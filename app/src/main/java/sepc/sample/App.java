@@ -8,7 +8,7 @@ public class App {
         // int port = ;
         // int port2 = ;
         Long timeout = 3000000L;
-        String subscription = "Monkey_Tilt";
+        // String subscription = "";
         System.out.println("Openening new connection");
         // Uncomment which connector type you want to use
         new PushConnector(hostname, port, subscription);
