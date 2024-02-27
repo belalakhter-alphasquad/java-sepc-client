@@ -2,10 +2,10 @@ package sepc.sample;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.betbrain.sepc.connector.sdql.EntityChangeBatchProcessingMonitor;
-import com.betbrain.sepc.connector.sdql.SEPCConnector;
-import com.betbrain.sepc.connector.sdql.SEPCPullConnector;
+
 import com.betbrain.sepc.connector.sdql.SEPCPushConnector;
 import com.betbrain.sepc.connector.sdql.SEPCStreamedConnectorListener;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
@@ -13,30 +13,16 @@ import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
 import org.agrona.concurrent.ShutdownSignalBarrier;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.io.BufferedWriter;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.zip.GZIPOutputStream;
 
-import sepc.sample.utils.FileWriterUtility;
+import java.io.File;
+
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 public class PushConnector {
 
     public PushConnector(String hostname, int port, String subscription) {
         ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();
-        SEPCConnector connector = new SEPCPushConnector(hostname, port);
+        SEPCPushConnector connector = new SEPCPushConnector(hostname, port);
         SEPCPUSHConnectorListener listener = new SEPCPUSHConnectorListener();
 
         connector.addStreamedConnectorListener(listener);
@@ -48,7 +34,8 @@ public class PushConnector {
         });
 
         connector.start(subscription);
-        connector.nextConnectorStep();
+        // connector.startWithResume(subscription, subscription, subscription,
+        // subscription);
         barrier.await();
         connector.stop();
         System.out.println("Stopping the connection");
@@ -67,21 +54,17 @@ public class PushConnector {
         @Override
         public void notifyPartialInitialDumpRetrieved(List<? extends Entity> entities) {
             System.out.println("Initial dump batch entities received " + entities.size());
-            Path path = Paths.get("./entities.txt.gz");
 
-            List<String> lines = entities.stream().map(Entity::toString).collect(Collectors.toList());
+            XmlMapper xmlMapper = new XmlMapper();
+            try {
+                List<String> lines = entities.stream().map(Entity::toString).collect(Collectors.toList());
+                Path path = Paths.get("./entities.xml");
 
-            try (
-                    FileOutputStream fos = new FileOutputStream(path.toFile(), true);
-                    GZIPOutputStream gzos = new GZIPOutputStream(fos);
-                    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(gzos, StandardCharsets.UTF_8))) {
-                for (String line : lines) {
-                    writer.write(line);
-                    writer.newLine();
-                }
-                System.out.println("Write successful with GZip compression");
+                xmlMapper.writeValue(new File(path.toString()), lines);
+                System.out.println("Write successful");
+
             } catch (IOException e) {
-                System.out.println("GZip compression and write method failed");
+                System.out.println("Error occurred while processing data");
                 e.printStackTrace();
             }
         }

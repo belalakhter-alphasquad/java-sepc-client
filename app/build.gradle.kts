@@ -15,6 +15,10 @@ dependencies {
     implementation(files("libs/SEPC-connector-3.8.0.jar"))
     implementation("log4j:log4j:1.2.17")
     implementation("org.agrona:agrona:1.20.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.0")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.13.0")
+
+
 }
 
 application {
