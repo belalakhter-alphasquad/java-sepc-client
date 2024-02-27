@@ -13,17 +13,27 @@ import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
 import org.agrona.concurrent.ShutdownSignalBarrier;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import java.io.File;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 public class PushConnector {
+    private final CountDownLatch latch = new CountDownLatch(1);
+    private final SEPCPushConnector connector;
 
     public PushConnector(String hostname, int port, String subscription) {
         ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();
-        SEPCPushConnector connector = new SEPCPushConnector(hostname, port);
-        SEPCPUSHConnectorListener listener = new SEPCPUSHConnectorListener();
+        connector = new SEPCPushConnector(hostname, port);
+        SEPCPUSHConnectorListener listener = new SEPCPUSHConnectorListener(latch);
 
         connector.addStreamedConnectorListener(listener);
         connector.setEntityChangeBatchProcessingMonitor(new EntityChangeBatchProcessingMonitor() {
@@ -34,6 +44,15 @@ public class PushConnector {
         });
 
         connector.start(subscription);
+
+        // try {
+        // latch.await();
+        // } catch (InterruptedException e) {
+        // Thread.currentThread().interrupt();
+        // }
+        // connector.stop();
+        // System.out.println("Stopping the connection");
+
         // connector.startWithResume(subscription, subscription, subscription,
         // subscription);
         barrier.await();
@@ -43,35 +62,56 @@ public class PushConnector {
     }
 
     public static class SEPCPUSHConnectorListener implements SEPCStreamedConnectorListener {
+        private final CountDownLatch latch;
         private volatile String lastBatchUuid;
         private volatile String SubscriptionId;
         private volatile String subscriptionChecksum;
+
+        public SEPCPUSHConnectorListener(CountDownLatch latch) {
+            this.latch = latch;
+        }
 
         public void notifyInitialDumpToBeRetrieved() {
             System.out.println("Initial dump starting ");
         }
 
+        private int batchCounterEntity = 0;
+
         @Override
         public void notifyPartialInitialDumpRetrieved(List<? extends Entity> entities) {
-            System.out.println("Initial dump batch entities received " + entities.size());
-
+            ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
             XmlMapper xmlMapper = new XmlMapper();
+            xmlMapper.enable(SerializationFeature.INDENT_OUTPUT);
+            List<String> processedEntities = new CopyOnWriteArrayList<>();
+            for (Entity entity : entities) {
+                executor.submit(() -> {
+                    processedEntities.add(entity.toString());
+                });
+            }
+            executor.shutdown();
             try {
-                List<String> lines = entities.stream().map(Entity::toString).collect(Collectors.toList());
-                Path path = Paths.get("./entities.xml");
-
-                xmlMapper.writeValue(new File(path.toString()), lines);
-                System.out.println("Write successful");
-
+                if (!executor.awaitTermination(6, TimeUnit.SECONDS)) {
+                    executor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                executor.shutdownNow();
+            }
+            String fileName = "./xml/batch_" + batchCounterEntity + ".xml";
+            try {
+                xmlMapper.writeValue(new File(fileName), processedEntities);
+                System.out.println("Batch " + batchCounterEntity + " written successfully to " + fileName);
+                batchCounterEntity++;
             } catch (IOException e) {
-                System.out.println("Error occurred while processing data");
+                System.out.println("Error occurred while processing batch " + batchCounterEntity);
                 e.printStackTrace();
             }
+
         }
 
         @Override
         public void notifyInitialDumpRetrieved() {
             System.out.println("Initial dump done ");
+            latch.countDown();
         }
 
         @Override

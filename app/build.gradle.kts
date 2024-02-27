@@ -17,6 +17,7 @@ dependencies {
     implementation("org.agrona:agrona:1.20.0")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.13.0")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.13.0")
+    implementation("mysql:mysql-connector-java:8.0.23")
 
 
 }

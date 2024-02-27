@@ -1,7 +1,18 @@
 package sepc.sample;
 
+import sepc.sample.DB.DbClient;
+
 public class App {
     public static void main(String[] args) {
+        // Credentials are hardcoded physically each time env will be added soon
+
+        try {
+            // make sure to provide sql server credentials
+            DbClient.runSqlFileToCreateTables();
+            System.out.println("Database setup successfully.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         // Hardocded
         String hostname = "";
