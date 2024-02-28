@@ -1,0 +1,6 @@
+.env
+/app/build
+/app/logs
+/app/xml/*
+.gradle
+.vscode
