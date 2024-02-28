@@ -1,30 +1,27 @@
 package sepc.sample;
 
+import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
-import java.util.stream.Collectors;
-
-import com.betbrain.sepc.connector.sdql.EntityChangeBatchProcessingMonitor;
-
-import com.betbrain.sepc.connector.sdql.SEPCPushConnector;
-import com.betbrain.sepc.connector.sdql.SEPCStreamedConnectorListener;
-import com.betbrain.sepc.connector.sportsmodel.Entity;
-import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
-import org.agrona.concurrent.ShutdownSignalBarrier;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import java.io.File;
+import org.agrona.concurrent.ShutdownSignalBarrier;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.betbrain.sepc.connector.sdql.EntityChangeBatchProcessingMonitor;
+import com.betbrain.sepc.connector.sdql.SEPCPushConnector;
+import com.betbrain.sepc.connector.sdql.SEPCStreamedConnectorListener;
+import com.betbrain.sepc.connector.sportsmodel.Entity;
+import com.betbrain.sepc.connector.sportsmodel.Sport;
+import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+
+import sepc.sample.DB.DbClient;
 
 public class PushConnector {
     private final CountDownLatch latch = new CountDownLatch(1);
@@ -75,36 +72,53 @@ public class PushConnector {
             System.out.println("Initial dump starting ");
         }
 
-        private int batchCounterEntity = 0;
+        // private int batchCounterEntity = 0;
 
         @Override
         public void notifyPartialInitialDumpRetrieved(List<? extends Entity> entities) {
-            ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-            XmlMapper xmlMapper = new XmlMapper();
-            xmlMapper.enable(SerializationFeature.INDENT_OUTPUT);
-            List<String> processedEntities = new CopyOnWriteArrayList<>();
             for (Entity entity : entities) {
-                executor.submit(() -> {
-                    processedEntities.add(entity.toString());
-                });
-            }
-            executor.shutdown();
-            try {
-                if (!executor.awaitTermination(6, TimeUnit.SECONDS)) {
-                    executor.shutdownNow();
+                if (entity instanceof Sport) {
+                    Sport sport = (Sport) entity;
+                    try {
+                        DbClient.insertSport(sport);
+                    } catch (SQLException e) {
+                        System.err.println("Error inserting sport into the database: " + e.getMessage());
+                    }
                 }
-            } catch (InterruptedException e) {
-                executor.shutdownNow();
             }
-            String fileName = "./xml/batch_" + batchCounterEntity + ".xml";
-            try {
-                xmlMapper.writeValue(new File(fileName), processedEntities);
-                System.out.println("Batch " + batchCounterEntity + " written successfully to " + fileName);
-                batchCounterEntity++;
-            } catch (IOException e) {
-                System.out.println("Error occurred while processing batch " + batchCounterEntity);
-                e.printStackTrace();
-            }
+            /*
+             * ExecutorService executor =
+             * Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+             * XmlMapper xmlMapper = new XmlMapper();
+             * xmlMapper.enable(SerializationFeature.INDENT_OUTPUT);
+             * List<String> processedEntities = new CopyOnWriteArrayList<>();
+             * for (Entity entity : entities) {
+             * executor.submit(() -> {
+             * processedEntities.add(entity.toString());
+             * System.out.println(processedEntities);
+             * System.exit(0);
+             * });
+             * }
+             * executor.shutdown();
+             * try {
+             * if (!executor.awaitTermination(6, TimeUnit.SECONDS)) {
+             * executor.shutdownNow();
+             * }
+             * } catch (InterruptedException e) {
+             * executor.shutdownNow();
+             * }
+             * String fileName = "./xml/batch_" + batchCounterEntity + ".xml";
+             * try {
+             * xmlMapper.writeValue(new File(fileName), processedEntities);
+             * System.out.println("Batch " + batchCounterEntity +
+             * " written successfully to " + fileName);
+             * batchCounterEntity++;
+             * } catch (IOException e) {
+             * System.out.println("Error occurred while processing batch " +
+             * batchCounterEntity);
+             * e.printStackTrace();
+             * }
+             */
 
         }
 

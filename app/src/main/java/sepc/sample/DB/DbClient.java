@@ -4,9 +4,11 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import com.betbrain.sepc.connector.sportsmodel.Sport;
 import com.google.common.collect.Tables;
 
 public class DbClient {
@@ -42,6 +44,28 @@ public class DbClient {
                     stmt.execute(command);
                 }
             }
+        }
+    }
+
+    public static void insertSport(Sport sport) throws SQLException {
+        String insertSQL = "INSERT INTO sport (id, version, name, description, parentId) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(insertSQL)) {
+
+            pstmt.setLong(1, sport.getId());
+            pstmt.setInt(2, sport.getVersion());
+            pstmt.setString(3, sport.getName());
+            pstmt.setString(4, sport.getDescription());
+            if (sport.getParentId() != null) {
+                pstmt.setLong(5, sport.getParentId());
+            } else {
+                pstmt.setNull(5, java.sql.Types.BIGINT);
+            }
+
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw e;
         }
     }
 }
