@@ -19,12 +19,11 @@ public class StoreEntity {
 
     public StoreEntity(DbClient dbClient) {
         StoreEntity.dbClient = dbClient;
-        this.executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        this.executor = Executors.newFixedThreadPool(2);
 
         this.entityQueue = new LinkedBlockingQueue<>();
         startProcessing();
-        barrier.await();
-        executor.shutdownNow();
+
     }
 
     public void queueEntity(Entity entity) {

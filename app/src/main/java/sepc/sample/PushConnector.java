@@ -11,6 +11,7 @@ import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
 
 import sepc.sample.DB.DbClient;
+
 import sepc.sample.utils.StoreEntity;
 
 public class PushConnector {
@@ -19,10 +20,10 @@ public class PushConnector {
     static DbClient dbClient = DbClient.getInstance();
     static StoreEntity storeEntity = new StoreEntity(dbClient);
 
-    public PushConnector(String hostname, int port, String subscription) {
+    public PushConnector(String hostname, int portPush, String subscription) {
 
         ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();
-        connector = new SEPCPushConnector(hostname, port);
+        connector = new SEPCPushConnector(hostname, portPush);
         SEPCPUSHConnectorListener listener = new SEPCPUSHConnectorListener(storeEntity);
 
         connector.addStreamedConnectorListener(listener);
@@ -32,10 +33,11 @@ public class PushConnector {
                 return listener.getLastBatchUuid();
             }
         });
-
+        System.out.println("\nAttempting to start the connector\n");
         connector.start(subscription);
 
         barrier.await();
+        storeEntity.shutdown();
         connector.stop();
 
         System.out.println("Stopping the connection");
@@ -59,6 +61,7 @@ public class PushConnector {
         @Override
         public void notifyPartialInitialDumpRetrieved(List<? extends Entity> entities) {
             for (Entity entity : entities) {
+                System.out.println("\nRecieved Entitiy" + " total entities in batch " + entities.size() + "\n");
                 this.storeEntity.queueEntity(entity);
             }
 

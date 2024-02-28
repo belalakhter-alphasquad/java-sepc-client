@@ -15,6 +15,7 @@ public class App {
             // make sure to provide sql server credentials
             dbClient.runSqlFileToCreateTables();
             System.out.println("Database setup successfully.");
+
         } catch (Exception e) {
             e.printStackTrace();
         }
