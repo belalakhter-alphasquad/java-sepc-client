@@ -7,6 +7,7 @@ import org.agrona.concurrent.ShutdownSignalBarrier;
 import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.Sport;
+import com.betbrain.sepc.connector.sportsmodel.Event;
 import java.sql.SQLException;
 
 import sepc.sample.DB.DbClient;
@@ -44,6 +45,7 @@ public class StoreEntity {
     }
 
     private void processEntity(Entity entity) {
+
         if (entity instanceof Sport) {
             Sport sport = (Sport) entity;
             try {
@@ -51,12 +53,21 @@ public class StoreEntity {
             } catch (SQLException e) {
                 System.err.println("Error inserting sport into the database: " + e.getMessage());
             }
-        } else if (entity instanceof BettingOffer) {
-            BettingOffer bettingOffer = (BettingOffer) entity;
+        }
+        if (entity instanceof BettingOffer) {
+            BettingOffer bettingoffer = (BettingOffer) entity;
             try {
-                dbClient.insertBettingOffer(bettingOffer);
+                dbClient.insertBettingOffer(bettingoffer);
             } catch (SQLException e) {
                 System.err.println("Error inserting BettingOffer into the database: " + e.getMessage());
+            }
+        }
+        if (entity instanceof Event) {
+            Event event = (Event) entity;
+            try {
+                dbClient.insertEvent(event);
+            } catch (SQLException e) {
+                System.err.println("Error inserting Event into the database: " + e.getMessage());
             }
         }
     }

@@ -60,16 +60,14 @@ public class PushConnector {
 
         @Override
         public void notifyPartialInitialDumpRetrieved(List<? extends Entity> entities) {
-            for (Entity entity : entities) {
-                System.out.println("\nRecieved Entitiy" + " total entities in batch " + entities.size() + "\n");
-                this.storeEntity.queueEntity(entity);
-            }
-
+            System.out.println("\nReceived Entity" + " total entities in batch " + entities.size() + "\n");
+            entities.parallelStream().forEach(storeEntity::queueEntity);
         }
 
         @Override
         public void notifyInitialDumpRetrieved() {
             System.out.println("Initial dump done ");
+            System.exit(0);
         }
 
         @Override
