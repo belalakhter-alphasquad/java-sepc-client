@@ -3,11 +3,15 @@ package sepc.sample.DB;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Connection;
-import java.sql.DriverManager;
+
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+
+import java.sql.Timestamp;
+import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
 import com.betbrain.sepc.connector.sportsmodel.Sport;
+
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
@@ -85,6 +89,34 @@ public class DbClient {
             } else {
                 pstmt.setNull(5, java.sql.Types.BIGINT);
             }
+            pstmt.executeUpdate();
+        }
+    }
+
+    public void insertBettingOffer(BettingOffer bettingOffer) throws SQLException {
+        String insertSQL = "INSERT INTO BettingOffer (providerId, sourceId, outcomeId, bettingTypeId, statusId, isLive, odds, multiplicity, volume, volumeCurrencyId, couponKey, slotNum, lastChangedTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(insertSQL)) {
+
+            pstmt.setLong(1, bettingOffer.getProviderId());
+            pstmt.setLong(2, bettingOffer.getSourceId());
+            pstmt.setLong(3, bettingOffer.getOutcomeId());
+            pstmt.setLong(4, bettingOffer.getBettingTypeId());
+            pstmt.setLong(5, bettingOffer.getStatusId());
+            pstmt.setBoolean(6, bettingOffer.getIsLive());
+            pstmt.setFloat(7, bettingOffer.getOdds());
+            pstmt.setInt(8, bettingOffer.getMultiplicity());
+            pstmt.setFloat(9, bettingOffer.getVolume());
+            if (bettingOffer.getVolumeCurrencyId() != null) {
+                pstmt.setLong(10, bettingOffer.getVolumeCurrencyId());
+            } else {
+                pstmt.setNull(10, java.sql.Types.BIGINT);
+            }
+            pstmt.setString(11, bettingOffer.getCouponKey());
+            pstmt.setInt(12, bettingOffer.getSlotNum());
+            pstmt.setTimestamp(13, new Timestamp(bettingOffer.getLastChangedTime().getTime()));
+
             pstmt.executeUpdate();
         }
     }

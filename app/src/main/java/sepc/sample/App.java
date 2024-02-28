@@ -24,7 +24,7 @@ public class App {
         int portPush = Integer.parseInt(System.getProperty("PORT_PUSH"));
         int portPull = Integer.parseInt(System.getProperty("PORT_PULL"));
         Long timeout = 3000000L;
-        System.out.println(subscription);
+        String subscription = System.getProperty("SUBSCRIPTION");
         System.out.println("Openening new connection");
         // Uncomment which connector type you want to use
         new PushConnector(hostname, portPush, subscription);

@@ -2,5 +2,6 @@
 /app/build
 /app/logs
 /app/xml/*
+!/app/xml/.gitkeep
 .gradle
 .vscode

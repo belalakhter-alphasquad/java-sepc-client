@@ -10,10 +10,10 @@ import com.betbrain.sepc.connector.sdql.SEPCPushConnector;
 import com.betbrain.sepc.connector.sdql.SEPCStreamedConnectorListener;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.Sport;
+import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
 import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
 
 import sepc.sample.DB.DbClient;
-import sepc.sample.utils.EnvLoader;
 
 public class PushConnector {
     private final SEPCPushConnector connector;
@@ -59,6 +59,14 @@ public class PushConnector {
                         dbClient.insertSport(sport);
                     } catch (SQLException e) {
                         System.err.println("Error inserting sport into the database: " + e.getMessage());
+                    }
+                }
+                if (entity instanceof BettingOffer) {
+                    BettingOffer BettingOffer = (BettingOffer) entity;
+                    try {
+                        dbClient.insertBettingOffer(BettingOffer);
+                    } catch (SQLException e) {
+                        System.err.println("Error inserting BettingOffer into the database: " + e.getMessage());
                     }
                 }
             }
