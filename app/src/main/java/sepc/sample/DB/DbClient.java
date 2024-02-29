@@ -9,10 +9,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import java.sql.Timestamp;
-import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
-import com.betbrain.sepc.connector.sportsmodel.Event;
-import com.betbrain.sepc.connector.sportsmodel.Sport;
 
+import com.betbrain.sepc.connector.sportsmodel.*;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
@@ -158,6 +156,263 @@ public class DbClient {
 
             pstmt.executeUpdate();
         }
+    }
+
+    public void insertEventType(EventType eventType) throws SQLException {
+        String insertSQL = "INSERT INTO eventtype (id, version, name, description) VALUES (?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(insertSQL)) {
+            pstmt.setLong(1, eventType.getId());
+            pstmt.setInt(2, eventType.getVersion());
+            pstmt.setString(3, eventType.getName());
+            pstmt.setString(4, eventType.getDescription());
+            pstmt.executeUpdate();
+        }
+    }
+
+    public void insertEventStatus(EventStatus eventStatus) throws SQLException {
+        String insertSQL = "INSERT INTO eventstatus (id, version, name, description) VALUES (?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(insertSQL)) {
+            pstmt.setLong(1, eventStatus.getId());
+            pstmt.setInt(2, eventStatus.getVersion());
+            pstmt.setString(3, eventStatus.getName());
+            pstmt.setString(4, eventStatus.getDescription());
+            pstmt.executeUpdate();
+        }
+    }
+
+    public void insertParticipant(Participant participant) throws SQLException {
+        String insertSQL = "INSERT INTO participant (id, version, namespaceId, typeId, name, firstName, lastName, shortName, isMale, birthTime, countryId, url, logoUrl, retirementTime, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(insertSQL)) {
+            pstmt.setLong(1, participant.getId());
+            pstmt.setInt(2, participant.getVersion());
+            pstmt.setObject(3, participant.getNamespaceId());
+            pstmt.setLong(4, participant.getTypeId());
+            pstmt.setString(5, participant.getName());
+            pstmt.setString(6, participant.getFirstName());
+            pstmt.setString(7, participant.getLastName());
+            pstmt.setString(8, participant.getShortName());
+            pstmt.setObject(9, participant.getIsMale());
+            pstmt.setTimestamp(10,
+                    participant.getBirthTime() != null ? new Timestamp(participant.getBirthTime().getTime()) : null);
+            pstmt.setObject(11, participant.getCountryId());
+            pstmt.setString(12, participant.getUrl());
+            pstmt.setString(13, participant.getLogoUrl());
+            pstmt.setTimestamp(14,
+                    participant.getRetirementTime() != null ? new Timestamp(participant.getRetirementTime().getTime())
+                            : null);
+            pstmt.setString(15, participant.getNote());
+            pstmt.executeUpdate();
+        }
+    }
+
+    public void insertEventCategory(EventCategory eventCategory) throws SQLException {
+        String insertSQL = "INSERT INTO eventcategory (id, version, name, sportId, note) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(insertSQL)) {
+            pstmt.setLong(1, eventCategory.getId());
+            pstmt.setInt(2, eventCategory.getVersion());
+            pstmt.setString(3, eventCategory.getName());
+            pstmt.setLong(4, eventCategory.getSportId());
+            pstmt.setString(5, eventCategory.getNote());
+            pstmt.executeUpdate();
+        }
+    }
+
+    public void insertEventTemplate(EventTemplate eventTemplate) throws SQLException {
+        String insertSQL = "INSERT INTO eventtemplate (id, version, namespaceId, name, eventTypeId, sportId, tier, categoryId, catalogId, url, venueId, rootPartId, isCyber, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(insertSQL)) {
+            pstmt.setLong(1, eventTemplate.getId());
+            pstmt.setInt(2, eventTemplate.getVersion());
+            pstmt.setObject(3, eventTemplate.getNamespaceId());
+            pstmt.setString(4, eventTemplate.getName());
+            pstmt.setLong(5, eventTemplate.getEventTypeId());
+            pstmt.setLong(6, eventTemplate.getSportId());
+            pstmt.setObject(7, eventTemplate.getTier());
+            pstmt.setObject(8, eventTemplate.getCategoryId());
+            pstmt.setObject(9, eventTemplate.getCatalogId());
+            pstmt.setString(10, eventTemplate.getUrl());
+            pstmt.setObject(11, eventTemplate.getVenueId());
+            pstmt.setObject(12, eventTemplate.getRootPartId());
+            pstmt.setObject(13, eventTemplate.getIsCyber());
+            pstmt.setString(14, eventTemplate.getNote());
+            pstmt.executeUpdate();
+        }
+    }
+
+    public void insertEventPart(EventPart eventPart) throws SQLException {
+
+    }
+
+    public void insertEventPartDefaultUsage(EventPartDefaultUsage eventPartDefaultUsage) throws SQLException {
+    }
+
+    public void insertStreamingProviderEventRelation(StreamingProviderEventRelation streamingProviderEventRelation)
+            throws SQLException {
+    }
+
+    public void insertStreamingProvider(StreamingProvider streamingProvider) throws SQLException {
+    }
+
+    public void insertProviderEventRelation(ProviderEventRelation providerEventRelation) throws SQLException {
+    }
+
+    public void insertEventParticipantRestriction(EventParticipantRestriction eventParticipantRestriction)
+            throws SQLException {
+    }
+
+    public void insertParticipantRole(ParticipantRole participantRole) throws SQLException {
+    }
+
+    public void insertParticipantUsage(ParticipantUsage participantUsage) throws SQLException {
+    }
+
+    public void insertParticipantTypeRoleUsage(ParticipantTypeRoleUsage participantTypeRoleUsage) throws SQLException {
+    }
+
+    public void insertParticipantRelation(ParticipantRelation participantRelation) throws SQLException {
+    }
+
+    public void insertParticipantRelationType(ParticipantRelationType participantRelationType) throws SQLException {
+    }
+
+    public void insertEventParticipantRelation(EventParticipantRelation eventParticipantRelation) throws SQLException {
+    }
+
+    public void insertEventActionTypeUsage(EventActionTypeUsage eventActionTypeUsage) throws SQLException {
+    }
+
+    public void insertEventActionType(EventActionType eventActionType) throws SQLException {
+    }
+
+    public void insertEventParticipantInfoTypeUsage(EventParticipantInfoTypeUsage eventParticipantInfoTypeUsage)
+            throws SQLException {
+        // Implementation here
+    }
+
+    public void insertEventParticipantInfoDetailTypeUsage(
+            EventParticipantInfoDetailTypeUsage eventParticipantInfoDetailTypeUsage) throws SQLException {
+        // Implementation here
+    }
+
+    public void insertEventActionDetailStatus(EventActionDetailStatus eventActionDetailStatus) throws SQLException {
+        // Implementation here
+    }
+
+    public void insertEventActionDetail(EventActionDetail eventActionDetail) throws SQLException {
+        // Implementation here
+    }
+
+    public void insertEventActionDetailTypeUsage(EventActionDetailTypeUsage eventActionDetailTypeUsage)
+            throws SQLException {
+        // Implementation here
+    }
+
+    public void insertEventAction(EventAction eventAction) throws SQLException {
+        // Implementation here
+    }
+
+    public void insertEventActionStatus(EventActionStatus eventActionStatus) throws SQLException {
+        // Implementation here
+    }
+
+    public void insertEventParticipantInfoStatus(EventParticipantInfoStatus eventParticipantInfoStatus)
+            throws SQLException {
+        // Implementation here
+    }
+
+    public void insertEventInfoStatus(EventInfoStatus eventInfoStatus) throws SQLException {
+        // Implementation here
+    }
+
+    public void insertEventInfo(EventInfo eventInfo) throws SQLException {
+        // Implementation here
+    }
+
+    public void insertEventInfoType(EventInfoType eventInfoType) throws SQLException {
+        // Implementation here
+    }
+
+    public void insertEventInfoTypeUsage(EventInfoTypeUsage eventInfoTypeUsage) throws SQLException {
+        // Implementation here
+    }
+
+    public void insertEventParticipantInfo(EventParticipantInfo eventParticipantInfo) throws SQLException {
+        // Implementation here
+    }
+
+    public void insertEventParticipantInfoDetail(EventParticipantInfoDetail eventParticipantInfoDetail)
+            throws SQLException {
+        // Implementation here
+    }
+
+    public void insertEventParticipantInfoDetailStatus(
+            EventParticipantInfoDetailStatus eventParticipantInfoDetailStatus) throws SQLException {
+        // Implementation here
+    }
+
+    public void insertParticipantType(ParticipantType participantType) throws SQLException {
+        // Implementation here
+    }
+
+    public void insertProvider(Provider provider) throws SQLException {
+        // Implementation here
+    }
+
+    public void insertSource(Source source) throws SQLException {
+        // Implementation here
+    }
+
+    public void insertBettingOfferStatus(BettingOfferStatus bettingOfferStatus) throws SQLException {
+        // Implementation here
+    }
+
+    public void insertBettingType(BettingType bettingType) throws SQLException {
+        // Implementation here
+    }
+
+    public void insertOutcome(Outcome outcome) throws SQLException {
+        // Implementation here
+    }
+
+    public void insertOutcomeType(OutcomeType outcomeType) throws SQLException {
+        // Implementation here
+    }
+
+    public void insertOutcomeTypeBettingTypeRelation(OutcomeTypeBettingTypeRelation outcomeTypeBettingTypeRelation)
+            throws SQLException {
+        // Implementation here
+    }
+
+    public void insertBettingTypeUsage(BettingTypeUsage bettingTypeUsage) throws SQLException {
+        // Implementation here
+    }
+
+    public void insertOutcomeStatus(OutcomeStatus outcomeStatus) throws SQLException {
+        // Implementation here
+    }
+
+    public void insertOutcomeTypeUsage(OutcomeTypeUsage outcomeTypeUsage) throws SQLException {
+        // Implementation here
+    }
+
+    public void insertMarket(Market market) throws SQLException {
+        // Implementation here
+    }
+
+    public void insertMarketOutcomeRelation(MarketOutcomeRelation marketOutcomeRelation) throws SQLException {
+        // Implementation here
+    }
+
+    public void insertCurrency(Currency currency) throws SQLException {
+        // Implementation here
+    }
+
+    public void insertProviderEntityMapping(ProviderEntityMapping providerEntityMapping) throws SQLException {
+        // Implementation here
     }
 
 }
