@@ -19,7 +19,7 @@ public class StoreEntity {
 
     public StoreEntity(DbClient dbClient) {
         StoreEntity.dbClient = dbClient;
-        this.executor = Executors.newFixedThreadPool(2);
+        this.executor = Executors.newFixedThreadPool(6);
 
         this.entityQueue = new LinkedBlockingQueue<>();
         startProcessing();
@@ -164,13 +164,6 @@ public class StoreEntity {
                 dbClient.insertParticipantUsage(participantUsage);
             } catch (SQLException e) {
                 System.err.println("Error inserting ParticipantUsage into the database: " + e.getMessage());
-            }
-        } else if (entity instanceof ParticipantTypeRoleUsage) {
-            ParticipantTypeRoleUsage participantTypeRoleUsage = (ParticipantTypeRoleUsage) entity;
-            try {
-                dbClient.insertParticipantTypeRoleUsage(participantTypeRoleUsage);
-            } catch (SQLException e) {
-                System.err.println("Error inserting ParticipantTypeRoleUsage into the database: " + e.getMessage());
             }
         } else if (entity instanceof ParticipantRelation) {
             ParticipantRelation participantRelation = (ParticipantRelation) entity;
@@ -328,13 +321,6 @@ public class StoreEntity {
                 dbClient.insertParticipantRole(participantRole);
             } catch (SQLException e) {
                 System.err.println("Error inserting ParticipantRole into the database: " + e.getMessage());
-            }
-        } else if (entity instanceof ParticipantTypeRoleUsage) {
-            ParticipantTypeRoleUsage participantTypeRoleUsage = (ParticipantTypeRoleUsage) entity;
-            try {
-                dbClient.insertParticipantTypeRoleUsage(participantTypeRoleUsage);
-            } catch (SQLException e) {
-                System.err.println("Error inserting ParticipantTypeRoleUsage into the database: " + e.getMessage());
             }
         } else if (entity instanceof ParticipantUsage) {
             ParticipantUsage participantUsage = (ParticipantUsage) entity;

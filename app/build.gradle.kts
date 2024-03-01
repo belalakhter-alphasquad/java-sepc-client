@@ -44,10 +44,11 @@ tasks.named<Jar>("jar") {
     from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
 }
 
+
 tasks.named<JavaExec>("run") {
-    mainClass.set("sepc.sample.App") 
-    classpath = files(tasks.getByName<Jar>("jar").archiveFile.get())
-    jvmArgs("--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED")
+    mainClass.set("sepc.sample.App")
+    classpath = files(tasks.named<Jar>("jar").get().archiveFile)
+    jvmArgs("-Xmx6g", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED")
 }
 
 

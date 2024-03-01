@@ -31,6 +31,9 @@ public class DbClient {
         config.setJdbcUrl(System.getProperty("DB_URL"));
         config.setUsername(USER);
         config.setPassword(PASSWORD);
+        config.setMaximumPoolSize(10);
+        config.setMinimumIdle(5);
+        config.setConnectionTimeout(10000);
         this.dataSource = new HikariDataSource(config);
     }
 
@@ -248,95 +251,390 @@ public class DbClient {
     }
 
     public void insertEventPartDefaultUsage(EventPartDefaultUsage eventPartDefaultUsage) throws SQLException {
+        String insertSQL = "INSERT INTO eventpartdefaultusage (id, version, parentEventId, eventTypeId, sportId, rootPartId) VALUES (?, ?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(insertSQL)) {
+            pstmt.setLong(1, eventPartDefaultUsage.getId());
+            pstmt.setInt(2, eventPartDefaultUsage.getVersion());
+            pstmt.setObject(3, eventPartDefaultUsage.getParentEventId()); // Assuming parentEventId can be null
+            pstmt.setLong(4, eventPartDefaultUsage.getEventTypeId());
+            pstmt.setLong(5, eventPartDefaultUsage.getSportId());
+            pstmt.setLong(6, eventPartDefaultUsage.getRootPartId());
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertStreamingProviderEventRelation(StreamingProviderEventRelation streamingProviderEventRelation)
             throws SQLException {
+        String insertSQL = "INSERT INTO streamingprovidereventrelation (id, version, streamingProviderId, eventId, channel, language) VALUES (?, ?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(insertSQL)) {
+            pstmt.setLong(1, streamingProviderEventRelation.getId());
+            pstmt.setInt(2, streamingProviderEventRelation.getVersion());
+            pstmt.setLong(3, streamingProviderEventRelation.getStreamingProviderId());
+            pstmt.setLong(4, streamingProviderEventRelation.getEventId());
+            pstmt.setString(5, streamingProviderEventRelation.getChannel());
+            pstmt.setString(6, streamingProviderEventRelation.getLanguage()); // Assuming language can be null
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertStreamingProvider(StreamingProvider streamingProvider) throws SQLException {
+        String insertSQL = "INSERT INTO streamingprovider (id, version, name, urlTemplate) VALUES (?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(insertSQL)) {
+            pstmt.setLong(1, streamingProvider.getId());
+            pstmt.setInt(2, streamingProvider.getVersion());
+            pstmt.setString(3, streamingProvider.getName());
+            pstmt.setString(4, streamingProvider.getUrlTemplate());
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertProviderEventRelation(ProviderEventRelation providerEventRelation) throws SQLException {
+        String insertSQL = "INSERT INTO providereventrelation (id, version, providerId, eventId, startTime, endTime, timeQualityRank, offersLiveOdds, offersLiveTV) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(insertSQL)) {
+            pstmt.setLong(1, providerEventRelation.getId());
+            pstmt.setInt(2, providerEventRelation.getVersion());
+            pstmt.setLong(3, providerEventRelation.getProviderId());
+            pstmt.setLong(4, providerEventRelation.getEventId());
+            pstmt.setTimestamp(5,
+                    providerEventRelation.getStartTime() != null
+                            ? new java.sql.Timestamp(providerEventRelation.getStartTime().getTime())
+                            : null);
+            pstmt.setTimestamp(6,
+                    providerEventRelation.getEndTime() != null
+                            ? new java.sql.Timestamp(providerEventRelation.getEndTime().getTime())
+                            : null);
+            pstmt.setInt(7, providerEventRelation.getTimeQualityRank());
+            pstmt.setBoolean(8, providerEventRelation.getOffersLiveOdds());
+            pstmt.setBoolean(9, providerEventRelation.isOffersLiveTV());
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertEventParticipantRestriction(EventParticipantRestriction eventParticipantRestriction)
             throws SQLException {
+        String sql = "INSERT INTO eventparticipantrestriction (id, version, eventId, participantTypeId, participantIsMale, participantMinAge, participantMaxAge, participantPartOfLocationId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, eventParticipantRestriction.getId());
+            pstmt.setInt(2, eventParticipantRestriction.getVersion());
+            pstmt.setLong(3, eventParticipantRestriction.getEventId());
+            pstmt.setLong(4, eventParticipantRestriction.getParticipantTypeId());
+            pstmt.setObject(5, eventParticipantRestriction.getParticipantIsMale(), java.sql.Types.TINYINT);
+            pstmt.setObject(6, eventParticipantRestriction.getParticipantMinAge(), java.sql.Types.INTEGER);
+            pstmt.setObject(7, eventParticipantRestriction.getParticipantMaxAge(), java.sql.Types.INTEGER);
+            pstmt.setObject(8, eventParticipantRestriction.getParticipantPartOfLocationId(), java.sql.Types.BIGINT);
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertParticipantRole(ParticipantRole participantRole) throws SQLException {
+        String sql = "INSERT INTO participantrole (id, version, name, description, isPrimary) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, participantRole.getId());
+            pstmt.setInt(2, participantRole.getVersion());
+            pstmt.setString(3, participantRole.getName());
+            pstmt.setString(4, participantRole.getDescription());
+            pstmt.setBoolean(5, participantRole.getIsPrimary());
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertParticipantUsage(ParticipantUsage participantUsage) throws SQLException {
-    }
-
-    public void insertParticipantTypeRoleUsage(ParticipantTypeRoleUsage participantTypeRoleUsage) throws SQLException {
+        String sql = "INSERT INTO participantusage (id, version, participantId, sportId) VALUES (?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, participantUsage.getId());
+            pstmt.setInt(2, participantUsage.getVersion());
+            pstmt.setLong(3, participantUsage.getParticipantId());
+            pstmt.setLong(4, participantUsage.getSportId());
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertParticipantRelation(ParticipantRelation participantRelation) throws SQLException {
+        String sql = "INSERT INTO participantrelation (id, version, typeId, fromParticipantId, toParticipantId, startTime, endTime, paramParticipantRoleId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, participantRelation.getId());
+            pstmt.setInt(2, participantRelation.getVersion());
+            pstmt.setLong(3, participantRelation.getTypeId());
+            pstmt.setLong(4, participantRelation.getFromParticipantId());
+            pstmt.setLong(5, participantRelation.getToParticipantId());
+            pstmt.setTimestamp(6,
+                    participantRelation.getStartTime() != null
+                            ? new java.sql.Timestamp(participantRelation.getStartTime().getTime())
+                            : null);
+            pstmt.setTimestamp(7,
+                    participantRelation.getEndTime() != null
+                            ? new java.sql.Timestamp(participantRelation.getEndTime().getTime())
+                            : null);
+            pstmt.setObject(8, participantRelation.getParamParticipantRoleId(), java.sql.Types.BIGINT);
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertParticipantRelationType(ParticipantRelationType participantRelationType) throws SQLException {
+        String sql = "INSERT INTO participantrelationtype (id, version, name, description, hasParamParticipantRoleId, paramParticipantRoleIdDescription) VALUES (?, ?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, participantRelationType.getId());
+            pstmt.setInt(2, participantRelationType.getVersion());
+            pstmt.setString(3, participantRelationType.getName());
+            pstmt.setString(4, participantRelationType.getDescription());
+            pstmt.setObject(5, participantRelationType.getHasParamParticipantRoleId(), java.sql.Types.TINYINT);
+            pstmt.setString(6, participantRelationType.getParamParticipantRoleIdDescription());
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertEventParticipantRelation(EventParticipantRelation eventParticipantRelation) throws SQLException {
+        String sql = "INSERT INTO eventparticipantrelation (id, version, eventId, eventPartId, participantId, participantRoleId, parentParticipantId) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, eventParticipantRelation.getId());
+            pstmt.setInt(2, eventParticipantRelation.getVersion());
+            pstmt.setLong(3, eventParticipantRelation.getEventId());
+            pstmt.setLong(4, eventParticipantRelation.getEventPartId());
+            pstmt.setLong(5, eventParticipantRelation.getParticipantId());
+            pstmt.setLong(6, eventParticipantRelation.getParticipantRoleId());
+            pstmt.setObject(7, eventParticipantRelation.getParentParticipantId(), java.sql.Types.BIGINT); // Nullable
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertEventActionTypeUsage(EventActionTypeUsage eventActionTypeUsage) throws SQLException {
+        String sql = "INSERT INTO eventactiontypeusage (id, version, eventActionTypeId, eventTypeId, eventPartId, sportId) VALUES (?, ?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, eventActionTypeUsage.getId());
+            pstmt.setInt(2, eventActionTypeUsage.getVersion());
+            pstmt.setLong(3, eventActionTypeUsage.getEventActionTypeId());
+            pstmt.setLong(4, eventActionTypeUsage.getEventTypeId());
+            pstmt.setLong(5, eventActionTypeUsage.getEventPartId());
+            pstmt.setLong(6, eventActionTypeUsage.getSportId());
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertEventActionType(EventActionType eventActionType) throws SQLException {
+        String sql = "INSERT INTO eventactiontype (id, version, name, description, hasParamFloat1, paramFloat1Description, hasParamParticipantId1, paramParticipantId1Description, hasParamParticipantId2, paramParticipantId2Description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, eventActionType.getId());
+            pstmt.setInt(2, eventActionType.getVersion());
+            pstmt.setString(3, eventActionType.getName());
+            pstmt.setString(4, eventActionType.getDescription());
+            pstmt.setObject(5, eventActionType.getHasParamFloat1(), java.sql.Types.TINYINT);
+            pstmt.setString(6, eventActionType.getParamFloat1Description());
+            pstmt.setObject(7, eventActionType.getHasParamParticipantId1(), java.sql.Types.TINYINT);
+            pstmt.setString(8, eventActionType.getParamParticipantId1Description());
+            pstmt.setObject(9, eventActionType.getHasParamParticipantId2(), java.sql.Types.TINYINT);
+            pstmt.setString(10, eventActionType.getParamParticipantId2Description());
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertEventParticipantInfoTypeUsage(EventParticipantInfoTypeUsage eventParticipantInfoTypeUsage)
             throws SQLException {
-        // Implementation here
+        String sql = "INSERT INTO eventparticipantinfotypeusage (id, version, eventParticipantInfoTypeId, eventTypeId, eventPartId, sportId) VALUES (?, ?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, eventParticipantInfoTypeUsage.getId());
+            pstmt.setInt(2, eventParticipantInfoTypeUsage.getVersion());
+            pstmt.setLong(3, eventParticipantInfoTypeUsage.getEventParticipantInfoTypeId());
+            pstmt.setLong(4, eventParticipantInfoTypeUsage.getEventTypeId());
+            pstmt.setLong(5, eventParticipantInfoTypeUsage.getEventPartId());
+            pstmt.setLong(6, eventParticipantInfoTypeUsage.getSportId());
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertEventParticipantInfoDetailTypeUsage(
             EventParticipantInfoDetailTypeUsage eventParticipantInfoDetailTypeUsage) throws SQLException {
-        // Implementation here
+        String sql = "INSERT INTO eventparticipantinfodetailtypeusage (id, version, eventParticipantInfoDetailTypeId, eventParticipantInfoTypeId, sportId) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, eventParticipantInfoDetailTypeUsage.getId());
+            pstmt.setInt(2, eventParticipantInfoDetailTypeUsage.getVersion());
+            pstmt.setLong(3, eventParticipantInfoDetailTypeUsage.getEventParticipantInfoDetailTypeId());
+            pstmt.setLong(4, eventParticipantInfoDetailTypeUsage.getEventParticipantInfoTypeId());
+            pstmt.setLong(5, eventParticipantInfoDetailTypeUsage.getSportId());
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertEventActionDetailStatus(EventActionDetailStatus eventActionDetailStatus) throws SQLException {
-        // Implementation here
+        String sql = "INSERT INTO eventactiondetailstatus (id, version, name, isAvailable, description) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, eventActionDetailStatus.getId());
+            pstmt.setInt(2, eventActionDetailStatus.getVersion());
+            pstmt.setString(3, eventActionDetailStatus.getName());
+            pstmt.setBoolean(4, eventActionDetailStatus.getIsAvailable());
+            pstmt.setString(5, eventActionDetailStatus.getDescription());
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertEventActionDetail(EventActionDetail eventActionDetail) throws SQLException {
-        // Implementation here
+        String sql = "INSERT INTO eventactiondetail (id, version, typeId, eventActionId, statusId, paramFloat1, paramFloat2, paramParticipantId1, paramString1, paramBoolean1, isManuallySet) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, eventActionDetail.getId());
+            pstmt.setInt(2, eventActionDetail.getVersion());
+            pstmt.setLong(3, eventActionDetail.getTypeId());
+            pstmt.setLong(4, eventActionDetail.getEventActionId());
+            pstmt.setLong(5, eventActionDetail.getStatusId());
+            pstmt.setObject(6, eventActionDetail.getParamFloat1());
+            pstmt.setObject(7, eventActionDetail.getParamFloat2());
+            pstmt.setObject(8, eventActionDetail.getParamParticipantId1(), java.sql.Types.BIGINT);
+            pstmt.setString(9, eventActionDetail.getParamString1());
+            pstmt.setObject(10, eventActionDetail.getParamBoolean1(), java.sql.Types.TINYINT);
+            pstmt.setBoolean(11, eventActionDetail.getIsManuallySet());
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertEventActionDetailTypeUsage(EventActionDetailTypeUsage eventActionDetailTypeUsage)
             throws SQLException {
-        // Implementation here
+        String sql = "INSERT INTO eventactiondetailtypeusage (id, version, eventActionDetailTypeId, eventActionTypeId, sportId) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, eventActionDetailTypeUsage.getId());
+            pstmt.setInt(2, eventActionDetailTypeUsage.getVersion());
+            pstmt.setLong(3, eventActionDetailTypeUsage.getEventActionDetailTypeId());
+            pstmt.setLong(4, eventActionDetailTypeUsage.getEventActionTypeId());
+            pstmt.setLong(5, eventActionDetailTypeUsage.getSportId());
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertEventAction(EventAction eventAction) throws SQLException {
-        // Implementation here
+        String sql = "INSERT INTO eventaction (id, version, typeId, eventId, providerId, statusId, eventPartId, paramFloat1, paramParticipantId1, paramParticipantId2, isManuallySet) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, eventAction.getId());
+            pstmt.setInt(2, eventAction.getVersion());
+            pstmt.setLong(3, eventAction.getTypeId());
+            pstmt.setLong(4, eventAction.getEventId());
+            pstmt.setLong(5, eventAction.getProviderId());
+            pstmt.setLong(6, eventAction.getStatusId());
+            pstmt.setLong(7, eventAction.getEventPartId());
+            pstmt.setDouble(8, eventAction.getParamFloat1()); // Double, check for null
+            pstmt.setObject(9, eventAction.getParamParticipantId1(), java.sql.Types.BIGINT); // Nullable
+            pstmt.setObject(10, eventAction.getParamParticipantId2(), java.sql.Types.BIGINT); // Nullable
+            pstmt.setBoolean(11, eventAction.getIsManuallySet());
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertEventActionStatus(EventActionStatus eventActionStatus) throws SQLException {
-        // Implementation here
+        String sql = "INSERT INTO eventactionstatus (id, version, name, isAvailable, description) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, eventActionStatus.getId());
+            pstmt.setInt(2, eventActionStatus.getVersion());
+            pstmt.setString(3, eventActionStatus.getName());
+            pstmt.setBoolean(4, eventActionStatus.getIsAvailable());
+            pstmt.setString(5, eventActionStatus.getDescription());
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertEventParticipantInfoStatus(EventParticipantInfoStatus eventParticipantInfoStatus)
             throws SQLException {
-        // Implementation here
+        String sql = "INSERT INTO eventparticipantinfostatus (id, version, name, isAvailable, description) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, eventParticipantInfoStatus.getId());
+            pstmt.setInt(2, eventParticipantInfoStatus.getVersion());
+            pstmt.setString(3, eventParticipantInfoStatus.getName());
+            pstmt.setBoolean(4, eventParticipantInfoStatus.getIsAvailable());
+            pstmt.setString(5, eventParticipantInfoStatus.getDescription());
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertEventInfoStatus(EventInfoStatus eventInfoStatus) throws SQLException {
-        // Implementation here
-    }
-
-    public void insertEventInfo(EventInfo eventInfo) throws SQLException {
-        // Implementation here
-    }
-
-    public void insertEventInfoType(EventInfoType eventInfoType) throws SQLException {
-        // Implementation here
+        String sql = "INSERT INTO eventinfostatus (id, version, name, isAvailable, description) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, eventInfoStatus.getId());
+            pstmt.setInt(2, eventInfoStatus.getVersion());
+            pstmt.setString(3, eventInfoStatus.getName());
+            pstmt.setBoolean(4, eventInfoStatus.getIsAvailable());
+            pstmt.setString(5, eventInfoStatus.getDescription());
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertEventInfoTypeUsage(EventInfoTypeUsage eventInfoTypeUsage) throws SQLException {
+        String sql = "INSERT INTO eventinfotypeusage (id, version, eventInfoTypeId, eventTypeId, eventPartId, sportId) VALUES (?, ?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, eventInfoTypeUsage.getId());
+            pstmt.setInt(2, eventInfoTypeUsage.getVersion());
+            pstmt.setLong(3, eventInfoTypeUsage.getEventInfoTypeId());
+            pstmt.setLong(4, eventInfoTypeUsage.getEventTypeId());
+            pstmt.setLong(5, eventInfoTypeUsage.getEventPartId());
+            pstmt.setLong(6, eventInfoTypeUsage.getSportId());
+            pstmt.executeUpdate();
+        }
+    }
+
+    public void insertEventParticipantInfoDetailStatus(
+            EventParticipantInfoDetailStatus eventParticipantInfoDetailStatus) throws SQLException {
+        String sql = "INSERT INTO eventparticipantinfodetailstatus (id, version, name, isAvailable, description) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, eventParticipantInfoDetailStatus.getId());
+            pstmt.setInt(2, eventParticipantInfoDetailStatus.getVersion());
+            pstmt.setString(3, eventParticipantInfoDetailStatus.getName());
+            pstmt.setBoolean(4, eventParticipantInfoDetailStatus.getIsAvailable());
+            pstmt.setString(5, eventParticipantInfoDetailStatus.getDescription());
+            pstmt.executeUpdate();
+        }
+    }
+
+    public void insertEventInfo(EventInfo eventInfo) throws SQLException {
+        String sql = "INSERT INTO eventinfo (id, version, typeId, eventId, providerId, statusId, eventPartId, paramFloat1, paramFloat2, paramParticipantId1, paramParticipantId2, paramEventPartId1, paramString1, paramBoolean1, paramEventStatusId1, paramTime1, paramScoringUnitId1, isManuallySet) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, eventInfo.getId());
+            pstmt.setInt(2, eventInfo.getVersion());
+            pstmt.setLong(3, eventInfo.getTypeId());
+            pstmt.setLong(4, eventInfo.getEventId());
+            pstmt.setLong(5, eventInfo.getProviderId());
+            pstmt.setLong(6, eventInfo.getStatusId());
+            pstmt.setLong(7, eventInfo.getEventPartId());
+            pstmt.setObject(8, eventInfo.getParamFloat1(), java.sql.Types.DOUBLE);
+            pstmt.setObject(9, eventInfo.getParamFloat2(), java.sql.Types.DOUBLE);
+            pstmt.setObject(10, eventInfo.getParamParticipantId1(), java.sql.Types.BIGINT);
+            pstmt.setObject(11, eventInfo.getParamParticipantId2(), java.sql.Types.BIGINT);
+            pstmt.setObject(12, eventInfo.getParamEventPartId1(), java.sql.Types.BIGINT);
+            pstmt.setString(13, eventInfo.getParamString1());
+            pstmt.setObject(14, eventInfo.getParamBoolean1(), java.sql.Types.TINYINT);
+            pstmt.setObject(15, eventInfo.getParamEventStatusId1(), java.sql.Types.BIGINT);
+
+            if (eventInfo.getParamTime1() != null) {
+                pstmt.setTimestamp(16, new java.sql.Timestamp(eventInfo.getParamTime1().getTime()));
+            } else {
+                pstmt.setNull(16, java.sql.Types.TIMESTAMP);
+            }
+
+            pstmt.setObject(17, eventInfo.getParamScoringUnitId1(), java.sql.Types.BIGINT);
+            pstmt.setBoolean(18, eventInfo.getIsManuallySet());
+
+            pstmt.executeUpdate();
+        }
+    }
+
+    public void insertEventInfoType(EventInfoType eventInfoType) throws SQLException {
         // Implementation here
     }
 
@@ -349,70 +647,247 @@ public class DbClient {
         // Implementation here
     }
 
-    public void insertEventParticipantInfoDetailStatus(
-            EventParticipantInfoDetailStatus eventParticipantInfoDetailStatus) throws SQLException {
-        // Implementation here
-    }
-
     public void insertParticipantType(ParticipantType participantType) throws SQLException {
-        // Implementation here
+        String sql = "INSERT INTO ParticipantType (id, name, description) VALUES (?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, participantType.getId());
+            pstmt.setString(2, participantType.getName());
+            pstmt.setString(3, participantType.getDescription());
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertProvider(Provider provider) throws SQLException {
-        // Implementation here
+        String sql = "INSERT INTO provider (id, version, name, locationId, url, isBookmaker, isBettingExchange, bettingCommissionVACs, isLiveOddsApproved, isNewsSource, isEnabled, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, provider.getId());
+            pstmt.setInt(2, provider.getVersion());
+            pstmt.setString(3, provider.getName());
+            pstmt.setLong(4, provider.getLocationId());
+            pstmt.setString(5, provider.getUrl());
+            pstmt.setBoolean(6, provider.getIsBookmaker());
+            pstmt.setBoolean(7, provider.getIsBettingExchange());
+            pstmt.setDouble(8, provider.getBettingCommissionVACs());
+            pstmt.setBoolean(9, provider.getIsLiveOddsApproved());
+            pstmt.setBoolean(10, provider.getIsNewsSource());
+            pstmt.setBoolean(11, provider.getIsEnabled());
+            pstmt.setString(12, provider.getNote());
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertSource(Source source) throws SQLException {
-        // Implementation here
+        String sql = "INSERT INTO source (id, version, collectorId, providerId, sourceKey, lastCollectedTime, lastUpdatedTime) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, source.getId());
+            pstmt.setInt(2, source.getVersion());
+            pstmt.setLong(3, source.getCollectorId());
+            pstmt.setLong(4, source.getProviderId());
+            pstmt.setString(5, source.getSourceKey());
+
+            if (source.getLastCollectedTime() != null) {
+                pstmt.setTimestamp(6, new java.sql.Timestamp(source.getLastCollectedTime().getTime()));
+            } else {
+
+                pstmt.setTimestamp(6, java.sql.Timestamp.valueOf("1970-01-01 00:00:01"));
+            }
+
+            if (source.getLastUpdatedTime() != null) {
+                pstmt.setTimestamp(7, new java.sql.Timestamp(source.getLastUpdatedTime().getTime()));
+            } else {
+
+                pstmt.setNull(7, java.sql.Types.TIMESTAMP);
+            }
+
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertBettingOfferStatus(BettingOfferStatus bettingOfferStatus) throws SQLException {
-        // Implementation here
+
+        String sql = "INSERT INTO bettingofferstatus (id, version, name, isAvailable, description) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setLong(1, bettingOfferStatus.getId());
+            pstmt.setInt(2, bettingOfferStatus.getVersion());
+            pstmt.setString(3, bettingOfferStatus.getName());
+            pstmt.setBoolean(4, bettingOfferStatus.getIsAvailable());
+            pstmt.setString(5, bettingOfferStatus.getDescription());
+
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertBettingType(BettingType bettingType) throws SQLException {
-        // Implementation here
+        String sql = "INSERT INTO bettingtype (id, name, description) VALUES (?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, bettingType.getId());
+            pstmt.setInt(2, bettingType.getVersion());
+            pstmt.setString(3, bettingType.getName());
+            pstmt.setString(4, bettingType.getDescription());
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertOutcome(Outcome outcome) throws SQLException {
-        // Implementation here
+        String sql = "INSERT INTO outcome (id, version, typeId, isNegation, statusId, eventId, eventPartId, paramFloat1, paramFloat2, paramFloat3, paramFloat4, paramFloat5, paramBoolean1, paramString1, paramParticipantId1, paramParticipantId2, paramParticipantId3, paramEventPartId1, paramScoringUnitId1, code, name, settlementRequired, isStatusManuallySet, namespaceId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, outcome.getId());
+            pstmt.setInt(2, outcome.getVersion());
+            pstmt.setLong(3, outcome.getTypeId());
+            pstmt.setBoolean(4, outcome.getIsNegation());
+            pstmt.setLong(5, outcome.getStatusId());
+            pstmt.setLong(6, outcome.getEventId());
+            pstmt.setLong(7, outcome.getEventPartId());
+            pstmt.setObject(8, outcome.getParamFloat1(), java.sql.Types.DOUBLE);
+            pstmt.setObject(9, outcome.getParamFloat2(), java.sql.Types.DOUBLE);
+            pstmt.setObject(10, outcome.getParamFloat3(), java.sql.Types.DOUBLE);
+            pstmt.setObject(11, outcome.getParamFloat4(), java.sql.Types.DOUBLE);
+            pstmt.setObject(12, outcome.getParamFloat5(), java.sql.Types.DOUBLE);
+            pstmt.setObject(13, outcome.getParamBoolean1(), java.sql.Types.TINYINT);
+            pstmt.setString(14, outcome.getParamString1());
+            pstmt.setObject(15, outcome.getParamParticipantId1(), java.sql.Types.BIGINT);
+            pstmt.setObject(16, outcome.getParamParticipantId2(), java.sql.Types.BIGINT);
+            pstmt.setObject(17, outcome.getParamParticipantId3(), java.sql.Types.BIGINT);
+            pstmt.setObject(18, outcome.getParamEventPartId1(), java.sql.Types.BIGINT);
+            pstmt.setObject(19, outcome.getParamScoringUnitId1(), java.sql.Types.BIGINT);
+            pstmt.setString(20, outcome.getCode());
+            pstmt.setString(21, outcome.getName());
+            pstmt.setObject(22, outcome.getSettlementRequired(), java.sql.Types.TINYINT);
+            pstmt.setBoolean(23, outcome.getIsStatusManuallySet());
+            pstmt.setObject(24, outcome.getNamespaceId(), java.sql.Types.BIGINT);
+
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertOutcomeType(OutcomeType outcomeType) throws SQLException {
-        // Implementation here
+        String sql = "INSERT INTO OutcomeType (id, name, description) VALUES (?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, outcomeType.getId());
+            pstmt.setString(2, outcomeType.getName());
+            pstmt.setString(3, outcomeType.getDescription());
+            pstmt.executeUpdate();
+        }
     }
 
-    public void insertOutcomeTypeBettingTypeRelation(OutcomeTypeBettingTypeRelation outcomeTypeBettingTypeRelation)
-            throws SQLException {
-        // Implementation here
-    }
-
-    public void insertBettingTypeUsage(BettingTypeUsage bettingTypeUsage) throws SQLException {
-        // Implementation here
+    public void insertOutcomeTypeBettingTypeRelation(OutcomeTypeBettingTypeRelation relation) throws SQLException {
+        String sql = "INSERT INTO OutcomeTypeBettingTypeRelation (outcomeTypeId, bettingTypeId) VALUES (?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, relation.getOutcomeTypeId());
+            pstmt.setLong(2, relation.getBettingTypeId());
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertOutcomeStatus(OutcomeStatus outcomeStatus) throws SQLException {
-        // Implementation here
+        String sql = "INSERT INTO OutcomeStatus (id, name, description, isAvailable) VALUES (?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, outcomeStatus.getId());
+            pstmt.setString(2, outcomeStatus.getName());
+            pstmt.setString(3, outcomeStatus.getDescription());
+            pstmt.executeUpdate();
+        }
     }
 
+    public void insertBettingTypeUsage(BettingTypeUsage bettingTypeUsage) throws SQLException {
+        String sql = "INSERT INTO BettingTypeUsage (id, bettingTypeId, sportId, isActive) VALUES (?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, bettingTypeUsage.getId());
+            pstmt.setLong(2, bettingTypeUsage.getVersion());
+            pstmt.setLong(3, bettingTypeUsage.getBettingTypeId());
+            pstmt.setLong(4, bettingTypeUsage.getEventTypeId());
+            pstmt.setLong(5, bettingTypeUsage.getSportId());
+            pstmt.setLong(6, bettingTypeUsage.getEventPartId());
+            pstmt.executeUpdate();
+        }
+    }
+
+    //
     public void insertOutcomeTypeUsage(OutcomeTypeUsage outcomeTypeUsage) throws SQLException {
-        // Implementation here
+        String sql = "INSERT INTO OutcomeTypeUsage (outcomeTypeId, eventTypeId, isActive) VALUES (?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, outcomeTypeUsage.getId());
+            pstmt.setInt(2, outcomeTypeUsage.getVersion());
+            pstmt.setLong(3, outcomeTypeUsage.getOutcomeTypeId());
+            pstmt.setLong(4, outcomeTypeUsage.getEventTypeId());
+            pstmt.setLong(5, outcomeTypeUsage.getSportId());
+            pstmt.setLong(6, outcomeTypeUsage.getScoringUnitId());
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertMarket(Market market) throws SQLException {
-        // Implementation here
+        String sql = "INSERT INTO market (id, version, name, eventId, eventPartId, bettingTypeId, scoringUnitId, discriminator, numberOfOutcomes, isComplete, isClosed, paramFloat1, paramFloat2, paramFloat3, paramString1, paramParticipantId1, paramParticipantId2, paramParticipantId3) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, market.getId());
+            pstmt.setInt(2, market.getVersion());
+            pstmt.setString(3, market.getName());
+            pstmt.setLong(4, market.getEventId());
+            pstmt.setLong(5, market.getEventPartId());
+            pstmt.setLong(6, market.getBettingTypeId());
+            pstmt.setObject(7, market.getScoringUnitId(), java.sql.Types.BIGINT);
+            pstmt.setString(8, market.getDiscriminator());
+            pstmt.setObject(9, market.getNumberOfOutcomes(), java.sql.Types.INTEGER);
+            pstmt.setBoolean(10, market.getIsComplete());
+            pstmt.setBoolean(11, market.getIsClosed());
+            pstmt.setObject(12, market.getParamFloat1(), java.sql.Types.DOUBLE);
+            pstmt.setObject(13, market.getParamFloat2(), java.sql.Types.DOUBLE);
+            pstmt.setObject(14, market.getParamFloat3(), java.sql.Types.DOUBLE);
+            pstmt.setString(15, market.getParamString1());
+            pstmt.setObject(16, market.getParamParticipantId1(), java.sql.Types.BIGINT);
+            pstmt.setObject(17, market.getParamParticipantId2(), java.sql.Types.BIGINT);
+            pstmt.setObject(18, market.getParamParticipantId3(), java.sql.Types.BIGINT);
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertMarketOutcomeRelation(MarketOutcomeRelation marketOutcomeRelation) throws SQLException {
-        // Implementation here
+        String sql = "INSERT INTO MarketOutcomeRelation (marketId, outcomeId) VALUES (?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, marketOutcomeRelation.getMarketId());
+            pstmt.setLong(2, marketOutcomeRelation.getOutcomeId());
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertCurrency(Currency currency) throws SQLException {
-        // Implementation here
+        String sql = "INSERT INTO Currency (id, code, name) VALUES (?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, currency.getId());
+            pstmt.setString(2, currency.getCode());
+            pstmt.setString(3, currency.getName());
+            pstmt.executeUpdate();
+        }
     }
 
     public void insertProviderEntityMapping(ProviderEntityMapping providerEntityMapping) throws SQLException {
-        // Implementation here
+        String sql = "INSERT INTO ProviderEntityMapping (providerId, entityId, entityType) VALUES (?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, providerEntityMapping.getId());
+            pstmt.setInt(2, providerEntityMapping.getVersion());
+            pstmt.setLong(3, providerEntityMapping.getProviderId());
+            pstmt.setString(4, providerEntityMapping.getProviderEntityTypeId());
+            pstmt.setString(5, providerEntityMapping.getProviderEntityId());
+            pstmt.setLong(6, providerEntityMapping.getEntityTypeId());
+            pstmt.setLong(7, providerEntityMapping.getEntityId());
+            pstmt.executeUpdate();
+        }
     }
 
 }
