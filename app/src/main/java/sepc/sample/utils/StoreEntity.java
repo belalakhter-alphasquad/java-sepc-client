@@ -1,17 +1,69 @@
 package sepc.sample.utils;
 
+import java.sql.SQLException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+
 import org.agrona.concurrent.ShutdownSignalBarrier;
 
-import com.betbrain.sepc.connector.sportsmodel.*;
-
-import java.sql.SQLException;
+import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
+import com.betbrain.sepc.connector.sportsmodel.BettingOfferStatus;
+import com.betbrain.sepc.connector.sportsmodel.BettingType;
+import com.betbrain.sepc.connector.sportsmodel.BettingTypeUsage;
+import com.betbrain.sepc.connector.sportsmodel.Currency;
+import com.betbrain.sepc.connector.sportsmodel.Entity;
+import com.betbrain.sepc.connector.sportsmodel.Event;
+import com.betbrain.sepc.connector.sportsmodel.EventAction;
+import com.betbrain.sepc.connector.sportsmodel.EventActionDetail;
+import com.betbrain.sepc.connector.sportsmodel.EventActionDetailStatus;
+import com.betbrain.sepc.connector.sportsmodel.EventActionDetailTypeUsage;
+import com.betbrain.sepc.connector.sportsmodel.EventActionStatus;
+import com.betbrain.sepc.connector.sportsmodel.EventActionType;
+import com.betbrain.sepc.connector.sportsmodel.EventActionTypeUsage;
+import com.betbrain.sepc.connector.sportsmodel.EventCategory;
+import com.betbrain.sepc.connector.sportsmodel.EventInfo;
+import com.betbrain.sepc.connector.sportsmodel.EventInfoStatus;
+import com.betbrain.sepc.connector.sportsmodel.EventInfoType;
+import com.betbrain.sepc.connector.sportsmodel.EventInfoTypeUsage;
+import com.betbrain.sepc.connector.sportsmodel.EventPart;
+import com.betbrain.sepc.connector.sportsmodel.EventPartDefaultUsage;
+import com.betbrain.sepc.connector.sportsmodel.EventParticipantInfo;
+import com.betbrain.sepc.connector.sportsmodel.EventParticipantInfoDetail;
+import com.betbrain.sepc.connector.sportsmodel.EventParticipantInfoDetailStatus;
+import com.betbrain.sepc.connector.sportsmodel.EventParticipantInfoDetailTypeUsage;
+import com.betbrain.sepc.connector.sportsmodel.EventParticipantInfoStatus;
+import com.betbrain.sepc.connector.sportsmodel.EventParticipantInfoTypeUsage;
+import com.betbrain.sepc.connector.sportsmodel.EventParticipantRelation;
+import com.betbrain.sepc.connector.sportsmodel.EventParticipantRestriction;
+import com.betbrain.sepc.connector.sportsmodel.EventStatus;
+import com.betbrain.sepc.connector.sportsmodel.EventTemplate;
+import com.betbrain.sepc.connector.sportsmodel.EventType;
+import com.betbrain.sepc.connector.sportsmodel.Market;
+import com.betbrain.sepc.connector.sportsmodel.MarketOutcomeRelation;
+import com.betbrain.sepc.connector.sportsmodel.Outcome;
+import com.betbrain.sepc.connector.sportsmodel.OutcomeStatus;
+import com.betbrain.sepc.connector.sportsmodel.OutcomeType;
+import com.betbrain.sepc.connector.sportsmodel.OutcomeTypeBettingTypeRelation;
+import com.betbrain.sepc.connector.sportsmodel.OutcomeTypeUsage;
+import com.betbrain.sepc.connector.sportsmodel.Participant;
+import com.betbrain.sepc.connector.sportsmodel.ParticipantRelation;
+import com.betbrain.sepc.connector.sportsmodel.ParticipantRelationType;
+import com.betbrain.sepc.connector.sportsmodel.ParticipantRole;
+import com.betbrain.sepc.connector.sportsmodel.ParticipantType;
+import com.betbrain.sepc.connector.sportsmodel.ParticipantUsage;
+import com.betbrain.sepc.connector.sportsmodel.Provider;
+import com.betbrain.sepc.connector.sportsmodel.ProviderEntityMapping;
+import com.betbrain.sepc.connector.sportsmodel.ProviderEventRelation;
+import com.betbrain.sepc.connector.sportsmodel.Source;
+import com.betbrain.sepc.connector.sportsmodel.Sport;
+import com.betbrain.sepc.connector.sportsmodel.StreamingProvider;
+import com.betbrain.sepc.connector.sportsmodel.StreamingProviderEventRelation;
 
 import sepc.sample.DB.DbClient;
 
 public class StoreEntity {
+
     ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();
     static DbClient dbClient = DbClient.getInstance();
     private final ExecutorService executor;
@@ -44,8 +96,11 @@ public class StoreEntity {
     }
 
     private void processEntity(Entity entity) {
+        int count = 0;
 
         if (entity instanceof Sport) {
+            count++;
+
             Sport sport = (Sport) entity;
             try {
                 dbClient.insertSport(sport);
@@ -53,6 +108,7 @@ public class StoreEntity {
                 System.err.println("Error inserting sport into the database: " + e.getMessage());
             }
         } else if (entity instanceof BettingOffer) {
+            count++;
             BettingOffer bettingoffer = (BettingOffer) entity;
             try {
                 dbClient.insertBettingOffer(bettingoffer);
@@ -60,6 +116,7 @@ public class StoreEntity {
                 System.err.println("Error inserting BettingOffer into the database: " + e.getMessage());
             }
         } else if (entity instanceof Event) {
+            count++;
             Event event = (Event) entity;
             try {
                 dbClient.insertEvent(event);
@@ -67,6 +124,7 @@ public class StoreEntity {
                 System.err.println("Error inserting Event into the database: " + e.getMessage());
             }
         } else if (entity instanceof EventType) {
+            count++;
             EventType eventType = (EventType) entity;
             try {
                 dbClient.insertEventType(eventType);
@@ -74,6 +132,7 @@ public class StoreEntity {
                 System.err.println("Error inserting EventType into the database: " + e.getMessage());
             }
         } else if (entity instanceof EventStatus) {
+            count++;
             EventStatus eventStatus = (EventStatus) entity;
             try {
                 dbClient.insertEventStatus(eventStatus);
@@ -81,6 +140,7 @@ public class StoreEntity {
                 System.err.println("Error inserting EventStatus into the database: " + e.getMessage());
             }
         } else if (entity instanceof EventParticipantRelation) {
+            count++;
             EventParticipantRelation eventParticipantRelation = (EventParticipantRelation) entity;
             try {
                 dbClient.insertEventParticipantRelation(eventParticipantRelation);
@@ -88,6 +148,7 @@ public class StoreEntity {
                 System.err.println("Error inserting Event into the database: " + e.getMessage());
             }
         } else if (entity instanceof Participant) {
+            count++;
             Participant participant = (Participant) entity;
             try {
                 dbClient.insertParticipant(participant);
@@ -95,6 +156,7 @@ public class StoreEntity {
                 System.err.println("Error inserting Event into the database: " + e.getMessage());
             }
         } else if (entity instanceof EventCategory) {
+            count++;
             EventCategory eventCategory = (EventCategory) entity;
             try {
                 dbClient.insertEventCategory(eventCategory);
@@ -102,6 +164,7 @@ public class StoreEntity {
                 System.err.println("Error inserting Event into the database: " + e.getMessage());
             }
         } else if (entity instanceof EventTemplate) {
+            count++;
             EventTemplate eventTemplate = (EventTemplate) entity;
             try {
                 dbClient.insertEventTemplate(eventTemplate);
@@ -109,6 +172,7 @@ public class StoreEntity {
                 System.err.println("Error inserting Event into the database: " + e.getMessage());
             }
         } else if (entity instanceof EventPart) {
+            count++;
             EventPart eventPart = (EventPart) entity;
             try {
                 dbClient.insertEventPart(eventPart);
@@ -116,6 +180,7 @@ public class StoreEntity {
                 System.err.println("Error inserting EventPart into the database: " + e.getMessage());
             }
         } else if (entity instanceof EventPartDefaultUsage) {
+            count++;
             EventPartDefaultUsage eventPartDefaultUsage = (EventPartDefaultUsage) entity;
             try {
                 dbClient.insertEventPartDefaultUsage(eventPartDefaultUsage);
@@ -123,6 +188,7 @@ public class StoreEntity {
                 System.err.println("Error inserting Event into the database: " + e.getMessage());
             }
         } else if (entity instanceof StreamingProviderEventRelation) {
+            count++;
             StreamingProviderEventRelation streamingProviderEventRelation = (StreamingProviderEventRelation) entity;
             try {
                 dbClient.insertStreamingProviderEventRelation(streamingProviderEventRelation);
@@ -131,6 +197,7 @@ public class StoreEntity {
                         .println("Error inserting StreamingProviderEventRelation into the database: " + e.getMessage());
             }
         } else if (entity instanceof StreamingProvider) {
+            count++;
             StreamingProvider streamingProvider = (StreamingProvider) entity;
             try {
                 dbClient.insertStreamingProvider(streamingProvider);
@@ -138,6 +205,7 @@ public class StoreEntity {
                 System.err.println("Error inserting StreamingProvider into the database: " + e.getMessage());
             }
         } else if (entity instanceof ProviderEventRelation) {
+            count++;
             ProviderEventRelation providerEventRelation = (ProviderEventRelation) entity;
             try {
                 dbClient.insertProviderEventRelation(providerEventRelation);
@@ -145,6 +213,7 @@ public class StoreEntity {
                 System.err.println("Error inserting ProviderEventRelation into the database: " + e.getMessage());
             }
         } else if (entity instanceof EventParticipantRestriction) {
+            count++;
             EventParticipantRestriction eventParticipantRestriction = (EventParticipantRestriction) entity;
             try {
                 dbClient.insertEventParticipantRestriction(eventParticipantRestriction);
@@ -152,6 +221,7 @@ public class StoreEntity {
                 System.err.println("Error inserting EventParticipantRestriction into the database: " + e.getMessage());
             }
         } else if (entity instanceof ParticipantRole) {
+            count++;
             ParticipantRole participantRole = (ParticipantRole) entity;
             try {
                 dbClient.insertParticipantRole(participantRole);
@@ -159,6 +229,7 @@ public class StoreEntity {
                 System.err.println("Error inserting ParticipantRole into the database: " + e.getMessage());
             }
         } else if (entity instanceof ParticipantUsage) {
+            count++;
             ParticipantUsage participantUsage = (ParticipantUsage) entity;
             try {
                 dbClient.insertParticipantUsage(participantUsage);
@@ -166,6 +237,7 @@ public class StoreEntity {
                 System.err.println("Error inserting ParticipantUsage into the database: " + e.getMessage());
             }
         } else if (entity instanceof ParticipantRelation) {
+            count++;
             ParticipantRelation participantRelation = (ParticipantRelation) entity;
             try {
                 dbClient.insertParticipantRelation(participantRelation);
@@ -173,6 +245,7 @@ public class StoreEntity {
                 System.err.println("Error inserting ParticipantRelation into the database: " + e.getMessage());
             }
         } else if (entity instanceof ParticipantRelationType) {
+            count++;
             ParticipantRelationType participantRelationType = (ParticipantRelationType) entity;
             try {
                 dbClient.insertParticipantRelationType(participantRelationType);
