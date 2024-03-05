@@ -873,13 +873,24 @@ public class DbClient {
     }
 
     public void insertParticipantType(ParticipantType participantType) throws SQLException {
-        String sql = "INSERT INTO participanttype (id, name, description) VALUES (?, ?, ?,?)";
+
+        String sql = "INSERT INTO participanttype (id, version, name, description, isIndividual, hasName, hasFirstName, hasLastName, hasShortName, hasIsMale, hasBirthTime, hasCountryId, hasRetirementTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setLong(1, participantType.getId());
             pstmt.setInt(2, participantType.getVersion());
             pstmt.setString(3, participantType.getName());
             pstmt.setString(4, participantType.getDescription());
+            pstmt.setBoolean(5, participantType.getIsIndividual());
+            pstmt.setObject(6, participantType.getHasName(), java.sql.Types.TINYINT);
+            pstmt.setObject(7, participantType.getHasFirstName(), java.sql.Types.TINYINT);
+            pstmt.setObject(8, participantType.getHasLastName(), java.sql.Types.TINYINT);
+            pstmt.setObject(9, participantType.getHasName(), java.sql.Types.TINYINT);
+            pstmt.setObject(10, participantType.getHasIsMale(), java.sql.Types.TINYINT);
+            pstmt.setObject(11, participantType.getHasBirthTime(), java.sql.Types.TINYINT);
+            pstmt.setObject(12, participantType.getHasCountryId(), java.sql.Types.TINYINT);
+            pstmt.setObject(13, participantType.getHasRetirementTime(), java.sql.Types.TINYINT);
             pstmt.executeUpdate();
         }
     }

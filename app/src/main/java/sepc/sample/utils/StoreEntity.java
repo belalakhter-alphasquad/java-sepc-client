@@ -13,36 +13,29 @@ import sepc.sample.DB.DbClient;
 
 public class StoreEntity {
     private static final Logger logger = LoggerFactory.getLogger(StoreEntity.class);
-    private final ExecutorService executorService;
+    boolean runner = true;
 
     static DbClient dbClient = DbClient.getInstance();
+    ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final LinkedBlockingQueue<Entity> entityQueue = new LinkedBlockingQueue<>();
 
     public StoreEntity(DbClient dbClient) {
         StoreEntity.dbClient = dbClient;
-        this.executorService = Executors.newFixedThreadPool(4);
-        // startProcessing();
 
     }
 
-    private void startProcessing() {
-        for (int i = 0; i < 4; i++) {
-
-            executorService.submit(() -> {
-
-                while (!Thread.currentThread().isInterrupted()) {
-                    try {
-                        Entity entity = entityQueue.take();
-                        processEntity(entity);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    } catch (Exception e) {
-                        System.err.println("Error processing entity: " + e.getMessage());
-                        e.printStackTrace();
-                    }
+    public void startProcessing() {
+        executorService.submit(() -> {
+            logger.info("Processor started on seperate thread");
+            while (runner) {
+                try {
+                    Entity entity = entityQueue.take();
+                    processEntity(entity);
+                } catch (Exception e) {
+                    logger.error("Unable to process Entitiy");
                 }
-            });
-        }
+            }
+        });
 
     }
 
@@ -583,7 +576,7 @@ public class StoreEntity {
     }
 
     public void shutdown() {
-        executorService.shutdownNow();
+        runner = false;
     }
 
 }
