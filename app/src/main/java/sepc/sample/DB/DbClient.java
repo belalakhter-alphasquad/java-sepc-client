@@ -13,7 +13,6 @@ import java.sql.Timestamp;
 import com.betbrain.sepc.connector.sportsmodel.*;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-bettingType
 import sepc.sample.utils.EnvLoader;
 
 public class DbClient {
@@ -31,7 +30,7 @@ public class DbClient {
         config.setJdbcUrl(System.getProperty("DB_URL"));
         config.setUsername(USER);
         config.setPassword(PASSWORD);
-        config.setMaximumPoolSize(20);
+        config.setMaximumPoolSize(40);
         config.setMinimumIdle(10);
         config.setConnectionTimeout(1000);
         this.dataSource = new HikariDataSource(config);
@@ -874,11 +873,11 @@ public class DbClient {
     }
 
     public void insertParticipantType(ParticipantType participantType) throws SQLException {
-        String sql = "INSERT INTO participanttype (id, name, description) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO participanttype (id, name, description) VALUES (?, ?, ?,?)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setLong(1, participantType.getId());
-            pstmt.setLong(2, participantType.getId());
+            pstmt.setInt(2, participantType.getVersion());
             pstmt.setString(3, participantType.getName());
             pstmt.setString(4, participantType.getDescription());
             pstmt.executeUpdate();
