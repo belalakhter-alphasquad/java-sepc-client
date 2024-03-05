@@ -19,8 +19,9 @@ dependencies {
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.13.0")
     implementation("mysql:mysql-connector-java:8.0.23")
     implementation("com.zaxxer:HikariCP:5.0.0")
-
-
+    implementation("redis.clients:jedis:4.0.1")
+    implementation("org.slf4j:slf4j-api:1.7.32")
+    implementation("ch.qos.logback:logback-classic:1.2.6")
 
 }
 

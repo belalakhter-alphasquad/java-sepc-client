@@ -1,14 +1,17 @@
 package sepc.sample;
 
 import sepc.sample.DB.DbClient;
+
 import sepc.sample.utils.EnvLoader;
 
 import org.agrona.concurrent.ShutdownSignalBarrier;
 
 public class App {
     public static void main(String[] args) {
+
         EnvLoader.load(".env");
         ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();
+
         DbClient dbClient = new DbClient();
         try {
             // make sure to provide sql server credentials
@@ -29,6 +32,7 @@ public class App {
         new PushConnector(hostname, portPush, subscription);
         barrier.await();
         dbClient.close();
+
         // new PullConnector(hostname, port2, subscription, timeout);
 
     }

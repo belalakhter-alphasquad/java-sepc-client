@@ -13,7 +13,7 @@ import java.sql.Timestamp;
 import com.betbrain.sepc.connector.sportsmodel.*;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-
+bettingType
 import sepc.sample.utils.EnvLoader;
 
 public class DbClient {
@@ -31,8 +31,8 @@ public class DbClient {
         config.setJdbcUrl(System.getProperty("DB_URL"));
         config.setUsername(USER);
         config.setPassword(PASSWORD);
-        config.setMaximumPoolSize(100);
-        config.setMinimumIdle(50);
+        config.setMaximumPoolSize(20);
+        config.setMinimumIdle(10);
         config.setConnectionTimeout(1000);
         this.dataSource = new HikariDataSource(config);
     }
@@ -874,12 +874,13 @@ public class DbClient {
     }
 
     public void insertParticipantType(ParticipantType participantType) throws SQLException {
-        String sql = "INSERT INTO ParticipantType (id, name, description) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO participanttype (id, name, description) VALUES (?, ?, ?)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setLong(1, participantType.getId());
-            pstmt.setString(2, participantType.getName());
-            pstmt.setString(3, participantType.getDescription());
+            pstmt.setLong(2, participantType.getId());
+            pstmt.setString(3, participantType.getName());
+            pstmt.setString(4, participantType.getDescription());
             pstmt.executeUpdate();
         }
     }
@@ -949,12 +950,13 @@ public class DbClient {
     }
 
     public void insertBettingType(BettingType bettingType) throws SQLException {
-        String sql = "INSERT INTO bettingtype (id, name, description) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO bettingtype (id,version, name, description) VALUES (?, ?, ?,?)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setLong(1, bettingType.getId());
-            pstmt.setString(2, bettingType.getName());
-            pstmt.setString(3, bettingType.getDescription());
+            pstmt.setInt(2, bettingType.getVersion());
+            pstmt.setString(3, bettingType.getName());
+            pstmt.setString(4, bettingType.getDescription());
             pstmt.executeUpdate();
         }
     }
@@ -994,7 +996,7 @@ public class DbClient {
     }
 
     public void insertOutcomeType(OutcomeType outcomeType) throws SQLException {
-        String sql = "INSERT INTO OutcomeType (id, name, description) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO outcometype (id, name, description) VALUES (?, ?, ?)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setLong(1, outcomeType.getId());
@@ -1005,7 +1007,7 @@ public class DbClient {
     }
 
     public void insertOutcomeTypeBettingTypeRelation(OutcomeTypeBettingTypeRelation relation) throws SQLException {
-        String sql = "INSERT INTO OutcomeTypeBettingTypeRelation (outcomeTypeId, bettingTypeId) VALUES (?, ?)";
+        String sql = "INSERT INTO outcometypebettingtyperelation (outcomeTypeId, bettingTypeId) VALUES (?, ?)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setLong(1, relation.getOutcomeTypeId());
@@ -1015,7 +1017,7 @@ public class DbClient {
     }
 
     public void insertOutcomeStatus(OutcomeStatus outcomeStatus) throws SQLException {
-        String sql = "INSERT INTO OutcomeStatus (id, name, description, isAvailable) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO outcomestatus (id, name, description, isAvailable) VALUES (?, ?, ?, ?)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setLong(1, outcomeStatus.getId());
@@ -1026,7 +1028,7 @@ public class DbClient {
     }
 
     public void insertBettingTypeUsage(BettingTypeUsage bettingTypeUsage) throws SQLException {
-        String sql = "INSERT INTO BettingTypeUsage (id, bettingTypeId, sportId, isActive) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO bettingtypeusage (id, version, bettingTypeId, eventTypeId,sportId, eventPartId) VALUES (?, ?, ?, ?,?,?)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setLong(1, bettingTypeUsage.getId());
@@ -1041,15 +1043,16 @@ public class DbClient {
 
     //
     public void insertOutcomeTypeUsage(OutcomeTypeUsage outcomeTypeUsage) throws SQLException {
-        String sql = "INSERT INTO OutcomeTypeUsage (outcomeTypeId, eventTypeId, isActive) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO outcometypeusage (id,version,outcomeTypeId, eventTypeId,eventPartId,sportId, scoringUnitId) VALUES (?, ?, ?,?,?,?,?)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setLong(1, outcomeTypeUsage.getId());
             pstmt.setInt(2, outcomeTypeUsage.getVersion());
             pstmt.setLong(3, outcomeTypeUsage.getOutcomeTypeId());
             pstmt.setLong(4, outcomeTypeUsage.getEventTypeId());
-            pstmt.setLong(5, outcomeTypeUsage.getSportId());
-            pstmt.setLong(6, outcomeTypeUsage.getScoringUnitId());
+            pstmt.setLong(5, outcomeTypeUsage.getEventPartId());
+            pstmt.setLong(6, outcomeTypeUsage.getSportId());
+            pstmt.setLong(7, outcomeTypeUsage.getScoringUnitId());
             pstmt.executeUpdate();
         }
     }
@@ -1081,28 +1084,32 @@ public class DbClient {
     }
 
     public void insertMarketOutcomeRelation(MarketOutcomeRelation marketOutcomeRelation) throws SQLException {
-        String sql = "INSERT INTO MarketOutcomeRelation (marketId, outcomeId) VALUES (?, ?)";
+        String sql = "INSERT INTO marketoutcomerelation (id,version,marketId, outcomeId) VALUES (?, ?,?,?)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setLong(1, marketOutcomeRelation.getMarketId());
-            pstmt.setLong(2, marketOutcomeRelation.getOutcomeId());
+            pstmt.setLong(1, marketOutcomeRelation.getId());
+            pstmt.setInt(2, marketOutcomeRelation.getVersion());
+            pstmt.setLong(3, marketOutcomeRelation.getMarketId());
+            pstmt.setLong(4, marketOutcomeRelation.getOutcomeId());
             pstmt.executeUpdate();
         }
     }
 
     public void insertCurrency(Currency currency) throws SQLException {
-        String sql = "INSERT INTO Currency (id, code, name) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO currency (id,version, name, code) VALUES (?, ?, ?,?)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setLong(1, currency.getId());
-            pstmt.setString(2, currency.getCode());
+            pstmt.setInt(2, currency.getVersion());
             pstmt.setString(3, currency.getName());
+            pstmt.setString(4, currency.getCode());
+
             pstmt.executeUpdate();
         }
     }
 
     public void insertProviderEntityMapping(ProviderEntityMapping providerEntityMapping) throws SQLException {
-        String sql = "INSERT INTO ProviderEntityMapping (providerId, entityId, entityType) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO providerentitymapping (id,version,providerId, providerEntityTypeId, providerEntityId,entityTypeId,entityId) VALUES (?, ?, ?,?,?,?,?)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setLong(1, providerEntityMapping.getId());
