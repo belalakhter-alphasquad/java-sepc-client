@@ -5,4 +5,4 @@
 !/app/xml/.gitkeep
 .gradle
 .vscode
-/`app/myapp.log
+/app/myapp.log
