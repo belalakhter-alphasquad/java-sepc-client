@@ -9,7 +9,6 @@ public class App {
     public static void main(String[] args) {
         EnvLoader.load(".env");
         ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();
-        // Credentials are hardcoded physically each time env will be added soon
         DbClient dbClient = new DbClient();
         try {
             // make sure to provide sql server credentials
@@ -20,7 +19,6 @@ public class App {
             e.printStackTrace();
         }
 
-        // Hardocded
         String hostname = System.getProperty("HOSTNAME");
         int portPush = Integer.parseInt(System.getProperty("PORT_PUSH"));
         int portPull = Integer.parseInt(System.getProperty("PORT_PULL"));
