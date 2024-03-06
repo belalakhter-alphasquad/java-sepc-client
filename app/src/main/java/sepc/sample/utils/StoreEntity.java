@@ -17,20 +17,26 @@ public class StoreEntity {
     public BlockingQueue<Entity> entityQueue = new LinkedBlockingDeque<>(500000);
     boolean runner = true;
     public static DbClient dbClient = DbClient.getInstance();
-    ExecutorService executorService = Executors.newFixedThreadPool(4);
+    public ExecutorService executorService = Executors.newFixedThreadPool(6);
 
     public StoreEntity() {
-        executorService.submit(() -> startProcessing(entityQueue));
+        RedisClient redisClient = new RedisClient("localhost", 6379);
+        logger.info("Redis Intilialized");
+
+        for (int i = 0; i < 6; i++) {
+            executorService.submit(() -> startProcessing(entityQueue, redisClient));
+
+        }
         logger.info("Queue Consumer Started");
 
     }
 
-    public void startProcessing(BlockingQueue<Entity> entityQueue) {
+    public void startProcessing(BlockingQueue<Entity> entityQueue, RedisClient redisClient) {
         while (runner) {
             try {
 
                 Entity entity = entityQueue.take();
-                processEntity(entity);
+                redisClient.setObject("entity:" + entity.getId(), entity);
 
             } catch (Exception e) {
                 logger.error("Unable to process Entity" + e);
@@ -51,7 +57,6 @@ public class StoreEntity {
     }
 
     public void processEntity(Entity entity) {
-        logger.info("processing eneity");
 
         if (entity instanceof Sport) {
 

@@ -22,6 +22,9 @@ dependencies {
     implementation("redis.clients:jedis:4.0.1")
     implementation("org.slf4j:slf4j-api:1.7.32")
     implementation("ch.qos.logback:logback-classic:1.2.6")
+    implementation("org.apache.kafka:kafka-clients:3.0.0") 
+    implementation("org.apache.commons:commons-pool2:2.11.0")
+    implementation ("redis.clients:jedis:3.7.0") 
 
 }
 
