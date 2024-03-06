@@ -14,7 +14,7 @@ import sepc.sample.DB.DbClient;
 
 public class StoreEntity {
     private static final Logger logger = LoggerFactory.getLogger(StoreEntity.class);
-    public BlockingQueue<Entity> entityQueue = new LinkedBlockingDeque<>();
+    public BlockingQueue<Entity> entityQueue = new LinkedBlockingDeque<>(200000);
     boolean runner = true;
     public ExecutorService executorService = Executors.newFixedThreadPool(6);
 
