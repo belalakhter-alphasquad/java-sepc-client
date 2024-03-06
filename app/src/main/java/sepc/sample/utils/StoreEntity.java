@@ -16,17 +16,21 @@ public class StoreEntity {
     private static final Logger logger = LoggerFactory.getLogger(StoreEntity.class);
     public BlockingQueue<Entity> entityQueue = new LinkedBlockingDeque<>();
     boolean runner = true;
-    public static DbClient dbClient = DbClient.getInstance();
-    public ExecutorService executorService = Executors.newFixedThreadPool(4);
+    public ExecutorService executorService = Executors.newFixedThreadPool(10);
 
     public StoreEntity() {
         RedisClient redisClient = new RedisClient("localhost", 6379);
         logger.info("Redis Intilialized");
+        DbClient dbClient = DbClient.getInstance();
 
         for (int i = 0; i < 6; i++) {
             executorService.submit(() -> startProcessing(entityQueue, redisClient));
 
         }
+        for (int i = 0; i < 3; i++) {
+            executorService.submit(() -> startInsertion(dbClient, redisClient));
+        }
+
         logger.info("Queue Consumer Started");
 
     }
@@ -36,8 +40,26 @@ public class StoreEntity {
             try {
 
                 Entity entity = entityQueue.take();
-                redisClient.setObject("entity:" + entity.getId(), entity);
+                String key = "entity:" + entity.getId();
+                redisClient.setObject(key, entity);
+                redisClient.rpush("entitiesToProcess", key);
 
+            } catch (Exception e) {
+                logger.error("Unable to process Entity" + e);
+            }
+        }
+    }
+
+    public void startInsertion(DbClient dbClient, RedisClient redisClient) {
+        while (runner) {
+            try {
+                String key = redisClient.lpop("entitiesToProcess");
+                if (key != null) {
+                    Entity entity = (Entity) redisClient.getObject(key);
+                    if (entity != null) {
+                        processEntity(entity, dbClient);
+                    }
+                }
             } catch (Exception e) {
                 logger.error("Unable to process Entity" + e);
             }
@@ -56,7 +78,7 @@ public class StoreEntity {
 
     }
 
-    public void processEntity(Entity entity) {
+    public void processEntity(Entity entity, DbClient dbClient) {
 
         if (entity instanceof Sport) {
 

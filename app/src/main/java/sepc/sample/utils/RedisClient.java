@@ -48,6 +48,18 @@ public class RedisClient {
         }
     }
 
+    public void rpush(String listKey, String... values) {
+        try (Jedis jedis = jedisPool.getResource()) {
+            jedis.rpush(listKey, values);
+        }
+    }
+
+    public String lpop(String listKey) {
+        try (Jedis jedis = jedisPool.getResource()) {
+            return jedis.lpop(listKey);
+        }
+    }
+
     public void close() {
         jedisPool.close();
     }
