@@ -64,13 +64,9 @@ public class PushConnector {
         @Override
         public void notifyPartialInitialDumpRetrieved(List<? extends Entity> entities) {
             for (Entity entity : entities) {
-                boolean isAdded = false;
-                while (!isAdded) {
-                    storeEntity.queueEntity(entity);
-                    isAdded = true;
-                }
+                storeEntity.queueEntity(entity);
                 try {
-                    Thread.sleep(5);
+                    Thread.sleep(1);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
