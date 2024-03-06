@@ -14,10 +14,10 @@ import sepc.sample.DB.DbClient;
 
 public class StoreEntity {
     private static final Logger logger = LoggerFactory.getLogger(StoreEntity.class);
-    public BlockingQueue<Entity> entityQueue = new LinkedBlockingDeque<>(500000);
+    public BlockingQueue<Entity> entityQueue = new LinkedBlockingDeque<>();
     boolean runner = true;
     public static DbClient dbClient = DbClient.getInstance();
-    public ExecutorService executorService = Executors.newFixedThreadPool(6);
+    public ExecutorService executorService = Executors.newFixedThreadPool(4);
 
     public StoreEntity() {
         RedisClient redisClient = new RedisClient("localhost", 6379);
