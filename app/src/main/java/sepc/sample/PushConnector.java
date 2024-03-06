@@ -69,6 +69,11 @@ public class PushConnector {
                     storeEntity.queueEntity(entity);
                     isAdded = true;
                 }
+                try {
+                    Thread.sleep(20);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 
             }
             logger.info("Added to queue for batch size" + entities.size());
@@ -97,7 +102,7 @@ public class PushConnector {
                         isAdded = true;
                     }
                     try {
-                        Thread.sleep(10);
+                        Thread.sleep(50);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
