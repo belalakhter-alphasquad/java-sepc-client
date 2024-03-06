@@ -3,7 +3,6 @@ package sepc.sample;
 import sepc.sample.DB.DbClient;
 
 import sepc.sample.utils.EnvLoader;
-import sepc.sample.utils.StoreEntity;
 
 import org.agrona.concurrent.ShutdownSignalBarrier;
 import org.slf4j.Logger;

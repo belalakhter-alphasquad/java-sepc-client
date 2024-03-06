@@ -14,24 +14,23 @@ import sepc.sample.DB.DbClient;
 
 public class StoreEntity {
     private static final Logger logger = LoggerFactory.getLogger(StoreEntity.class);
+    public BlockingQueue<Entity> entityQueue = new LinkedBlockingDeque<>(500000);
     boolean runner = true;
-    // keeping count for inner satisfication
-    int count = 0;
-    static DbClient dbClient = DbClient.getInstance();
-    // ExecutorService executorService = Executors.newFixedThreadPool(4);
-    private final BlockingQueue<Entity> entityQueue = new LinkedBlockingDeque<>(50000);
+    public static DbClient dbClient = DbClient.getInstance();
+    ExecutorService executorService = Executors.newFixedThreadPool(4);
 
-    public StoreEntity(DbClient dbClient) {
-        StoreEntity.dbClient = dbClient;
+    public StoreEntity() {
+        executorService.submit(() -> startProcessing(entityQueue));
+        logger.info("Queue Consumer Started");
+
     }
 
-    public void startProcessing() {
-        logger.info("Queue Consumer Started");
+    public void startProcessing(BlockingQueue<Entity> entityQueue) {
         while (runner) {
             try {
-                count++;
+
                 Entity entity = entityQueue.take();
-                processEntity(entity, dbClient);
+                processEntity(entity);
 
             } catch (Exception e) {
                 logger.error("Unable to process Entity" + e);
@@ -42,13 +41,17 @@ public class StoreEntity {
     public void queueEntity(Entity entity) {
         try {
             entityQueue.offer(entity);
+            if (entityQueue.size() == 10000) {
+                logger.info("Yes data is recieving in the queuue");
+            }
         } catch (Exception e) {
             logger.info("Unable to add entity to the queue");
         }
 
     }
 
-    public void processEntity(Entity entity, DbClient dbClient) {
+    public void processEntity(Entity entity) {
+        logger.info("processing eneity");
 
         if (entity instanceof Sport) {
 
@@ -575,10 +578,13 @@ public class StoreEntity {
 
     }
 
+    public void changeEntity(EntityChange entityChange) {
+        logger.info(entityChange.toString());
+    }
+
     public void shutdown() {
         runner = false;
-        // executorService.shutdownNow();
-        logger.info("\n count is ==>>" + count + " \n");
+        executorService.shutdownNow();
     }
 
 }

@@ -12,7 +12,6 @@ import com.betbrain.sepc.connector.sdql.SEPCStreamedConnectorListener;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityChange;
 import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
-import sepc.sample.DB.DbClient;
 
 import sepc.sample.utils.StoreEntity;
 
@@ -20,14 +19,13 @@ public class PushConnector {
     private static final Logger logger = LoggerFactory.getLogger(PushConnector.class);
 
     private final SEPCPushConnector connector;
-    static DbClient dbClient = DbClient.getInstance();
     static boolean checkInitialDumpComplete = false;
 
     public PushConnector(String hostname, int portPush, String subscription) {
 
         ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();
         connector = new SEPCPushConnector(hostname, portPush);
-        StoreEntity storeEntity = new StoreEntity(dbClient);
+        StoreEntity storeEntity = new StoreEntity();
         SEPCPUSHConnectorListener listener = new SEPCPUSHConnectorListener(storeEntity);
 
         connector.addStreamedConnectorListener(listener);
@@ -56,8 +54,7 @@ public class PushConnector {
 
         public SEPCPUSHConnectorListener(StoreEntity storeEntity) {
             this.storeEntity = storeEntity;
-            storeEntity.startProcessing();
-            logger.info("Queue processor is running ");
+
         }
 
         public void notifyInitialDumpToBeRetrieved() {
@@ -66,14 +63,16 @@ public class PushConnector {
 
         @Override
         public void notifyPartialInitialDumpRetrieved(List<? extends Entity> entities) {
-            boolean isAdded = false;
             for (Entity entity : entities) {
 
-                while (!isAdded) {
-                    storeEntity.queueEntity(entity);
-                    isAdded = true;
+                storeEntity.queueEntity(entity);
+                try {
+                    Thread.sleep(5);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
             }
+            logger.info("Added to queue for batch size" + entities.size());
 
         }
 
@@ -85,30 +84,23 @@ public class PushConnector {
 
         @Override
         public void notifyEntityUpdatesRetrieved(EntityChangeBatch entityChangeBatch) {
-            // boolean isAdded = false;
+
             lastBatchUuid = entityChangeBatch.getUuid();
             SubscriptionId = entityChangeBatch.getSubscriptionId();
             subscriptionChecksum = entityChangeBatch.getSubscriptionCheckSum();
             List<EntityChange> ListChangeEntities = entityChangeBatch.getEntityChanges();
             if (checkInitialDumpComplete) {
+                boolean isAdded = false;
                 for (EntityChange entityChange : ListChangeEntities) {
-                    logger.info(entityChange.getName());
-                    logger.info(entityChange.getDisplayName());
-                    logger.info(entityChange.getEntityClass().toString());
+
+                    while (!isAdded) {
+                        storeEntity.changeEntity(entityChange);
+                        isAdded = true;
+                    }
 
                 }
-                System.exit(0);
-            }
 
-            /*
-             * for (EntityChange entityChange : ListChangeEntities) {
-             * Class<? extends Entity> entityClass = entityChange.getEntityClass();
-             * while (!isAdded) {
-             * storeEntity.queueEntity(entityClass);
-             * isAdded = true;
-             * }
-             * }
-             */
+            }
 
         }
 

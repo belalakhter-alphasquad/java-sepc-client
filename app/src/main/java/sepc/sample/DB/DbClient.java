@@ -3,16 +3,78 @@ package sepc.sample.DB;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Connection;
-
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-
 import java.sql.Timestamp;
 
-import com.betbrain.sepc.connector.sportsmodel.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.betbrain.sepc.connector.sportsmodel.BettingOffer;
+import com.betbrain.sepc.connector.sportsmodel.BettingOfferStatus;
+import com.betbrain.sepc.connector.sportsmodel.BettingType;
+import com.betbrain.sepc.connector.sportsmodel.BettingTypeUsage;
+import com.betbrain.sepc.connector.sportsmodel.Currency;
+import com.betbrain.sepc.connector.sportsmodel.EntityProperty;
+import com.betbrain.sepc.connector.sportsmodel.EntityPropertyType;
+import com.betbrain.sepc.connector.sportsmodel.EntityPropertyValue;
+import com.betbrain.sepc.connector.sportsmodel.EntityType;
+import com.betbrain.sepc.connector.sportsmodel.Event;
+import com.betbrain.sepc.connector.sportsmodel.EventAction;
+import com.betbrain.sepc.connector.sportsmodel.EventActionDetail;
+import com.betbrain.sepc.connector.sportsmodel.EventActionDetailStatus;
+import com.betbrain.sepc.connector.sportsmodel.EventActionDetailTypeUsage;
+import com.betbrain.sepc.connector.sportsmodel.EventActionStatus;
+import com.betbrain.sepc.connector.sportsmodel.EventActionType;
+import com.betbrain.sepc.connector.sportsmodel.EventActionTypeUsage;
+import com.betbrain.sepc.connector.sportsmodel.EventCategory;
+import com.betbrain.sepc.connector.sportsmodel.EventInfo;
+import com.betbrain.sepc.connector.sportsmodel.EventInfoStatus;
+import com.betbrain.sepc.connector.sportsmodel.EventInfoType;
+import com.betbrain.sepc.connector.sportsmodel.EventInfoTypeUsage;
+import com.betbrain.sepc.connector.sportsmodel.EventPart;
+import com.betbrain.sepc.connector.sportsmodel.EventPartDefaultUsage;
+import com.betbrain.sepc.connector.sportsmodel.EventParticipantInfo;
+import com.betbrain.sepc.connector.sportsmodel.EventParticipantInfoDetail;
+import com.betbrain.sepc.connector.sportsmodel.EventParticipantInfoDetailStatus;
+import com.betbrain.sepc.connector.sportsmodel.EventParticipantInfoDetailTypeUsage;
+import com.betbrain.sepc.connector.sportsmodel.EventParticipantInfoStatus;
+import com.betbrain.sepc.connector.sportsmodel.EventParticipantInfoTypeUsage;
+import com.betbrain.sepc.connector.sportsmodel.EventParticipantRelation;
+import com.betbrain.sepc.connector.sportsmodel.EventParticipantRestriction;
+import com.betbrain.sepc.connector.sportsmodel.EventStatus;
+import com.betbrain.sepc.connector.sportsmodel.EventTemplate;
+import com.betbrain.sepc.connector.sportsmodel.EventType;
+import com.betbrain.sepc.connector.sportsmodel.Location;
+import com.betbrain.sepc.connector.sportsmodel.LocationRelation;
+import com.betbrain.sepc.connector.sportsmodel.LocationRelationType;
+import com.betbrain.sepc.connector.sportsmodel.LocationType;
+import com.betbrain.sepc.connector.sportsmodel.Market;
+import com.betbrain.sepc.connector.sportsmodel.MarketOutcomeRelation;
+import com.betbrain.sepc.connector.sportsmodel.Outcome;
+import com.betbrain.sepc.connector.sportsmodel.OutcomeStatus;
+import com.betbrain.sepc.connector.sportsmodel.OutcomeType;
+import com.betbrain.sepc.connector.sportsmodel.OutcomeTypeBettingTypeRelation;
+import com.betbrain.sepc.connector.sportsmodel.OutcomeTypeUsage;
+import com.betbrain.sepc.connector.sportsmodel.Participant;
+import com.betbrain.sepc.connector.sportsmodel.ParticipantRelation;
+import com.betbrain.sepc.connector.sportsmodel.ParticipantRelationType;
+import com.betbrain.sepc.connector.sportsmodel.ParticipantRole;
+import com.betbrain.sepc.connector.sportsmodel.ParticipantType;
+import com.betbrain.sepc.connector.sportsmodel.ParticipantUsage;
+import com.betbrain.sepc.connector.sportsmodel.Provider;
+import com.betbrain.sepc.connector.sportsmodel.ProviderEntityMapping;
+import com.betbrain.sepc.connector.sportsmodel.ProviderEventRelation;
+import com.betbrain.sepc.connector.sportsmodel.ScoringUnit;
+import com.betbrain.sepc.connector.sportsmodel.Source;
+import com.betbrain.sepc.connector.sportsmodel.Sport;
+import com.betbrain.sepc.connector.sportsmodel.StreamingProvider;
+import com.betbrain.sepc.connector.sportsmodel.StreamingProviderEventRelation;
+import com.betbrain.sepc.connector.sportsmodel.Translation;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+
 import sepc.sample.utils.EnvLoader;
 
 public class DbClient {
@@ -22,6 +84,7 @@ public class DbClient {
     private static final String PASSWORD = System.getProperty("DB_PASS");
     private HikariDataSource dataSource;
     private static final String SQL_FILE_PATH = "./src/main/resources/Tables.sql";
+    private static final Logger logger = LoggerFactory.getLogger(DbClient.class);
     private static DbClient instance;
 
     public DbClient() {
@@ -32,7 +95,7 @@ public class DbClient {
         config.setPassword(PASSWORD);
         config.setMaximumPoolSize(40);
         config.setMinimumIdle(10);
-        config.setConnectionTimeout(1000);
+        config.setConnectionTimeout(100000);
         this.dataSource = new HikariDataSource(config);
     }
 
@@ -40,7 +103,7 @@ public class DbClient {
         return this.dataSource;
     }
 
-    public static synchronized DbClient getInstance() {
+    public static DbClient getInstance() {
         if (instance == null) {
             instance = new DbClient();
         }
@@ -91,6 +154,7 @@ public class DbClient {
                 pstmt.setNull(5, java.sql.Types.BIGINT);
             }
             pstmt.executeUpdate();
+
         }
     }
 
@@ -121,6 +185,7 @@ public class DbClient {
             pstmt.setTimestamp(15, new Timestamp(bettingoffer.getLastChangedTime().getTime()));
 
             pstmt.executeUpdate();
+
         }
 
     }
@@ -157,6 +222,7 @@ public class DbClient {
             pstmt.setString(24, event.getNote());
 
             pstmt.executeUpdate();
+
         }
     }
 
@@ -169,6 +235,7 @@ public class DbClient {
             pstmt.setString(3, eventType.getName());
             pstmt.setString(4, eventType.getDescription());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -181,6 +248,7 @@ public class DbClient {
             pstmt.setString(3, eventStatus.getName());
             pstmt.setString(4, eventStatus.getDescription());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -207,6 +275,7 @@ public class DbClient {
                             : null);
             pstmt.setString(15, participant.getNote());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -220,6 +289,7 @@ public class DbClient {
             pstmt.setLong(4, eventCategory.getSportId());
             pstmt.setString(5, eventCategory.getNote());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -242,6 +312,7 @@ public class DbClient {
             pstmt.setObject(13, eventTemplate.getIsCyber());
             pstmt.setString(14, eventTemplate.getNote());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -266,10 +337,12 @@ public class DbClient {
             }
             pstmt.setBoolean(8, eventPart.getIsBreak());
             pstmt.executeUpdate();
+
         }
     }
 
-    public void insertEventPartDefaultUsage(EventPartDefaultUsage eventPartDefaultUsage) throws SQLException {
+    public void insertEventPartDefaultUsage(EventPartDefaultUsage eventPartDefaultUsage)
+            throws SQLException {
         String insertSQL = "INSERT INTO eventpartdefaultusage (id, version, parentEventId, eventTypeId, sportId, rootPartId) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(insertSQL)) {
@@ -280,10 +353,12 @@ public class DbClient {
             pstmt.setLong(5, eventPartDefaultUsage.getSportId());
             pstmt.setLong(6, eventPartDefaultUsage.getRootPartId());
             pstmt.executeUpdate();
+
         }
     }
 
-    public void insertStreamingProviderEventRelation(StreamingProviderEventRelation streamingProviderEventRelation)
+    public void insertStreamingProviderEventRelation(
+            StreamingProviderEventRelation streamingProviderEventRelation)
             throws SQLException {
         String insertSQL = "INSERT INTO streamingprovidereventrelation (id, version, streamingProviderId, eventId, channel, language) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = dataSource.getConnection();
@@ -295,6 +370,7 @@ public class DbClient {
             pstmt.setString(5, streamingProviderEventRelation.getChannel());
             pstmt.setString(6, streamingProviderEventRelation.getLanguage()); // Assuming language can be null
             pstmt.executeUpdate();
+
         }
     }
 
@@ -307,10 +383,12 @@ public class DbClient {
             pstmt.setString(3, streamingProvider.getName());
             pstmt.setString(4, streamingProvider.getUrlTemplate());
             pstmt.executeUpdate();
+
         }
     }
 
-    public void insertProviderEventRelation(ProviderEventRelation providerEventRelation) throws SQLException {
+    public void insertProviderEventRelation(ProviderEventRelation providerEventRelation)
+            throws SQLException {
         String insertSQL = "INSERT INTO providereventrelation (id, version, providerId, eventId, startTime, endTime, timeQualityRank, offersLiveOdds, offersLiveTV) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(insertSQL)) {
@@ -330,6 +408,7 @@ public class DbClient {
             pstmt.setBoolean(8, providerEventRelation.getOffersLiveOdds());
             pstmt.setBoolean(9, providerEventRelation.isOffersLiveTV());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -347,6 +426,7 @@ public class DbClient {
             pstmt.setObject(7, eventParticipantRestriction.getParticipantMaxAge(), java.sql.Types.INTEGER);
             pstmt.setObject(8, eventParticipantRestriction.getParticipantPartOfLocationId(), java.sql.Types.BIGINT);
             pstmt.executeUpdate();
+
         }
     }
 
@@ -360,6 +440,7 @@ public class DbClient {
             pstmt.setString(4, participantRole.getDescription());
             pstmt.setBoolean(5, participantRole.getIsPrimary());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -372,6 +453,7 @@ public class DbClient {
             pstmt.setString(3, scoringUnit.getName());
             pstmt.setString(4, scoringUnit.getDescription());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -384,6 +466,7 @@ public class DbClient {
             pstmt.setLong(3, participantUsage.getParticipantId());
             pstmt.setLong(4, participantUsage.getSportId());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -406,10 +489,12 @@ public class DbClient {
                             : null);
             pstmt.setObject(8, participantRelation.getParamParticipantRoleId(), java.sql.Types.BIGINT);
             pstmt.executeUpdate();
+
         }
     }
 
-    public void insertParticipantRelationType(ParticipantRelationType participantRelationType) throws SQLException {
+    public void insertParticipantRelationType(ParticipantRelationType participantRelationType)
+            throws SQLException {
         String sql = "INSERT INTO participantrelationtype (id, version, name, description, hasParamParticipantRoleId, paramParticipantRoleIdDescription) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -419,11 +504,12 @@ public class DbClient {
             pstmt.setString(4, participantRelationType.getDescription());
             pstmt.setObject(5, participantRelationType.getHasParamParticipantRoleId(), java.sql.Types.TINYINT);
             pstmt.setString(6, participantRelationType.getParamParticipantRoleIdDescription());
-            pstmt.executeUpdate();
+
         }
     }
 
-    public void insertEventParticipantRelation(EventParticipantRelation eventParticipantRelation) throws SQLException {
+    public void insertEventParticipantRelation(EventParticipantRelation eventParticipantRelation)
+            throws SQLException {
         String sql = "INSERT INTO eventparticipantrelation (id, version, eventId, eventPartId, participantId, participantRoleId, parentParticipantId) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -435,6 +521,7 @@ public class DbClient {
             pstmt.setLong(6, eventParticipantRelation.getParticipantRoleId());
             pstmt.setObject(7, eventParticipantRelation.getParentParticipantId(), java.sql.Types.BIGINT); // Nullable
             pstmt.executeUpdate();
+
         }
     }
 
@@ -449,6 +536,7 @@ public class DbClient {
             pstmt.setLong(5, eventActionTypeUsage.getEventPartId());
             pstmt.setLong(6, eventActionTypeUsage.getSportId());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -461,6 +549,7 @@ public class DbClient {
             pstmt.setString(3, locationRelationType.getName());
             pstmt.setString(4, locationRelationType.getDescription());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -474,6 +563,7 @@ public class DbClient {
             pstmt.setLong(4, locationRelation.getFromLocationId());
             pstmt.setLong(5, locationRelation.getToLocationId());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -492,10 +582,12 @@ public class DbClient {
             pstmt.setObject(9, eventActionType.getHasParamParticipantId2(), java.sql.Types.TINYINT);
             pstmt.setString(10, eventActionType.getParamParticipantId2Description());
             pstmt.executeUpdate();
+
         }
     }
 
-    public void insertEventParticipantInfoTypeUsage(EventParticipantInfoTypeUsage eventParticipantInfoTypeUsage)
+    public void insertEventParticipantInfoTypeUsage(
+            EventParticipantInfoTypeUsage eventParticipantInfoTypeUsage)
             throws SQLException {
         String sql = "INSERT INTO eventparticipantinfotypeusage (id, version, eventParticipantInfoTypeId, eventTypeId, eventPartId, sportId) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = dataSource.getConnection();
@@ -507,6 +599,7 @@ public class DbClient {
             pstmt.setLong(5, eventParticipantInfoTypeUsage.getEventPartId());
             pstmt.setLong(6, eventParticipantInfoTypeUsage.getSportId());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -521,6 +614,7 @@ public class DbClient {
             pstmt.setLong(4, eventParticipantInfoDetailTypeUsage.getEventParticipantInfoTypeId());
             pstmt.setLong(5, eventParticipantInfoDetailTypeUsage.getSportId());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -535,6 +629,7 @@ public class DbClient {
             pstmt.setBoolean(5, locationType.getHasCode());
             pstmt.setString(6, locationType.getCodeDescription());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -550,6 +645,7 @@ public class DbClient {
             pstmt.setLong(6, translation.getLanguageId());
             pstmt.setTimestamp(7, new java.sql.Timestamp(translation.getLastChangedDate().getTime()));
             pstmt.executeUpdate();
+
         }
 
     }
@@ -567,10 +663,12 @@ public class DbClient {
             pstmt.setString(7, location.getUrl());
             pstmt.setString(8, location.getNote());
             pstmt.executeUpdate();
+
         }
     }
 
-    public void insertEventActionDetailStatus(EventActionDetailStatus eventActionDetailStatus) throws SQLException {
+    public void insertEventActionDetailStatus(EventActionDetailStatus eventActionDetailStatus)
+            throws SQLException {
         String sql = "INSERT INTO eventactiondetailstatus (id, version, name, isAvailable, description) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -580,6 +678,7 @@ public class DbClient {
             pstmt.setBoolean(4, eventActionDetailStatus.getIsAvailable());
             pstmt.setString(5, eventActionDetailStatus.getDescription());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -592,6 +691,7 @@ public class DbClient {
             pstmt.setString(3, entityPropertyType.getName());
             pstmt.setString(4, entityPropertyType.getDescription());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -606,6 +706,7 @@ public class DbClient {
             pstmt.setString(5, entityProperty.getName());
             pstmt.setString(6, entityProperty.getDescription());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -618,6 +719,7 @@ public class DbClient {
             pstmt.setString(3, entityType.getName());
             pstmt.setString(4, entityType.getDescription());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -631,6 +733,7 @@ public class DbClient {
             pstmt.setLong(4, entityPropertyValue.getEntityId());
             pstmt.setString(5, entityPropertyValue.getValue());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -650,6 +753,7 @@ public class DbClient {
             pstmt.setObject(10, eventActionDetail.getParamBoolean1(), java.sql.Types.TINYINT);
             pstmt.setBoolean(11, eventActionDetail.getIsManuallySet());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -664,6 +768,7 @@ public class DbClient {
             pstmt.setLong(4, eventActionDetailTypeUsage.getEventActionTypeId());
             pstmt.setLong(5, eventActionDetailTypeUsage.getSportId());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -683,6 +788,7 @@ public class DbClient {
             pstmt.setObject(10, eventAction.getParamParticipantId2(), java.sql.Types.BIGINT); // Nullable
             pstmt.setBoolean(11, eventAction.getIsManuallySet());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -696,6 +802,7 @@ public class DbClient {
             pstmt.setBoolean(4, eventActionStatus.getIsAvailable());
             pstmt.setString(5, eventActionStatus.getDescription());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -710,6 +817,7 @@ public class DbClient {
             pstmt.setBoolean(4, eventParticipantInfoStatus.getIsAvailable());
             pstmt.setString(5, eventParticipantInfoStatus.getDescription());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -723,6 +831,7 @@ public class DbClient {
             pstmt.setBoolean(4, eventInfoStatus.getIsAvailable());
             pstmt.setString(5, eventInfoStatus.getDescription());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -737,6 +846,7 @@ public class DbClient {
             pstmt.setLong(5, eventInfoTypeUsage.getEventPartId());
             pstmt.setLong(6, eventInfoTypeUsage.getSportId());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -751,6 +861,7 @@ public class DbClient {
             pstmt.setBoolean(4, eventParticipantInfoDetailStatus.getIsAvailable());
             pstmt.setString(5, eventParticipantInfoDetailStatus.getDescription());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -784,6 +895,7 @@ public class DbClient {
             pstmt.setBoolean(18, eventInfo.getIsManuallySet());
 
             pstmt.executeUpdate();
+
         }
     }
 
@@ -819,6 +931,7 @@ public class DbClient {
             pstmt.setString(26, eventInfoType.getParamScoringUnitId1Description());
 
             pstmt.executeUpdate();
+
         }
     }
 
@@ -837,6 +950,7 @@ public class DbClient {
             pstmt.setBoolean(9, eventParticipantInfo.getIsManuallySet());
 
             pstmt.executeUpdate();
+
         }
     }
 
@@ -869,6 +983,7 @@ public class DbClient {
             pstmt.setBoolean(10, eventParticipantInfoDetail.getIsManuallySet());
 
             pstmt.executeUpdate();
+
         }
     }
 
@@ -892,6 +1007,7 @@ public class DbClient {
             pstmt.setObject(12, participantType.getHasCountryId(), java.sql.Types.TINYINT);
             pstmt.setObject(13, participantType.getHasRetirementTime(), java.sql.Types.TINYINT);
             pstmt.executeUpdate();
+
         }
     }
 
@@ -912,6 +1028,7 @@ public class DbClient {
             pstmt.setBoolean(11, provider.getIsEnabled());
             pstmt.setString(12, provider.getNote());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -940,6 +1057,7 @@ public class DbClient {
             }
 
             pstmt.executeUpdate();
+
         }
     }
 
@@ -956,6 +1074,7 @@ public class DbClient {
             pstmt.setString(5, bettingOfferStatus.getDescription());
 
             pstmt.executeUpdate();
+
         }
     }
 
@@ -968,6 +1087,7 @@ public class DbClient {
             pstmt.setString(3, bettingType.getName());
             pstmt.setString(4, bettingType.getDescription());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -1057,10 +1177,12 @@ public class DbClient {
             pstmt.setString(34, outcomeType.getParamScoringUnitId1Description());
 
             pstmt.executeUpdate();
+
         }
     }
 
-    public void insertOutcomeTypeBettingTypeRelation(OutcomeTypeBettingTypeRelation outcomeTypeBettingTypeRelation)
+    public void insertOutcomeTypeBettingTypeRelation(
+            OutcomeTypeBettingTypeRelation outcomeTypeBettingTypeRelation)
             throws SQLException {
         String sql = "INSERT INTO outcometypebettingtyperelation (id,version,outcomeTypeId, bettingTypeId) VALUES (?, ?,?,?)";
         try (Connection conn = dataSource.getConnection();
@@ -1070,6 +1192,7 @@ public class DbClient {
             pstmt.setLong(3, outcomeTypeBettingTypeRelation.getOutcomeTypeId());
             pstmt.setLong(4, outcomeTypeBettingTypeRelation.getBettingTypeId());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -1082,6 +1205,7 @@ public class DbClient {
             pstmt.setString(3, outcomeStatus.getName());
             pstmt.setString(4, outcomeStatus.getDescription());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -1096,6 +1220,7 @@ public class DbClient {
             pstmt.setLong(5, bettingTypeUsage.getSportId());
             pstmt.setLong(6, bettingTypeUsage.getEventPartId());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -1112,6 +1237,7 @@ public class DbClient {
             pstmt.setLong(6, outcomeTypeUsage.getSportId());
             pstmt.setLong(7, outcomeTypeUsage.getScoringUnitId());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -1138,10 +1264,12 @@ public class DbClient {
             pstmt.setObject(17, market.getParamParticipantId2(), java.sql.Types.BIGINT);
             pstmt.setObject(18, market.getParamParticipantId3(), java.sql.Types.BIGINT);
             pstmt.executeUpdate();
+
         }
     }
 
-    public void insertMarketOutcomeRelation(MarketOutcomeRelation marketOutcomeRelation) throws SQLException {
+    public void insertMarketOutcomeRelation(MarketOutcomeRelation marketOutcomeRelation)
+            throws SQLException {
         String sql = "INSERT INTO marketoutcomerelation (id,version,marketId, outcomeId) VALUES (?, ?,?,?)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -1150,6 +1278,7 @@ public class DbClient {
             pstmt.setLong(3, marketOutcomeRelation.getMarketId());
             pstmt.setLong(4, marketOutcomeRelation.getOutcomeId());
             pstmt.executeUpdate();
+
         }
     }
 
@@ -1163,10 +1292,12 @@ public class DbClient {
             pstmt.setString(4, currency.getCode());
 
             pstmt.executeUpdate();
+
         }
     }
 
-    public void insertProviderEntityMapping(ProviderEntityMapping providerEntityMapping) throws SQLException {
+    public void insertProviderEntityMapping(ProviderEntityMapping providerEntityMapping)
+            throws SQLException {
         String sql = "INSERT INTO providerentitymapping (id,version,providerId, providerEntityTypeId, providerEntityId,entityTypeId,entityId) VALUES (?, ?, ?,?,?,?,?)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -1178,6 +1309,7 @@ public class DbClient {
             pstmt.setLong(6, providerEntityMapping.getEntityTypeId());
             pstmt.setLong(7, providerEntityMapping.getEntityId());
             pstmt.executeUpdate();
+
         }
     }
 
