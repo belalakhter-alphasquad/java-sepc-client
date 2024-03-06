@@ -3,11 +3,15 @@ package sepc.sample;
 import sepc.sample.DB.DbClient;
 
 import sepc.sample.utils.EnvLoader;
+import sepc.sample.utils.StoreEntity;
 
 import org.agrona.concurrent.ShutdownSignalBarrier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class App {
     public static void main(String[] args) {
+        final Logger logger = LoggerFactory.getLogger(App.class);
 
         EnvLoader.load(".env");
         ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();

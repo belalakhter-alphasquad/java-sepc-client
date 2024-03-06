@@ -22,7 +22,7 @@ public class PushConnector {
 
     private final SEPCPushConnector connector;
     static DbClient dbClient = DbClient.getInstance();
-    static boolean check = true;
+    static boolean checkInitialDumpComplete = false;
 
     public PushConnector(String hostname, int portPush, String subscription) {
 
@@ -67,16 +67,19 @@ public class PushConnector {
 
         @Override
         public void notifyPartialInitialDumpRetrieved(List<? extends Entity> entities) {
-
+            boolean isAdded = false;
             for (Entity entity : entities) {
-                storeEntity.queueEntity(entity);
+                while (!isAdded) {
+                    storeEntity.queueEntity(entity);
+                    isAdded = true;
+                }
             }
 
         }
 
         @Override
         public void notifyInitialDumpRetrieved() {
-            check = false;
+            checkInitialDumpComplete = true;
             System.out.println("Initial dump done ");
         }
 
@@ -86,6 +89,7 @@ public class PushConnector {
             SubscriptionId = entityChangeBatch.getSubscriptionId();
             subscriptionChecksum = entityChangeBatch.getSubscriptionCheckSum();
             entityChangeBatch.getClass();
+
             logger.info(entityChangeBatch.getEntityChanges().toString());
         }
 

@@ -972,7 +972,7 @@ public class DbClient {
     }
 
     public void insertOutcome(Outcome outcome) throws SQLException {
-        String sql = "INSERT INTO outcome (id, version, typeId, isNegation, statusId, eventId, eventPartId, paramFloat1, paramFloat2, paramFloat3, paramFloat4, paramFloat5, paramBoolean1, paramString1, paramParticipantId1, paramParticipantId2, paramParticipantId3, paramEventPartId1, paramScoringUnitId1, code, name, shortCode, shortName, settlementRequired, isStatusManuallySet, namespaceId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO outcome (id, version, typeId, isNegation, statusId, eventId, eventPartId, paramFloat1, paramFloat2, paramFloat3, paramBoolean1, paramString1, paramParticipantId1, paramParticipantId2, paramParticipantId3, paramEventPartId1, paramScoringUnitId1, code, name, shortCode, shortName, settlementRequired, isStatusManuallySet, namespaceId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setLong(1, outcome.getId());
@@ -985,15 +985,15 @@ public class DbClient {
             pstmt.setObject(8, outcome.getParamFloat1(), java.sql.Types.DOUBLE);
             pstmt.setObject(9, outcome.getParamFloat2(), java.sql.Types.DOUBLE);
             pstmt.setObject(10, outcome.getParamFloat3(), java.sql.Types.DOUBLE);
-            pstmt.setObject(11, outcome.getParamFloat4(), java.sql.Types.DOUBLE);
-            pstmt.setObject(12, outcome.getParamFloat5(), java.sql.Types.DOUBLE);
-            pstmt.setObject(13, outcome.getParamBoolean1(), java.sql.Types.TINYINT);
-            pstmt.setString(14, outcome.getParamString1());
-            pstmt.setObject(15, outcome.getParamParticipantId1(), java.sql.Types.BIGINT);
-            pstmt.setObject(16, outcome.getParamParticipantId2(), java.sql.Types.BIGINT);
-            pstmt.setObject(17, outcome.getParamParticipantId3(), java.sql.Types.BIGINT);
-            pstmt.setObject(18, outcome.getParamEventPartId1(), java.sql.Types.BIGINT);
-            pstmt.setObject(19, outcome.getParamScoringUnitId1(), java.sql.Types.BIGINT);
+            pstmt.setObject(11, outcome.getParamBoolean1(), java.sql.Types.TINYINT);
+            pstmt.setString(12, outcome.getParamString1());
+            pstmt.setObject(13, outcome.getParamParticipantId1(), java.sql.Types.BIGINT);
+            pstmt.setObject(14, outcome.getParamParticipantId2(), java.sql.Types.BIGINT);
+            pstmt.setObject(15, outcome.getParamParticipantId3(), java.sql.Types.BIGINT);
+            pstmt.setObject(16, outcome.getParamEventPartId1(), java.sql.Types.BIGINT);
+            pstmt.setObject(17, outcome.getParamScoringUnitId1(), java.sql.Types.BIGINT);
+            pstmt.setString(18, outcome.getCode());
+            pstmt.setString(19, outcome.getName());
             pstmt.setString(20, outcome.getCode());
             pstmt.setString(21, outcome.getName());
             pstmt.setObject(22, outcome.getSettlementRequired(), java.sql.Types.TINYINT);
@@ -1006,33 +1006,81 @@ public class DbClient {
     }
 
     public void insertOutcomeType(OutcomeType outcomeType) throws SQLException {
-        String sql = "INSERT INTO outcometype (id, name, description) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO outcometype (id, version, name, description, hasParamFloat1, paramFloat1Description, hasParamFloat2, paramFloat2Description, "
+                +
+                "hasParamFloat3, paramFloat3Description, hasParamBoolean1, paramBoolean1Description, hasParamString1, paramString1Description, paramString1PossibleValues, "
+                +
+                "hasParamParticipantId1, paramParticipantId1Description, paramParticipant1MustBePrimary, paramParticipant1MustBeRoot, paramParticipant1MustHaveRoleId, "
+                +
+                "hasParamParticipantId2, paramParticipantId2Description, paramParticipant2MustBePrimary, paramParticipant2MustBeRoot, paramParticipant2MustHaveRoleId, "
+                +
+                "hasParamParticipantId3, paramParticipantId3Description, paramParticipant3MustBePrimary, paramParticipant3MustBeRoot, paramParticipant3MustHaveRoleId, "
+                +
+                "hasParamEventPartId1, paramEventPartId1Description, hasParamScoringUnitId1, paramScoringUnitId1Description) "
+                +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setLong(1, outcomeType.getId());
-            pstmt.setString(2, outcomeType.getName());
-            pstmt.setString(3, outcomeType.getDescription());
+            pstmt.setInt(2, outcomeType.getVersion());
+            pstmt.setString(3, outcomeType.getName());
+            pstmt.setString(4, outcomeType.getDescription());
+            pstmt.setBoolean(5, outcomeType.getHasParamFloat1());
+            pstmt.setString(6, outcomeType.getParamFloat1Description());
+            pstmt.setBoolean(7, outcomeType.getHasParamFloat2());
+            pstmt.setString(8, outcomeType.getParamFloat2Description());
+            pstmt.setBoolean(9, outcomeType.getHasParamFloat3());
+            pstmt.setString(10, outcomeType.getParamFloat3Description());
+            pstmt.setBoolean(11, outcomeType.getHasParamBoolean1());
+            pstmt.setString(12, outcomeType.getParamBoolean1Description());
+            pstmt.setBoolean(13, outcomeType.getHasParamString1());
+            pstmt.setString(14, outcomeType.getParamString1Description());
+            pstmt.setString(15, outcomeType.getParamString1PossibleValues());
+            pstmt.setBoolean(16, outcomeType.getHasParamParticipantId1());
+            pstmt.setString(17, outcomeType.getParamParticipantId1Description());
+            pstmt.setBoolean(18, outcomeType.getParamParticipant1MustBePrimary());
+            pstmt.setBoolean(19, outcomeType.getParamParticipant1MustBeRoot());
+            pstmt.setLong(20, outcomeType.getParamParticipant1MustHaveRoleId());
+            pstmt.setBoolean(21, outcomeType.getHasParamParticipantId2());
+            pstmt.setString(22, outcomeType.getParamParticipantId2Description());
+            pstmt.setBoolean(23, outcomeType.getParamParticipant2MustBePrimary());
+            pstmt.setBoolean(24, outcomeType.getParamParticipant2MustBeRoot());
+            pstmt.setLong(25, outcomeType.getParamParticipant2MustHaveRoleId());
+            pstmt.setBoolean(26, outcomeType.getHasParamParticipantId3());
+            pstmt.setString(27, outcomeType.getParamParticipantId3Description());
+            pstmt.setBoolean(28, outcomeType.getParamParticipant3MustBePrimary());
+            pstmt.setBoolean(29, outcomeType.getParamParticipant3MustBeRoot());
+            pstmt.setLong(30, outcomeType.getParamParticipant3MustHaveRoleId());
+            pstmt.setBoolean(31, outcomeType.getHasParamEventPartId1());
+            pstmt.setString(32, outcomeType.getParamEventPartId1Description());
+            pstmt.setBoolean(33, outcomeType.getHasParamScoringUnitId1());
+            pstmt.setString(34, outcomeType.getParamScoringUnitId1Description());
+
             pstmt.executeUpdate();
         }
     }
 
-    public void insertOutcomeTypeBettingTypeRelation(OutcomeTypeBettingTypeRelation relation) throws SQLException {
-        String sql = "INSERT INTO outcometypebettingtyperelation (outcomeTypeId, bettingTypeId) VALUES (?, ?)";
+    public void insertOutcomeTypeBettingTypeRelation(OutcomeTypeBettingTypeRelation outcomeTypeBettingTypeRelation)
+            throws SQLException {
+        String sql = "INSERT INTO outcometypebettingtyperelation (id,version,outcomeTypeId, bettingTypeId) VALUES (?, ?,?,?)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setLong(1, relation.getOutcomeTypeId());
-            pstmt.setLong(2, relation.getBettingTypeId());
+            pstmt.setLong(1, outcomeTypeBettingTypeRelation.getId());
+            pstmt.setInt(2, outcomeTypeBettingTypeRelation.getVersion());
+            pstmt.setLong(3, outcomeTypeBettingTypeRelation.getOutcomeTypeId());
+            pstmt.setLong(4, outcomeTypeBettingTypeRelation.getBettingTypeId());
             pstmt.executeUpdate();
         }
     }
 
     public void insertOutcomeStatus(OutcomeStatus outcomeStatus) throws SQLException {
-        String sql = "INSERT INTO outcomestatus (id, name, description, isAvailable) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO outcomestatus (id,version, name, description) VALUES (?, ?, ?, ?)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setLong(1, outcomeStatus.getId());
-            pstmt.setString(2, outcomeStatus.getName());
-            pstmt.setString(3, outcomeStatus.getDescription());
+            pstmt.setInt(2, outcomeStatus.getVersion());
+            pstmt.setString(3, outcomeStatus.getName());
+            pstmt.setString(4, outcomeStatus.getDescription());
             pstmt.executeUpdate();
         }
     }

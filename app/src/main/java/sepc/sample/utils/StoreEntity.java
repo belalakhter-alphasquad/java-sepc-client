@@ -6,6 +6,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import com.betbrain.sepc.connector.sportsmodel.*;
+import com.betbrain.sepc.connector.sportsmodel.;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,25 +15,28 @@ import sepc.sample.DB.DbClient;
 public class StoreEntity {
     private static final Logger logger = LoggerFactory.getLogger(StoreEntity.class);
     boolean runner = true;
-
+    // keeping count for inner satisfication
+    int count = 0;
     static DbClient dbClient = DbClient.getInstance();
     ExecutorService executorService = Executors.newSingleThreadExecutor();
-    private final LinkedBlockingQueue<Entity> entityQueue = new LinkedBlockingQueue<>();
+    private final LinkedBlockingQueue<Entity> entityQueue = new LinkedBlockingQueue<>(20000);
 
     public StoreEntity(DbClient dbClient) {
         StoreEntity.dbClient = dbClient;
-
     }
 
     public void startProcessing() {
+
         executorService.submit(() -> {
-            logger.info("Processor started on seperate thread");
+            logger.info("Processor started on separate thread");
             while (runner) {
                 try {
+                    count++;
                     Entity entity = entityQueue.take();
-                    processEntity(entity);
+                    processEntity(entity, dbClient);
+
                 } catch (Exception e) {
-                    logger.error("Unable to process Entitiy");
+                    logger.error("Unable to process Entity" + e);
                 }
             }
         });
@@ -43,12 +47,12 @@ public class StoreEntity {
         try {
             entityQueue.put(entity);
         } catch (InterruptedException e) {
-            System.out.println("Block this crazy thread");
+            logger.info("Unable to add entity to the queue");
         }
 
     }
 
-    public void processEntity(Entity entity) {
+    public void processEntity(Entity entity, DbClient dbClient) {
 
         if (entity instanceof Sport) {
 
@@ -577,6 +581,8 @@ public class StoreEntity {
 
     public void shutdown() {
         runner = false;
+        executorService.shutdownNow();
+        logger.info("\n count is ==>>" + count + " \n");
     }
 
 }
