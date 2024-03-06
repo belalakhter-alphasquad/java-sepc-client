@@ -12,7 +12,6 @@ import com.betbrain.sepc.connector.sdql.SEPCStreamedConnectorListener;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityChange;
 import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
-
 import sepc.sample.DB.DbClient;
 
 import sepc.sample.utils.StoreEntity;
@@ -69,6 +68,7 @@ public class PushConnector {
         public void notifyPartialInitialDumpRetrieved(List<? extends Entity> entities) {
             boolean isAdded = false;
             for (Entity entity : entities) {
+
                 while (!isAdded) {
                     storeEntity.queueEntity(entity);
                     isAdded = true;
@@ -85,12 +85,31 @@ public class PushConnector {
 
         @Override
         public void notifyEntityUpdatesRetrieved(EntityChangeBatch entityChangeBatch) {
+            // boolean isAdded = false;
             lastBatchUuid = entityChangeBatch.getUuid();
             SubscriptionId = entityChangeBatch.getSubscriptionId();
             subscriptionChecksum = entityChangeBatch.getSubscriptionCheckSum();
-            entityChangeBatch.getClass();
+            List<EntityChange> ListChangeEntities = entityChangeBatch.getEntityChanges();
+            if (checkInitialDumpComplete) {
+                for (EntityChange entityChange : ListChangeEntities) {
+                    logger.info(entityChange.getName());
+                    logger.info(entityChange.getDisplayName());
+                    logger.info(entityChange.getEntityClass().toString());
 
-            logger.info(entityChangeBatch.getEntityChanges().toString());
+                }
+                System.exit(0);
+            }
+
+            /*
+             * for (EntityChange entityChange : ListChangeEntities) {
+             * Class<? extends Entity> entityClass = entityChange.getEntityClass();
+             * while (!isAdded) {
+             * storeEntity.queueEntity(entityClass);
+             * isAdded = true;
+             * }
+             * }
+             */
+
         }
 
         public String getLastBatchUuid() {

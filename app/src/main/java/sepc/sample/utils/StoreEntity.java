@@ -1,12 +1,12 @@
 package sepc.sample.utils;
 
 import java.sql.SQLException;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 
 import com.betbrain.sepc.connector.sportsmodel.*;
-import com.betbrain.sepc.connector.sportsmodel.;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,35 +18,31 @@ public class StoreEntity {
     // keeping count for inner satisfication
     int count = 0;
     static DbClient dbClient = DbClient.getInstance();
-    ExecutorService executorService = Executors.newSingleThreadExecutor();
-    private final LinkedBlockingQueue<Entity> entityQueue = new LinkedBlockingQueue<>(20000);
+    // ExecutorService executorService = Executors.newFixedThreadPool(4);
+    private final BlockingQueue<Entity> entityQueue = new LinkedBlockingDeque<>(50000);
 
     public StoreEntity(DbClient dbClient) {
         StoreEntity.dbClient = dbClient;
     }
 
     public void startProcessing() {
+        logger.info("Queue Consumer Started");
+        while (runner) {
+            try {
+                count++;
+                Entity entity = entityQueue.take();
+                processEntity(entity, dbClient);
 
-        executorService.submit(() -> {
-            logger.info("Processor started on separate thread");
-            while (runner) {
-                try {
-                    count++;
-                    Entity entity = entityQueue.take();
-                    processEntity(entity, dbClient);
-
-                } catch (Exception e) {
-                    logger.error("Unable to process Entity" + e);
-                }
+            } catch (Exception e) {
+                logger.error("Unable to process Entity" + e);
             }
-        });
-
+        }
     }
 
     public void queueEntity(Entity entity) {
         try {
-            entityQueue.put(entity);
-        } catch (InterruptedException e) {
+            entityQueue.offer(entity);
+        } catch (Exception e) {
             logger.info("Unable to add entity to the queue");
         }
 
@@ -581,7 +577,7 @@ public class StoreEntity {
 
     public void shutdown() {
         runner = false;
-        executorService.shutdownNow();
+        // executorService.shutdownNow();
         logger.info("\n count is ==>>" + count + " \n");
     }
 
