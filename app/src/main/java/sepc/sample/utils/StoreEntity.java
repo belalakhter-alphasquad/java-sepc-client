@@ -16,20 +16,19 @@ public class StoreEntity {
     private static final Logger logger = LoggerFactory.getLogger(StoreEntity.class);
     public BlockingQueue<Entity> entityQueue = new LinkedBlockingDeque<>();
     boolean runner = true;
-    public ExecutorService executorService = Executors.newFixedThreadPool(10);
+    public ExecutorService executorService = Executors.newFixedThreadPool(6);
 
     public StoreEntity() {
         RedisClient redisClient = new RedisClient("localhost", 6379);
         logger.info("Redis Intilialized");
         DbClient dbClient = DbClient.getInstance();
 
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < 5; i++) {
             executorService.submit(() -> startProcessing(entityQueue, redisClient));
 
         }
-        for (int i = 0; i < 3; i++) {
-            executorService.submit(() -> startInsertion(dbClient, redisClient));
-        }
+
+        executorService.submit(() -> startInsertion(dbClient, redisClient));
 
         logger.info("Queue Consumer Started");
 

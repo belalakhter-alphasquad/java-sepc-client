@@ -95,6 +95,11 @@ public class PushConnector {
                     while (!isAdded) {
                         storeEntity.changeEntity(entityChange);
                         isAdded = true;
+                        try {
+                            Thread.sleep(10);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     }
 
                 }
