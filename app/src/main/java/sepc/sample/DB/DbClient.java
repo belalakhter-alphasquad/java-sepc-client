@@ -93,8 +93,8 @@ public class DbClient {
         config.setJdbcUrl(System.getProperty("DB_URL"));
         config.setUsername(USER);
         config.setPassword(PASSWORD);
-        config.setMaximumPoolSize(40);
-        config.setMinimumIdle(10);
+        config.setMaximumPoolSize(100);
+        config.setMinimumIdle(5);
         config.setConnectionTimeout(100000);
         this.dataSource = new HikariDataSource(config);
     }

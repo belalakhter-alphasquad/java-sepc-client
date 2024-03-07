@@ -14,11 +14,11 @@ public class RedisClient {
 
         JedisPoolConfig poolConfig = new JedisPoolConfig();
 
-        poolConfig.setMaxTotal(50);
+        poolConfig.setMaxTotal(500);
 
-        poolConfig.setMaxIdle(10);
+        poolConfig.setMaxIdle(100);
 
-        poolConfig.setMinIdle(5);
+        poolConfig.setMinIdle(50);
 
         this.jedisPool = new JedisPool(poolConfig, host, port);
     }

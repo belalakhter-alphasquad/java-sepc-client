@@ -63,16 +63,15 @@ public class PushConnector {
 
         @Override
         public void notifyPartialInitialDumpRetrieved(List<? extends Entity> entities) {
+
             for (Entity entity : entities) {
                 storeEntity.queueEntity(entity);
-                try {
-                    Thread.sleep(1);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
             }
-            logger.info("Added to queue for batch size" + entities.size());
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
         }
 
@@ -90,18 +89,10 @@ public class PushConnector {
             subscriptionChecksum = entityChangeBatch.getSubscriptionCheckSum();
             List<EntityChange> ListChangeEntities = entityChangeBatch.getEntityChanges();
             if (checkInitialDumpComplete) {
-                boolean isAdded = false;
-                logger.info(entityChangeBatch.toString());
                 for (EntityChange entityChange : ListChangeEntities) {
-                    while (!isAdded) {
-                        storeEntity.changeEntity(entityChange);
-                        isAdded = true;
-                    }
-                    try {
-                        Thread.sleep(50);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+
+                    storeEntity.changeEntity(entityChange);
+
                 }
 
             }

@@ -31,6 +31,7 @@ public class App {
         Long timeout = 3000000L;
         String subscription = System.getProperty("SUBSCRIPTION");
         System.out.println("Openening new connection");
+
         // Uncomment which connector type you want to use
         new PushConnector(hostname, portPush, subscription);
         barrier.await();
