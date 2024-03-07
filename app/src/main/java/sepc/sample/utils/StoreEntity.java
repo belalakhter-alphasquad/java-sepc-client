@@ -10,6 +10,9 @@ import org.slf4j.LoggerFactory;
 
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityChange;
+import com.betbrain.sepc.connector.sportsmodel.EntityCreate;
+import com.betbrain.sepc.connector.sportsmodel.EntityDelete;
+import com.betbrain.sepc.connector.sportsmodel.EntityUpdate;
 
 import sepc.sample.DB.DbClient;
 
@@ -17,6 +20,7 @@ public class StoreEntity {
     int count = 0;
     private static final Logger logger = LoggerFactory.getLogger(StoreEntity.class);
     public BlockingQueue<Entity> entityQueue = new LinkedBlockingDeque<>();
+    public BlockingQueue<EntityChange> updateentityQueue = new LinkedBlockingDeque<>();
     boolean runner = true;
     public ExecutorService executorService = Executors.newFixedThreadPool(9);
 
@@ -31,6 +35,7 @@ public class StoreEntity {
         }
 
         executorService.submit(() -> startInsertion(dbClient, redisClient));
+        executorService.submit(() -> startUpdate(dbClient, redisClient));
 
         logger.info("Queue Consumer Started");
 
@@ -68,6 +73,27 @@ public class StoreEntity {
         }
     }
 
+    public void startUpdate(DbClient dbClient, RedisClient redisClient) {
+        while (runner) {
+            try {
+                EntityChange entityChange = updateentityQueue.take();
+                if (entityChange instanceof EntityCreate) {
+                    EntityCreate newCreate = (EntityCreate) entityChange;
+                    Entity entity = newCreate.getEntity();
+                    createEntity.processEntity(entity, dbClient);
+                } else if (entityChange instanceof EntityDelete) {
+
+                } else if (entityChange instanceof EntityUpdate) {
+
+                }
+
+            } catch (Exception e) {
+                logger.error("Unable to process Entity change" + e);
+            }
+
+        }
+    }
+
     public void queueEntity(Entity entity) {
         try {
             entityQueue.offer(entity);
@@ -77,9 +103,13 @@ public class StoreEntity {
 
     }
 
-    public void changeEntity(EntityChange entityChange) {
+    public void updatequeueEntity(EntityChange entityChange) {
+        try {
+            updateentityQueue.offer(entityChange);
+        } catch (Exception e) {
+            logger.info("Unable to add entity to the queue");
+        }
 
-        logger.info(entityChange.toString());
     }
 
     public void shutdown() {
@@ -87,47 +117,4 @@ public class StoreEntity {
         executorService.shutdownNow();
     }
 
-}
-
-
-
-
-// Source code is decompiled from a .class file using FernFlower decompiler.
-package com.betbrain.sepc.connector.sportsmodel;
-
-public class Sport extends Entity {
-   private static final long serialVersionUID = 1L;
-   public static final String PROPERTY_NAME_name = "name";
-   public static final String PROPERTY_NAME_description = "description";
-   public static final String PROPERTY_NAME_parentId = "parentId";
-   private String _name;
-   private String _description;
-   private Long _parentId;
-
-   public Sport() {
-   }
-
-   public String getName() {
-      return this._name;
-   }
-
-   public void setName(String name) {
-      this._name = name;
-   }
-
-   public String getDescription() {
-      return this._description;
-   }
-
-   public void setDescription(String description) {
-      this._description = description;
-   }
-
-   public Long getParentId() {
-      return this._parentId;
-   }
-
-   public void setParentId(Long parentId) {
-      this._parentId = parentId;
-   }
 }

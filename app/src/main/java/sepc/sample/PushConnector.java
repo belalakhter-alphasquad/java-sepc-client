@@ -68,11 +68,10 @@ public class PushConnector {
                 storeEntity.queueEntity(entity);
             }
             try {
-                Thread.sleep(3000);
+                Thread.sleep(2000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-
         }
 
         @Override
@@ -90,9 +89,7 @@ public class PushConnector {
             List<EntityChange> ListChangeEntities = entityChangeBatch.getEntityChanges();
             if (checkInitialDumpComplete) {
                 for (EntityChange entityChange : ListChangeEntities) {
-
-                    storeEntity.changeEntity(entityChange);
-
+                    storeEntity.updatequeueEntity(entityChange);
                 }
 
             }
