@@ -7,6 +7,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1313,8 +1314,63 @@ public class DbClient {
         }
     }
 
-    public void deleteEntity(Long Id, String table) throws SQLException {
+    public void deleteEntity(Long id, String table) throws SQLException {
+        String sql = "DELETE FROM " + table + " WHERE id = ?";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, id);
 
+        }
+    }
+
+    public void updateEntity(Long id, String table, List<String> fields, List<Object> fieldvalues) throws SQLException {
+        if (fields.isEmpty() || fieldvalues.isEmpty()) {
+            throw new IllegalArgumentException("Fields and values cannot be empty.");
+        }
+
+        StringBuilder sql = new StringBuilder("UPDATE ");
+        sql.append(table).append(" SET ");
+
+        for (int i = 0; i < fields.size(); i++) {
+            sql.append(fields.get(i)).append(" = ?");
+            if (i < fields.size() - 1) {
+                sql.append(", ");
+            }
+        }
+
+        sql.append(" WHERE id = ?");
+
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
+
+            for (int i = 0; i < fieldvalues.size(); i++) {
+                Object value = fieldvalues.get(i);
+                if (value instanceof Integer) {
+                    pstmt.setInt(i + 1, (Integer) value);
+                } else if (value instanceof String) {
+                    pstmt.setString(i + 1, (String) value);
+                } else if (value instanceof Double) {
+                    pstmt.setDouble(i + 1, (Double) value);
+                } else if (value instanceof Long) {
+                    pstmt.setLong(i + 1, (Long) value);
+                } else if (value instanceof Float) {
+                    pstmt.setFloat(i + 1, (Float) value);
+                } else if (value instanceof Boolean) {
+                    pstmt.setBoolean(i + 1, (Boolean) value);
+                } else if (value instanceof Timestamp) {
+                    pstmt.setDate(i + 1, new java.sql.Date(((Timestamp) value).getTime()));
+                } else if (value instanceof Timestamp) {
+                    pstmt.setTimestamp(i + 1, (Timestamp) value);
+                } else {
+                    pstmt.setObject(i + 1, value);
+                }
+            }
+
+            pstmt.setObject(fields.size() + 1, id);
+
+            int affectedRows = pstmt.executeUpdate();
+            System.out.println("Affected rows: " + affectedRows);
+        }
     }
 
 }

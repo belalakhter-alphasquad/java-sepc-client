@@ -1,5 +1,6 @@
 package sepc.sample.utils;
 
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -84,11 +85,16 @@ public class StoreEntity {
                 } else if (entityChange instanceof EntityDelete) {
                     EntityDelete deletechange = (EntityDelete) entityChange;
                     Long Id = deletechange.getEntityId();
-                    String table = deletechange.getEntityClass().toString().toLowerCase();
+                    String table = deletechange.getEntityClass().getSimpleName().toLowerCase();
                     dbClient.deleteEntity(Id, table);
 
                 } else if (entityChange instanceof EntityUpdate) {
                     EntityUpdate updatechange = (EntityUpdate) entityChange;
+                    String table = updatechange.getEntityClass().getSimpleName().toLowerCase();
+                    Long Id = updatechange.getEntityId();
+                    List<Object> fieldvalues = updatechange.getPropertyValues();
+                    List<String> fields = updatechange.getPropertyNames();
+                    dbClient.updateEntity(Id, table, fields, fieldvalues);
 
                 }
 

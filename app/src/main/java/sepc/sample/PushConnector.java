@@ -91,6 +91,11 @@ public class PushConnector {
                 for (EntityChange entityChange : ListChangeEntities) {
                     storeEntity.updatequeueEntity(entityChange);
                 }
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 
             }
 
