@@ -82,8 +82,13 @@ public class StoreEntity {
                     Entity entity = newCreate.getEntity();
                     createEntity.processEntity(entity, dbClient);
                 } else if (entityChange instanceof EntityDelete) {
+                    EntityDelete deletechange = (EntityDelete) entityChange;
+                    Long Id = deletechange.getEntityId();
+                    String table = deletechange.getEntityClass().toString().toLowerCase();
+                    dbClient.deleteEntity(Id, table);
 
                 } else if (entityChange instanceof EntityUpdate) {
+                    EntityUpdate updatechange = (EntityUpdate) entityChange;
 
                 }
 

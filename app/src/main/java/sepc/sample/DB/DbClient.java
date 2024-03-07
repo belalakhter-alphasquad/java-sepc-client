@@ -1313,4 +1313,8 @@ public class DbClient {
         }
     }
 
+    public void deleteEntity(Long Id, String table) throws SQLException {
+
+    }
+
 }
