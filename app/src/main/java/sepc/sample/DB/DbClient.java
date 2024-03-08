@@ -1320,6 +1320,8 @@ public class DbClient {
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setLong(1, id);
 
+        } catch (SQLException e) {
+            logger.info("Entry not present in the database");
         }
     }
 
@@ -1368,8 +1370,7 @@ public class DbClient {
 
             pstmt.setObject(fields.size() + 1, id);
 
-            int affectedRows = pstmt.executeUpdate();
-            System.out.println("Affected rows: " + affectedRows);
+            int affectedRows = pstmt.executeUpdate()
         }
     }
 
