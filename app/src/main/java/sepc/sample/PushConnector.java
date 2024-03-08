@@ -68,7 +68,7 @@ public class PushConnector {
                 storeEntity.queueEntity(entity);
             }
             try {
-                Thread.sleep(2000);
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

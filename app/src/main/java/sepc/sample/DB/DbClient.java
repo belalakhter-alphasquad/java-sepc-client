@@ -146,7 +146,7 @@ public class DbClient {
             }
 
             pstmt.executeUpdate();
-            logger.info("Entity creation successful");
+
         }
     }
 
@@ -197,7 +197,6 @@ public class DbClient {
             }
 
             pstmt.setObject(fields.size() + 1, id);
-            logger.info("Success");
 
         }
     }

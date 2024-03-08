@@ -11,7 +11,7 @@ public class createEntity {
     private static final Logger logger = LoggerFactory.getLogger(createEntity.class);
 
     public static void processEntity(Entity entity, DbClient dbClient) {
-        String table = entity.getDisplayName();
+        String table = entity.getDisplayName().toLowerCase();
         List<String> fields = entity.getPropertyNames();
         List<Object> values = entity.getPropertyValues(fields);
         try {
