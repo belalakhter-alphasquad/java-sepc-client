@@ -1369,8 +1369,8 @@ public class DbClient {
             }
 
             pstmt.setObject(fields.size() + 1, id);
+            logger.info("Success");
 
-            int affectedRows = pstmt.executeUpdate()
         }
     }
 

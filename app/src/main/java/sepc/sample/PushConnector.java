@@ -63,16 +63,16 @@ public class PushConnector {
 
         @Override
         public void notifyPartialInitialDumpRetrieved(List<? extends Entity> entities) {
-            /*
-             * for (Entity entity : entities) {
-             * storeEntity.queueEntity(entity);
-             * }
-             * try {
-             * Thread.sleep(2000);
-             * } catch (InterruptedException e) {
-             * e.printStackTrace();
-             * }
-             */
+
+            for (Entity entity : entities) {
+                storeEntity.queueEntity(entity);
+            }
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
         }
 
         @Override

@@ -14,13 +14,13 @@ public class RedisClient {
 
         JedisPoolConfig poolConfig = new JedisPoolConfig();
 
-        poolConfig.setMaxTotal(500);
+        poolConfig.setMaxTotal(2000);
 
-        poolConfig.setMaxIdle(100);
+        poolConfig.setMaxIdle(500);
 
-        poolConfig.setMinIdle(50);
+        poolConfig.setMinIdle(200);
 
-        this.jedisPool = new JedisPool(poolConfig, host, port);
+        this.jedisPool = new JedisPool(poolConfig, host, port, 3000);
     }
 
     public void setObject(String key, Object obj) throws Exception {

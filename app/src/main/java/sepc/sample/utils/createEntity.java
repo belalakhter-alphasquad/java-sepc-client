@@ -67,6 +67,7 @@ import com.betbrain.sepc.connector.sportsmodel.StreamingProviderEventRelation;
 import com.betbrain.sepc.connector.sportsmodel.Translation;
 import java.sql.SQLException;
 import sepc.sample.DB.DbClient;
+import java.util.List;
 
 public class createEntity {
     private static final Logger logger = LoggerFactory.getLogger(createEntity.class);
@@ -74,8 +75,15 @@ public class createEntity {
     public static void processEntity(Entity entity, DbClient dbClient) {
 
         if (entity instanceof Sport) {
+            entity.getDisplayName();
+            entity.getId();
+            entity.getVersion();
+            List<String> fields = entity.getPropertyNames();
+            entity.getPropertyValues(null);
 
             Sport sport = (Sport) entity;
+            logger.info(sport.getDisplayName());
+
             try {
                 dbClient.insertSport(sport);
                 logger.info("Entries saved to db");
