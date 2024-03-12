@@ -19,7 +19,7 @@ public class EnvLoader {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+
         }
     }
 }

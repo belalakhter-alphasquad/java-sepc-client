@@ -18,7 +18,6 @@ public class createEntity {
             dbClient.createEntity(table, fields, values);
         } catch (SQLException e) {
 
-            e.printStackTrace();
         }
     }
 

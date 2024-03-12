@@ -20,7 +20,7 @@ import sepc.sample.utils.EnvLoader;
 public class DbClient {
 
     private static final String DATABASE_NAME = System.getProperty("DB_NAME");
-    
+
     private static final String USER = System.getProperty("DB_USER");
     private static final String PASSWORD = System.getProperty("DB_PASS");
     private HikariDataSource dataSource;
@@ -87,7 +87,7 @@ public class DbClient {
             pstmt.setLong(1, id);
 
         } catch (SQLException e) {
-            logger.info("Entry not present in the database");
+
         }
     }
 

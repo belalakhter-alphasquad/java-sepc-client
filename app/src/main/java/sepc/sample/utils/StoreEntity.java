@@ -109,7 +109,7 @@ public class StoreEntity {
         try {
             entityQueue.offer(entity);
         } catch (Exception e) {
-            logger.info("Unable to add entity to the queue");
+
         }
 
     }
@@ -118,7 +118,7 @@ public class StoreEntity {
         try {
             updateentityQueue.offer(entityChange);
         } catch (Exception e) {
-            logger.info("Unable to add entity to the queue");
+
         }
 
     }
