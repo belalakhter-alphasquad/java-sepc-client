@@ -1,6 +1,7 @@
 package sepc.sample.utils;
 
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -66,13 +67,16 @@ public class StoreEntity {
                     Entity entity = (Entity) redisClient.getObject(key);
                     if (entity != null) {
                         createEntity.processEntity(entity, dbClient);
-
                     }
                 } else {
-                    logger.info("No more entries left in Redis to process.");
+                    Set<String> keys = redisClient.keys("*");
+                    if (keys.isEmpty()) {
+                        logger.info("Confirmed no more entries left in Redis to process.");
+                        Thread.sleep(3000);
+                    }
                 }
             } catch (Exception e) {
-
+                // do something
             }
         }
     }

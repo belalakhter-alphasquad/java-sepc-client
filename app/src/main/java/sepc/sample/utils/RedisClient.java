@@ -5,6 +5,8 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
 import java.io.*;
+import java.util.Collections;
+import java.util.Set;
 
 public class RedisClient {
 
@@ -45,6 +47,15 @@ public class RedisClient {
             Object obj = ois.readObject();
 
             return obj;
+        }
+    }
+
+    public Set<String> keys(String pattern) {
+        try (Jedis jedis = jedisPool.getResource()) {
+            return jedis.keys(pattern);
+        } catch (Exception e) {
+
+            return Collections.emptySet();
         }
     }
 
