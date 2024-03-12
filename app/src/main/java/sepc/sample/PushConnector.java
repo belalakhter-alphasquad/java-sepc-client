@@ -93,7 +93,7 @@ public class PushConnector {
                     storeEntity.updatequeueEntity(entityChange);
                 }
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(300);
                 } catch (InterruptedException e) {
 
                 }
