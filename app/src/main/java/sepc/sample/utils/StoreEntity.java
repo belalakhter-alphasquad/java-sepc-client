@@ -32,18 +32,18 @@ public class StoreEntity {
     public BlockingQueue<Entity> entityQueue = new LinkedBlockingDeque<>();
     public BlockingQueue<EntityChange> updateentityQueue = new LinkedBlockingDeque<>();
     boolean runner = true;
-    public ExecutorService executorService = Executors.newFixedThreadPool(12);
+    public ExecutorService executorService = Executors.newFixedThreadPool(6);
 
     public StoreEntity() {
         RedisClient redisClient = new RedisClient("localhost", 6379);
         logger.info("Redis Intilialized");
         DbClient dbClient = DbClient.getInstance();
 
-        for (int i = 0; i < 7; i++) {
+        for (int i = 0; i < 4; i++) {
             executorService.submit(() -> startProcessing(entityQueue, redisClient));
 
         }
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 2; i++) {
             executorService.submit(() -> startInsertion(dbClient, redisClient));
 
         }
@@ -61,7 +61,7 @@ public class StoreEntity {
                 Entity entity = entityQueue.take();
                 String key = "entity:" + entity.getId();
                 redisClient.setObject(key, entity);
-                redisClient.rpush(entity.getDisplayName().toLowerCase(), key);
+                redisClient.rpush("entitiesToProcess", key);
 
             } catch (Exception e) {
 
@@ -69,70 +69,19 @@ public class StoreEntity {
         }
     }
 
-    /*
-     * 
-     * public void startInsertion(DbClient dbClient, RedisClient redisClient) {
-     * while (runner) {
-     * try {
-     * String key = redisClient.lpop("entitiesToProcess");
-     * if (key != null) {
-     * Entity entity = (Entity) redisClient.getObject(key);
-     * if (entity != null) {
-     * createEntity.processEntity(entity, dbClient);
-     * }
-     * }
-     * } catch (Exception e) {
-     * // do something
-     * }
-     * }
-     * }
-     */
     public void startInsertion(DbClient dbClient, RedisClient redisClient) {
-        List<Entity> entityBatch = new ArrayList<>();
-        int batchSize = 10000;
-        String[] redisLists = new String[] {
-                "bettingoffer", "bettingofferstatus", "bettingtype", "bettingtypeusage", "currency",
-                "entityproperty", "entitypropertytype", "entitypropertyvalue", "entitytype", "event",
-                "eventaction", "eventactiondetail", "eventactiondetailstatus", "eventactiondetailtype",
-                "eventactiondetailtypeusage", "eventactionstatus", "eventactiontype", "eventactiontypeusage",
-                "eventcategory", "eventinfo", "eventinfostatus", "eventinfotype", "eventinfotypeusage",
-                "eventpart", "eventpartdefaultusage", "eventparticipantinfo", "eventparticipantinfodetail",
-                "eventparticipantinfodetailstatus", "eventparticipantinfodetailtype",
-                "eventparticipantinfodetailtypeusage",
-                "eventparticipantinfostatus", "eventparticipantinfotype", "eventparticipantinfotypeusage",
-                "eventparticipantrelation", "eventparticipantrestriction", "eventstatus", "eventtemplate",
-                "eventtype", "location", "locationrelation", "locationrelationtype", "locationtype",
-                "market", "marketoutcomerelation", "outcome", "outcomestatus", "outcometype",
-                "outcometypebettingtyperelation", "outcometypeusage", "participant", "participantrelation",
-                "participantrelationtype", "participantrole", "participanttype", "participantusage",
-                "provider", "providerentitymapping", "providereventrelation", "scoringunit",
-                "source", "sport", "streamingprovider", "streamingprovidereventrelation", "translation"
-        };
-
-        int listIndex = 0;
-
         while (runner) {
             try {
-                String currentList = redisLists[listIndex];
-                String key = redisClient.lpop(currentList);
+                String key = redisClient.lpop("entitiesToProcess");
                 if (key != null) {
                     Entity entity = (Entity) redisClient.getObject(key);
                     if (entity != null) {
-                        entityBatch.add(entity);
-                        if (entityBatch.size() >= batchSize) {
-                            createEntity.processEntitiesBatch(entityBatch, dbClient);
-                            entityBatch.clear();
-                        }
+                        createEntity.processEntity(entity, dbClient);
                     }
                 }
-                listIndex = (listIndex + 1) % redisLists.length;
             } catch (Exception e) {
-                // Do something
+                // do something
             }
-        }
-
-        if (!entityBatch.isEmpty()) {
-            createEntity.processEntitiesBatch(entityBatch, dbClient);
         }
     }
 
