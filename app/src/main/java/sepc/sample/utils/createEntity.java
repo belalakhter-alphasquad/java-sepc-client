@@ -21,4 +21,19 @@ public class createEntity {
         }
     }
 
+    public static void processEntitiesBatch(List<Entity> entities, DbClient dbClient) {
+        if (entities.isEmpty())
+            return;
+
+        String table = entities.get(0).getDisplayName().toLowerCase();
+        List<String> fields = entities.get(0).getPropertyNames();
+
+        try {
+            dbClient.createEntitiesBatch(table, fields, entities);
+        } catch (SQLException e) {
+
+        }
+        entities.clear();
+    }
+
 }

@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,6 +97,54 @@ public class DbClient {
         } catch (SQLException e) {
 
         }
+    }
+
+    public void createEntitiesBatch(String table, List<String> fields, List<Entity> entities) throws SQLException {
+        if (fields.isEmpty() || entities.isEmpty()) {
+            throw new IllegalArgumentException("Fields and entities cannot be empty.");
+        }
+
+        StringBuilder sql = new StringBuilder("INSERT INTO ");
+        sql.append(table).append(" (");
+
+        sql.append(String.join(", ", fields));
+        sql.append(") VALUES ");
+
+        String valuePlaceholder = "(" + fields.stream().map(f -> "?").collect(Collectors.joining(", ")) + ")";
+        sql.append(
+                IntStream.range(0, entities.size()).mapToObj(i -> valuePlaceholder).collect(Collectors.joining(", ")));
+
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
+
+            int index = 1;
+            for (Entity entity : entities) {
+                List<Object> values = entity.getPropertyValues(fields);
+                for (Object value : values) {
+                    if (value instanceof Integer) {
+                        pstmt.setInt(index++, (Integer) value);
+                    } else if (value instanceof Integer) {
+                        pstmt.setInt(index++, (Integer) value);
+                    } else if (value instanceof String) {
+                        pstmt.setString(index++, (String) value);
+                    } else if (value instanceof Double) {
+                        pstmt.setDouble(index++, (Double) value);
+                    } else if (value instanceof Long) {
+                        pstmt.setLong(index++, (Long) value);
+                    } else if (value instanceof Float) {
+                        pstmt.setFloat(index++, (Float) value);
+                    } else if (value instanceof Boolean) {
+                        pstmt.setBoolean(index++, (Boolean) value);
+                    } else if (value instanceof Timestamp) {
+                        pstmt.setTimestamp(index++, (Timestamp) value);
+                    } else {
+                        pstmt.setObject(index++, value);
+                    }
+                }
+            }
+            pstmt.executeBatch();
+        }
+
     }
 
     public void createEntity(String table, List<String> fields, List<Object> fieldvalues) throws SQLException {
