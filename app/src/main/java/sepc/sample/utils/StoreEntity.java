@@ -1,15 +1,12 @@
 package sepc.sample.utils;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,19 +26,11 @@ public class StoreEntity {
     public BlockingQueue<Entity> entityQueue = new LinkedBlockingDeque<>();
     public BlockingQueue<EntityChange> updateentityQueue = new LinkedBlockingDeque<>();
     boolean runner = true;
-    public ExecutorService executorService = Executors.newFixedThreadPool(6);
 
-    public StoreEntity() {
-        RedisClient redisClient = new RedisClient("localhost", 6379);
-        logger.info("Redis Intilialized");
-        DbClient dbClient = DbClient.getInstance();
-
+    public StoreEntity(RedisClient redisClient, DbClient dbClient) {
+        ExecutorService executorService = Executors.newFixedThreadPool(4);
         for (int i = 0; i < 4; i++) {
             executorService.submit(() -> startProcessing(entityQueue, redisClient));
-
-        }
-        for (int i = 0; i < 2; i++) {
-            executorService.submit(() -> startInsertion(dbClient, redisClient));
 
         }
 
