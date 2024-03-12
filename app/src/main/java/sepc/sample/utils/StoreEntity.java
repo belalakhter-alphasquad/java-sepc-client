@@ -26,12 +26,13 @@ public class StoreEntity {
     public BlockingQueue<Entity> entityQueue = new LinkedBlockingDeque<>();
     public BlockingQueue<EntityChange> updateentityQueue = new LinkedBlockingDeque<>();
     boolean runner = true;
-    ExecutorService executorService = Executors.newFixedThreadPool(4);
+    boolean Cacherunner = true;
+    ExecutorService executorServicecache = Executors.newFixedThreadPool(4);
 
     public StoreEntity(RedisClient redisClient, DbClient dbClient) {
 
         for (int i = 0; i < 4; i++) {
-            executorService.submit(() -> startProcessing(entityQueue, redisClient));
+            executorServicecache.submit(() -> startProcessing(entityQueue, redisClient));
 
         }
 
@@ -42,7 +43,7 @@ public class StoreEntity {
     }
 
     public void startProcessing(BlockingQueue<Entity> entityQueue, RedisClient redisClient) {
-        while (runner) {
+        while (Cacherunner) {
             try {
 
                 Entity entity = entityQueue.take();
@@ -122,8 +123,8 @@ public class StoreEntity {
     }
 
     public void shutdown() {
-        runner = false;
-        executorService.shutdownNow();
+        Cacherunner = false;
+        executorServicecache.shutdownNow();
     }
 
 }
