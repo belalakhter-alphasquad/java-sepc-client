@@ -23,14 +23,14 @@ public class StoreEntity {
     public BlockingQueue<Entity> entityQueue = new LinkedBlockingDeque<>();
     public BlockingQueue<EntityChange> updateentityQueue = new LinkedBlockingDeque<>();
     boolean runner = true;
-    public ExecutorService executorService = Executors.newFixedThreadPool(9);
+    public ExecutorService executorService = Executors.newFixedThreadPool(7);
 
     public StoreEntity() {
         RedisClient redisClient = new RedisClient("localhost", 6379);
         logger.info("Redis Intilialized");
         DbClient dbClient = DbClient.getInstance();
 
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < 5; i++) {
             executorService.submit(() -> startProcessing(entityQueue, redisClient));
 
         }
