@@ -55,7 +55,7 @@ public class StoreEntity {
                 redisClient.rpush("entitiesToProcess", key);
 
             } catch (Exception e) {
-                logger.error("Unable to process Entity" + e);
+
             }
         }
     }
@@ -70,9 +70,11 @@ public class StoreEntity {
                         createEntity.processEntity(entity, dbClient);
 
                     }
+                } else {
+                    logger.info("No more entries left in Redis to process.");
                 }
             } catch (Exception e) {
-                logger.error("Unable to process Entity" + e);
+
             }
         }
     }
