@@ -3,9 +3,12 @@ package sepc.sample.utils;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,27 +18,31 @@ import com.betbrain.sepc.connector.sportsmodel.EntityChange;
 import com.betbrain.sepc.connector.sportsmodel.EntityCreate;
 import com.betbrain.sepc.connector.sportsmodel.EntityDelete;
 import com.betbrain.sepc.connector.sportsmodel.EntityUpdate;
-
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import sepc.sample.DB.DbClient;
 
 public class StoreEntity {
+    private ConcurrentHashMap<String, ConcurrentLinkedQueue<List<Object>>> tableBatches = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, AtomicInteger> tableCounts = new ConcurrentHashMap<>();
     int count = 0;
     private static final Logger logger = LoggerFactory.getLogger(StoreEntity.class);
     public BlockingQueue<Entity> entityQueue = new LinkedBlockingDeque<>();
     public BlockingQueue<EntityChange> updateentityQueue = new LinkedBlockingDeque<>();
     boolean runner = true;
-    public ExecutorService executorService = Executors.newFixedThreadPool(12);
+    public ExecutorService executorService = Executors.newFixedThreadPool(13);
 
     public StoreEntity() {
         RedisClient redisClient = new RedisClient("localhost", 6379);
         logger.info("Redis Intilialized");
         DbClient dbClient = DbClient.getInstance();
 
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 4; i++) {
             executorService.submit(() -> startProcessing(entityQueue, redisClient));
 
         }
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 9; i++) {
             executorService.submit(() -> startInsertion(dbClient, redisClient));
 
         }
