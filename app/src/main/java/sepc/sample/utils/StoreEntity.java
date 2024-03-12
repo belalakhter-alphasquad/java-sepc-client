@@ -23,7 +23,7 @@ public class StoreEntity {
     public BlockingQueue<Entity> entityQueue = new LinkedBlockingDeque<>();
     public BlockingQueue<EntityChange> updateentityQueue = new LinkedBlockingDeque<>();
     boolean runner = true;
-    public ExecutorService executorService = Executors.newFixedThreadPool(8);
+    public ExecutorService executorService = Executors.newFixedThreadPool(7);
 
     public StoreEntity() {
         RedisClient redisClient = new RedisClient("localhost", 6379);
@@ -34,12 +34,10 @@ public class StoreEntity {
             executorService.submit(() -> startProcessing(entityQueue, redisClient));
 
         }
-        for (int i = 0; i < 2; i++) {
-            executorService.submit(() -> startInsertion(dbClient, redisClient));
 
-        }
+        executorService.submit(() -> startInsertion(dbClient, redisClient));
 
-        executorService.submit(() -> startUpdate(dbClient, redisClient));
+        // executorService.submit(() -> startUpdate(dbClient, redisClient));
 
         logger.info("Queue Consumer Started");
 
@@ -121,7 +119,7 @@ public class StoreEntity {
 
     public void updatequeueEntity(EntityChange entityChange) {
         try {
-            updateentityQueue.offer(entityChange);
+            // updateentityQueue.offer(entityChange);
         } catch (Exception e) {
 
         }
