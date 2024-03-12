@@ -147,7 +147,6 @@ public class DbClient {
             }
 
             pstmt.executeUpdate();
-            logger.info("Entity added");
 
         }
     }
