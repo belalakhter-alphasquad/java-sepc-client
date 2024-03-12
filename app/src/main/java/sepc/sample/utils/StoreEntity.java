@@ -19,14 +19,11 @@ import com.betbrain.sepc.connector.sportsmodel.EntityChange;
 import com.betbrain.sepc.connector.sportsmodel.EntityCreate;
 import com.betbrain.sepc.connector.sportsmodel.EntityDelete;
 import com.betbrain.sepc.connector.sportsmodel.EntityUpdate;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicInteger;
+
 import sepc.sample.DB.DbClient;
 
 public class StoreEntity {
-    private ConcurrentHashMap<String, ConcurrentLinkedQueue<List<Object>>> tableBatches = new ConcurrentHashMap<>();
-    private ConcurrentHashMap<String, AtomicInteger> tableCounts = new ConcurrentHashMap<>();
+
     int count = 0;
     private static final Logger logger = LoggerFactory.getLogger(StoreEntity.class);
     public BlockingQueue<Entity> entityQueue = new LinkedBlockingDeque<>();
