@@ -26,9 +26,10 @@ public class StoreEntity {
     public BlockingQueue<Entity> entityQueue = new LinkedBlockingDeque<>();
     public BlockingQueue<EntityChange> updateentityQueue = new LinkedBlockingDeque<>();
     boolean runner = true;
+    ExecutorService executorService = Executors.newFixedThreadPool(4);
 
     public StoreEntity(RedisClient redisClient, DbClient dbClient) {
-        ExecutorService executorService = Executors.newFixedThreadPool(4);
+
         for (int i = 0; i < 4; i++) {
             executorService.submit(() -> startProcessing(entityQueue, redisClient));
 
