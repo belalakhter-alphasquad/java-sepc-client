@@ -22,7 +22,7 @@ public class RedisClient {
 
         poolConfig.setMinIdle(100);
 
-        this.jedisPool = new JedisPool(poolConfig, host, port, 3000);
+        this.jedisPool = new JedisPool(poolConfig, host, port, 6000);
     }
 
     public void setObject(String key, Object obj) throws Exception {
