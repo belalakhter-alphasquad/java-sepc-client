@@ -70,12 +70,6 @@ public class StoreEntity {
                     if (entity != null) {
                         createEntity.processEntity(entity, dbClient);
                     }
-                } else {
-                    Set<String> keys = redisClient.keys("*");
-                    if (keys.isEmpty()) {
-                        logger.info("Confirmed no more entries left in Redis to process.");
-                        Thread.sleep(3000);
-                    }
                 }
             } catch (Exception e) {
                 // do something
