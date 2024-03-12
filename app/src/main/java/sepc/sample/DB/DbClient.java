@@ -7,10 +7,14 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.betbrain.sepc.connector.sportsmodel.Entity;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -18,6 +22,8 @@ import com.zaxxer.hikari.HikariDataSource;
 import sepc.sample.utils.EnvLoader;
 
 public class DbClient {
+    private Map<String, List<Entity>> batchData = new HashMap<>();
+    private static final int BATCH_SIZE = 10000;
 
     private static final String DATABASE_NAME = System.getProperty("DB_NAME");
 
