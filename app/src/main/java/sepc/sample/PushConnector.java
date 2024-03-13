@@ -90,11 +90,12 @@ public class PushConnector {
         public void notifyInitialDumpRetrieved() {
             checkInitialDumpComplete = true;
             storeEntity.shutdown();
-            System.out.println("Initial dump done ");
-            executorService = Executors.newFixedThreadPool(4);
-            for (int i = 0; i < 4; i++) {
-                executorService.submit(() -> storeEntity.startInsertion(dbClient, redisClient));
-            }
+            // System.out.println("Initial dump done ");
+            // executorService = Executors.newFixedThreadPool(4);
+            // for (int i = 0; i < 4; i++) {
+            // executorService.submit(() -> storeEntity.startInsertion(dbClient,
+            // redisClient));
+            // }
 
         }
 
