@@ -6,7 +6,6 @@ import java.util.concurrent.BlockingQueue;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingDeque;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +15,6 @@ import com.betbrain.sepc.connector.sportsmodel.EntityChange;
 import com.betbrain.sepc.connector.sportsmodel.EntityCreate;
 import com.betbrain.sepc.connector.sportsmodel.EntityDelete;
 import com.betbrain.sepc.connector.sportsmodel.EntityUpdate;
-import java.util.ArrayList;
 
 import sepc.sample.DB.DbClient;
 
@@ -24,20 +22,21 @@ public class StoreEntity {
 
     int count = 0;
     private static final Logger logger = LoggerFactory.getLogger(StoreEntity.class);
-    public BlockingQueue<Entity> entityQueue = new LinkedBlockingDeque<>();
-    public BlockingQueue<EntityChange> updateentityQueue = new LinkedBlockingDeque<>();
+
     boolean runner = true;
     boolean Cacherunner = true;
-    ExecutorService executorServicecache = Executors.newFixedThreadPool(4);
+    ExecutorService executorServicecache = Executors.newFixedThreadPool(6);
 
-    public StoreEntity(RedisClient redisClient, DbClient dbClient) {
+    public StoreEntity(RedisClient redisClient, DbClient dbClient, BlockingQueue<Entity> entityQueue,
+            BlockingQueue<EntityChange> updateentityQueue) {
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 6; i++) {
             executorServicecache.submit(() -> startProcessing(entityQueue, redisClient));
 
         }
 
-        // executorService.submit(() -> startUpdate(dbClient, redisClient));
+        // executorService.submit(() -> startUpdate(dbClient,
+        // redisClient,updateentityQueue));
 
         logger.info("Queue Consumer Started");
 
@@ -74,7 +73,7 @@ public class StoreEntity {
         }
     }
 
-    public void startUpdate(DbClient dbClient, RedisClient redisClient) {
+    public void startUpdate(DbClient dbClient, RedisClient redisClient, BlockingQueue<EntityChange> updateentityQueue) {
         while (runner) {
             try {
                 EntityChange entityChange = updateentityQueue.take();
@@ -105,7 +104,7 @@ public class StoreEntity {
         }
     }
 
-    public void queueEntity(Entity entity) {
+    public void queueEntity(Entity entity, BlockingQueue<Entity> entityQueue) {
         try {
             entityQueue.offer(entity);
         } catch (Exception e) {
@@ -114,7 +113,7 @@ public class StoreEntity {
 
     }
 
-    public void updatequeueEntity(EntityChange entityChange) {
+    public void updatequeueEntity(EntityChange entityChange, BlockingQueue<EntityChange> updateentityQueue) {
         try {
             // updateentityQueue.offer(entityChange);
         } catch (Exception e) {
