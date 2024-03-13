@@ -28,7 +28,7 @@ public class StoreEntity {
     boolean Cacherunner = true;
     public BlockingQueue<Entity> entityQueue = new LinkedBlockingDeque<>();
     public BlockingQueue<EntityChange> updateentityQueue = new LinkedBlockingDeque<>();
-    ExecutorService executorServicecache = Executors.newFixedThreadPool(3);
+    ExecutorService executorServicecache = Executors.newFixedThreadPool(6);
 
     public StoreEntity(RedisClient redisClient, DbClient dbClient) {
 

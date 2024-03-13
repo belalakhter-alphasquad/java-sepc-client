@@ -177,42 +177,42 @@ public class DbClient {
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
             conn.setAutoCommit(false);
-
+            int batchIndex = 0;
             for (List<Object> values : batchFieldValues) {
-
                 for (int i = 0; i < values.size(); i++) {
+                    int parameterIndex = i + 1 + batchIndex * fields.size();
                     Object value = values.get(i);
                     if (value == null) {
-                        pstmt.setNull(i + 1, java.sql.Types.NULL);
+                        pstmt.setNull(parameterIndex, java.sql.Types.NULL);
                     } else if (value instanceof Integer) {
-                        pstmt.setInt(i + 1, (Integer) value);
+                        pstmt.setInt(parameterIndex, (Integer) value);
                     } else if (value instanceof String) {
-                        pstmt.setString(i + 1, (String) value);
+                        pstmt.setString(parameterIndex, (String) value);
                     } else if (value instanceof Double) {
-                        pstmt.setDouble(i + 1, (Double) value);
+                        pstmt.setDouble(parameterIndex, (Double) value);
                     } else if (value instanceof Long) {
-                        pstmt.setLong(i + 1, (Long) value);
+                        pstmt.setLong(parameterIndex, (Long) value);
                     } else if (value instanceof Float) {
-                        pstmt.setFloat(i + 1, (Float) value);
+                        pstmt.setFloat(parameterIndex, (Float) value);
                     } else if (value instanceof Boolean) {
-                        pstmt.setBoolean(i + 1, (Boolean) value);
+                        pstmt.setBoolean(parameterIndex, (Boolean) value);
                     } else if (value instanceof Timestamp) {
-                        pstmt.setTimestamp(i + 1, (Timestamp) value);
-                    } else if (value instanceof Object) {
-                        pstmt.setObject(i + 1, value);
+                        pstmt.setTimestamp(parameterIndex, (Timestamp) value);
+                    } else {
+                        pstmt.setObject(parameterIndex, value);
                     }
                 }
-
                 pstmt.addBatch();
+                batchIndex++;
             }
 
             pstmt.executeBatch();
             conn.commit();
         } catch (BatchUpdateException e) {
-
+            System.err.println("BatchUpdateException: " + e.getMessage());
             throw new SQLException("Failed to execute batch insert", e);
         } catch (SQLException e) {
-
+            System.err.println("SQLException: " + e.getMessage());
             throw e;
         }
     }

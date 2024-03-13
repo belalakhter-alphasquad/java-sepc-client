@@ -20,7 +20,7 @@ public class App {
         DbClient dbClient = new DbClient();
         try {
             dbClient.runSqlFileToCreateTables();
-            if (testsingleInsertion(dbClient)) {
+            if (testBatchInsertion(dbClient)) {
                 System.out.println("Batch Insertion Successful");
 
             }
