@@ -138,6 +138,7 @@ public class DbClient {
                 pstmt.addBatch();
             }
             pstmt.executeBatch();
+            logger.info("batch executed");
         }
     }
 

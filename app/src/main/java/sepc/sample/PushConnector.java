@@ -14,7 +14,7 @@ import com.betbrain.sepc.connector.sdql.SEPCStreamedConnectorListener;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityChange;
 import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
-
+import java.util.concurrent.Executors;
 import sepc.sample.DB.DbClient;
 import sepc.sample.utils.RedisClient;
 import sepc.sample.utils.StoreEntity;
@@ -60,6 +60,7 @@ public class PushConnector {
         private final DbClient dbClient;
         private final RedisClient redisClient;
         private ExecutorService executorService;
+        private Executors executors;
 
         public SEPCPUSHConnectorListener(StoreEntity storeEntity, RedisClient redisClient, DbClient dbClient) {
             this.storeEntity = storeEntity;
@@ -106,30 +107,19 @@ public class PushConnector {
                     "provider", "providerentitymapping", "providereventrelation", "scoringunit",
                     "source", "sport", "streamingprovider", "streamingprovidereventrelation", "translation"
             };
-            final int numThreads = 4;
-            int totalLists = redisLists.length;
-            int chunkSize = totalLists / numThreads;
 
             checkInitialDumpComplete = true;
             storeEntity.shutdown();
             logger.info("initial dump done");
+            executorService = Executors.newSingleThreadExecutor();
+            executorService.submit(() -> {
+                for (int i = 0; i < redisLists.length; i++) {
+                    storeEntity.startInsertion(dbClient, redisClient, redisLists[i]);
+                    logger.info("Thread " + Thread.currentThread().getId() + " processing: " + redisLists[i]);
 
-            executorService = Executors.newFixedThreadPool(numThreads);
-            for (int i = 0; i < numThreads; i++) {
-                final int index = i;
-                executorService.submit(() -> {
-
-                    int start = index * chunkSize;
-                    int end = (index == numThreads - 1) ? totalLists : start + chunkSize;
-
-                    for (int j = start; j < end; j++) {
-                        String listName = redisLists[j];
-                        storeEntity.startInsertion(dbClient, redisClient, listName);
-                        logger.info("Thread " + Thread.currentThread().getId() + " processing: " + listName);
-
-                    }
-                });
-            }
+                }
+                logger.info("Insertion process done for initial data");
+            });
 
         }
 
