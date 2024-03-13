@@ -32,9 +32,7 @@ public class PushConnector {
         RedisClient redisClient = new RedisClient("localhost", 6379);
         DbClient dbClient = DbClient.getInstance();
         StoreEntity storeEntity = new StoreEntity(redisClient, dbClient);
-        ExecutorService executorService = Executors.newFixedThreadPool(2);
-        SEPCPUSHConnectorListener listener = new SEPCPUSHConnectorListener(storeEntity, redisClient, dbClient,
-                executorService);
+        SEPCPUSHConnectorListener listener = new SEPCPUSHConnectorListener(storeEntity, redisClient, dbClient);
 
         connector.addStreamedConnectorListener(listener);
         connector.setEntityChangeBatchProcessingMonitor(new EntityChangeBatchProcessingMonitor() {
@@ -61,14 +59,12 @@ public class PushConnector {
         private final StoreEntity storeEntity;
         private final DbClient dbClient;
         private final RedisClient redisClient;
-        private final ExecutorService executorService;
+        private ExecutorService executorService;
 
-        public SEPCPUSHConnectorListener(StoreEntity storeEntity, RedisClient redisClient, DbClient dbClient,
-                ExecutorService executorService) {
+        public SEPCPUSHConnectorListener(StoreEntity storeEntity, RedisClient redisClient, DbClient dbClient) {
             this.storeEntity = storeEntity;
             this.dbClient = dbClient;
             this.redisClient = redisClient;
-            this.executorService = executorService;
 
         }
 
@@ -95,9 +91,9 @@ public class PushConnector {
             checkInitialDumpComplete = true;
             storeEntity.shutdown();
             System.out.println("Initial dump done ");
-            for (int i = 0; i < 2; i++) {
+            executorService = Executors.newFixedThreadPool(4);
+            for (int i = 0; i < 4; i++) {
                 executorService.submit(() -> storeEntity.startInsertion(dbClient, redisClient));
-
             }
 
         }
