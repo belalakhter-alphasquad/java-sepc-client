@@ -141,6 +141,66 @@ public class DbClient {
         }
     }
 
+    public void createUpdateEntity(String table, List<String> fields, List<Object> fieldvalues) throws SQLException {
+        if (fields.isEmpty() || fieldvalues.isEmpty()) {
+            throw new IllegalArgumentException("Fields and values cannot be empty.");
+        }
+        if (fields.size() != fieldvalues.size()) {
+            throw new IllegalArgumentException("The number of fields must match the number of field values.");
+        }
+
+        StringBuilder sql = new StringBuilder("INSERT INTO ");
+        sql.append(table).append(" (");
+
+        for (int i = 0; i < fields.size(); i++) {
+            sql.append(fields.get(i));
+            if (i < fields.size() - 1) {
+                sql.append(", ");
+            }
+        }
+
+        sql.append(") VALUES (");
+
+        for (int i = 0; i < fieldvalues.size(); i++) {
+            sql.append("?");
+            if (i < fieldvalues.size() - 1) {
+                sql.append(", ");
+            }
+        }
+
+        sql.append(")");
+
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
+
+            for (int i = 0; i < fieldvalues.size(); i++) {
+                Object value = fieldvalues.get(i);
+                if (value == null) {
+                    pstmt.setNull(i + 1, java.sql.Types.NULL);
+                } else if (value instanceof Integer) {
+                    pstmt.setInt(i + 1, (Integer) value);
+                } else if (value instanceof String) {
+                    pstmt.setString(i + 1, (String) value);
+                } else if (value instanceof Double) {
+                    pstmt.setDouble(i + 1, (Double) value);
+                } else if (value instanceof Long) {
+                    pstmt.setLong(i + 1, (Long) value);
+                } else if (value instanceof Float) {
+                    pstmt.setFloat(i + 1, (Float) value);
+                } else if (value instanceof Boolean) {
+                    pstmt.setBoolean(i + 1, (Boolean) value);
+                } else if (value instanceof Timestamp) {
+                    pstmt.setTimestamp(i + 1, (Timestamp) value);
+                } else {
+                    pstmt.setObject(i + 1, value);
+                }
+            }
+
+            pstmt.executeUpdate();
+
+        }
+    }
+
     public void updateEntity(Long id, String table, List<String> fields, List<Object> fieldvalues) throws SQLException {
         if (fields.isEmpty() || fieldvalues.isEmpty()) {
             throw new IllegalArgumentException("Fields and values cannot be empty.");

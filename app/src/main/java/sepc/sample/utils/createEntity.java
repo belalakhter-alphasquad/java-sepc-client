@@ -28,4 +28,15 @@ public class createEntity {
 
         }
     }
+
+    public static void processUpdateEntity(Entity entity, DbClient dbClient) {
+        String table = entity.getDisplayName().toLowerCase();
+        List<String> fields = entity.getPropertyNames();
+        List<Object> values = entity.getPropertyValues(fields);
+        try {
+            dbClient.createUpdateEntity(table, fields, values);
+        } catch (SQLException e) {
+
+        }
+    }
 }
