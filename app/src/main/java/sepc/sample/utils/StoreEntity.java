@@ -15,7 +15,8 @@ import com.betbrain.sepc.connector.sportsmodel.EntityChange;
 import com.betbrain.sepc.connector.sportsmodel.EntityCreate;
 import com.betbrain.sepc.connector.sportsmodel.EntityDelete;
 import com.betbrain.sepc.connector.sportsmodel.EntityUpdate;
-
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.BlockingQueue;
 import sepc.sample.DB.DbClient;
 
 public class StoreEntity {
@@ -25,12 +26,13 @@ public class StoreEntity {
 
     boolean runner = true;
     boolean Cacherunner = true;
-    ExecutorService executorServicecache = Executors.newFixedThreadPool(6);
+    public BlockingQueue<Entity> entityQueue = new LinkedBlockingDeque<>();
+    public BlockingQueue<EntityChange> updateentityQueue = new LinkedBlockingDeque<>();
+    ExecutorService executorServicecache = Executors.newFixedThreadPool(3);
 
-    public StoreEntity(RedisClient redisClient, DbClient dbClient, BlockingQueue<Entity> entityQueue,
-            BlockingQueue<EntityChange> updateentityQueue) {
+    public StoreEntity(RedisClient redisClient, DbClient dbClient) {
 
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < 3; i++) {
             executorServicecache.submit(() -> startProcessing(entityQueue, redisClient));
 
         }
@@ -73,7 +75,7 @@ public class StoreEntity {
         }
     }
 
-    public void startUpdate(DbClient dbClient, RedisClient redisClient, BlockingQueue<EntityChange> updateentityQueue) {
+    public void startUpdate(DbClient dbClient, RedisClient redisClient) {
         while (runner) {
             try {
                 EntityChange entityChange = updateentityQueue.take();
@@ -104,7 +106,7 @@ public class StoreEntity {
         }
     }
 
-    public void queueEntity(Entity entity, BlockingQueue<Entity> entityQueue) {
+    public void queueEntity(Entity entity) {
         try {
             entityQueue.offer(entity);
         } catch (Exception e) {
@@ -113,7 +115,7 @@ public class StoreEntity {
 
     }
 
-    public void updatequeueEntity(EntityChange entityChange, BlockingQueue<EntityChange> updateentityQueue) {
+    public void updatequeueEntity(EntityChange entityChange) {
         try {
             // updateentityQueue.offer(entityChange);
         } catch (Exception e) {

@@ -18,8 +18,7 @@ import java.util.concurrent.Executors;
 import sepc.sample.DB.DbClient;
 import sepc.sample.utils.RedisClient;
 import sepc.sample.utils.StoreEntity;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.BlockingQueue;
+
 
 public class PushConnector {
     private static final Logger logger = LoggerFactory.getLogger(PushConnector.class);
@@ -33,11 +32,9 @@ public class PushConnector {
         connector = new SEPCPushConnector(hostname, portPush);
         RedisClient redisClient = new RedisClient("localhost", 6379);
         DbClient dbClient = DbClient.getInstance();
-        BlockingQueue<Entity> entityQueue = new LinkedBlockingDeque<>();
-        BlockingQueue<EntityChange> updateentityQueue = new LinkedBlockingDeque<>();
-        StoreEntity storeEntity = new StoreEntity(redisClient, dbClient, entityQueue, updateentityQueue);
-        SEPCPUSHConnectorListener listener = new SEPCPUSHConnectorListener(storeEntity, redisClient, dbClient,
-                entityQueue, updateentityQueue);
+
+        StoreEntity storeEntity = new StoreEntity(redisClient, dbClient);
+        SEPCPUSHConnectorListener listener = new SEPCPUSHConnectorListener(storeEntity, redisClient, dbClient);
 
         connector.addStreamedConnectorListener(listener);
         connector.setEntityChangeBatchProcessingMonitor(new EntityChangeBatchProcessingMonitor() {
@@ -66,16 +63,11 @@ public class PushConnector {
         private final RedisClient redisClient;
         private ExecutorService executorService;
         private Executors executors;
-        private BlockingQueue<Entity> entityQueue;
-        private BlockingQueue<EntityChange> updateentityQueue;
 
-        public SEPCPUSHConnectorListener(StoreEntity storeEntity, RedisClient redisClient, DbClient dbClient,
-                BlockingQueue<Entity> entityQueue, BlockingQueue<EntityChange> updateentityQueue) {
+        public SEPCPUSHConnectorListener(StoreEntity storeEntity, RedisClient redisClient, DbClient dbClient) {
             this.storeEntity = storeEntity;
             this.dbClient = dbClient;
             this.redisClient = redisClient;
-            this.entityQueue = entityQueue;
-            this.updateentityQueue = updateentityQueue;
 
         }
 
@@ -87,7 +79,7 @@ public class PushConnector {
         public void notifyPartialInitialDumpRetrieved(List<? extends Entity> entities) {
 
             for (Entity entity : entities) {
-                storeEntity.queueEntity(entity, entityQueue);
+                storeEntity.queueEntity(entity);
             }
             try {
                 Thread.sleep(500);
@@ -102,15 +94,9 @@ public class PushConnector {
 
             checkInitialDumpComplete = true;
             logger.info("initial dump done");
-            storeEntity.shutdown();
-            executorService = Executors.newFixedThreadPool(6);
-            for (int i = 0; i < 2; i++) {
-                executorService.submit(() -> storeEntity.startProcessing(entityQueue, redisClient));
 
-            }
-            storeEntity.startProcessing(entityQueue, redisClient);
-            executorService = Executors.newFixedThreadPool(4);
-            for (int i = 0; i < 4; i++) {
+            executorService = Executors.newFixedThreadPool(3);
+            for (int i = 0; i < 3; i++) {
                 executorService.submit(() -> storeEntity.startInsertion(dbClient, redisClient));
 
             }
@@ -126,7 +112,7 @@ public class PushConnector {
             List<EntityChange> ListChangeEntities = entityChangeBatch.getEntityChanges();
             if (checkInitialDumpComplete) {
                 for (EntityChange entityChange : ListChangeEntities) {
-                    storeEntity.updatequeueEntity(entityChange, updateentityQueue);
+                    storeEntity.updatequeueEntity(entityChange);
                 }
                 try {
                     Thread.sleep(1000);
