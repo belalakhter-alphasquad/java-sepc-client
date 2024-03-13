@@ -6,6 +6,7 @@ import com.betbrain.sepc.connector.sportsmodel.Entity;
 import java.sql.SQLException;
 import sepc.sample.DB.DbClient;
 import java.util.List;
+import java.util.ArrayList;
 
 public class createEntity {
     private static final Logger logger = LoggerFactory.getLogger(createEntity.class);
@@ -22,6 +23,7 @@ public class createEntity {
         }
         try {
             dbClient.createEntity(table, fields, batchFieldValues);
+            logger.info("sending a batch to db clien");
         } catch (SQLException e) {
 
         }
