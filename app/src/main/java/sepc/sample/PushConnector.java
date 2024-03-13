@@ -1,8 +1,6 @@
 package sepc.sample;
 
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import org.agrona.concurrent.ShutdownSignalBarrier;
 import org.slf4j.Logger;
@@ -14,11 +12,10 @@ import com.betbrain.sepc.connector.sdql.SEPCStreamedConnectorListener;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityChange;
 import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
-import java.util.concurrent.Executors;
+
 import sepc.sample.DB.DbClient;
 import sepc.sample.utils.RedisClient;
 import sepc.sample.utils.StoreEntity;
-
 
 public class PushConnector {
     private static final Logger logger = LoggerFactory.getLogger(PushConnector.class);
@@ -34,7 +31,7 @@ public class PushConnector {
         DbClient dbClient = DbClient.getInstance();
 
         StoreEntity storeEntity = new StoreEntity(redisClient, dbClient);
-        SEPCPUSHConnectorListener listener = new SEPCPUSHConnectorListener(storeEntity, redisClient, dbClient);
+        SEPCPUSHConnectorListener listener = new SEPCPUSHConnectorListener(storeEntity);
 
         connector.addStreamedConnectorListener(listener);
         connector.setEntityChangeBatchProcessingMonitor(new EntityChangeBatchProcessingMonitor() {
@@ -59,15 +56,9 @@ public class PushConnector {
         private volatile String SubscriptionId;
         private volatile String subscriptionChecksum;
         private final StoreEntity storeEntity;
-        private final DbClient dbClient;
-        private final RedisClient redisClient;
-        private ExecutorService executorService;
-        private Executors executors;
 
-        public SEPCPUSHConnectorListener(StoreEntity storeEntity, RedisClient redisClient, DbClient dbClient) {
+        public SEPCPUSHConnectorListener(StoreEntity storeEntity) {
             this.storeEntity = storeEntity;
-            this.dbClient = dbClient;
-            this.redisClient = redisClient;
 
         }
 
@@ -94,12 +85,6 @@ public class PushConnector {
 
             checkInitialDumpComplete = true;
             logger.info("initial dump done");
-
-            executorService = Executors.newFixedThreadPool(3);
-            for (int i = 0; i < 3; i++) {
-                executorService.submit(() -> storeEntity.startInsertion(dbClient, redisClient));
-
-            }
 
         }
 

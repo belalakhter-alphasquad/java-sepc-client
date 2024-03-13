@@ -9,7 +9,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.BatchUpdateException;
 import java.util.List;
-
+import java.sql.SQLIntegrityConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.Date;
@@ -95,11 +95,12 @@ public class DbClient {
         }
     }
 
-    public void createEntity(String table, List<String> fields, List<Object> fieldvalues) throws SQLException {
-        if (fields.isEmpty() || fieldvalues.isEmpty()) {
+    public void createEntity(String table, List<String> fields, List<Object> fieldValues) throws SQLException {
+        if (fields.isEmpty() || fieldValues.isEmpty()) {
             throw new IllegalArgumentException("Fields and values cannot be empty.");
         }
-        if (fields.size() != fieldvalues.size()) {
+
+        if (fields.size() != fieldValues.size()) {
             throw new IllegalArgumentException("The number of fields must match the number of field values.");
         }
 
@@ -115,9 +116,9 @@ public class DbClient {
 
         sql.append(") VALUES (");
 
-        for (int i = 0; i < fieldvalues.size(); i++) {
+        for (int i = 0; i < fieldValues.size(); i++) {
             sql.append("?");
-            if (i < fieldvalues.size() - 1) {
+            if (i < fieldValues.size() - 1) {
                 sql.append(", ");
             }
         }
@@ -127,8 +128,8 @@ public class DbClient {
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
 
-            for (int i = 0; i < fieldvalues.size(); i++) {
-                Object value = fieldvalues.get(i);
+            for (int i = 0; i < fieldValues.size(); i++) {
+                Object value = fieldValues.get(i);
                 if (value == null) {
                     pstmt.setNull(i + 1, java.sql.Types.NULL);
                 } else if (value instanceof Integer) {
@@ -145,13 +146,19 @@ public class DbClient {
                     pstmt.setBoolean(i + 1, (Boolean) value);
                 } else if (value instanceof Timestamp) {
                     pstmt.setTimestamp(i + 1, (Timestamp) value);
-                } else {
+                } else if (value instanceof Object) {
                     pstmt.setObject(i + 1, value);
                 }
             }
 
             pstmt.executeUpdate();
 
+        } catch (SQLIntegrityConstraintViolationException e) {
+
+            throw new SQLException("Failed to insert into " + table + ": " + e.getMessage(), e);
+        } catch (SQLException e) {
+
+            throw new SQLException("Failed to insert into " + table + ": " + e.getMessage(), e);
         }
     }
 
@@ -169,48 +176,44 @@ public class DbClient {
 
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
+            conn.setAutoCommit(false);
 
-            int parameterIndex = 1;
             for (List<Object> values : batchFieldValues) {
-                if (values.size() != fields.size()) {
-                    throw new IllegalArgumentException(
-                            "The number of fields must match the number of field values for each entity.");
-                }
 
                 for (int i = 0; i < values.size(); i++) {
                     Object value = values.get(i);
-
                     if (value == null) {
-                        pstmt.setNull(parameterIndex, java.sql.Types.NULL);
+                        pstmt.setNull(i + 1, java.sql.Types.NULL);
                     } else if (value instanceof Integer) {
-                        pstmt.setInt(parameterIndex, (Integer) value);
+                        pstmt.setInt(i + 1, (Integer) value);
                     } else if (value instanceof String) {
-                        pstmt.setString(parameterIndex, (String) value);
+                        pstmt.setString(i + 1, (String) value);
                     } else if (value instanceof Double) {
-                        pstmt.setDouble(parameterIndex, (Double) value);
+                        pstmt.setDouble(i + 1, (Double) value);
                     } else if (value instanceof Long) {
-                        pstmt.setLong(parameterIndex, (Long) value);
+                        pstmt.setLong(i + 1, (Long) value);
                     } else if (value instanceof Float) {
-                        pstmt.setFloat(parameterIndex, (Float) value);
+                        pstmt.setFloat(i + 1, (Float) value);
                     } else if (value instanceof Boolean) {
-                        pstmt.setBoolean(parameterIndex, (Boolean) value);
+                        pstmt.setBoolean(i + 1, (Boolean) value);
                     } else if (value instanceof Timestamp) {
-                        pstmt.setTimestamp(parameterIndex, (Timestamp) value);
-                    } else if (value instanceof Date) {
-                        pstmt.setDate(parameterIndex, new java.sql.Date(((Date) value).getTime()));
-                    } else if (value instanceof byte[]) {
-                        pstmt.setBytes(parameterIndex, (byte[]) value);
-                    } else {
-                        pstmt.setObject(parameterIndex, value);
+                        pstmt.setTimestamp(i + 1, (Timestamp) value);
+                    } else if (value instanceof Object) {
+                        pstmt.setObject(i + 1, value);
                     }
-                    parameterIndex++;
                 }
 
+                pstmt.addBatch();
             }
 
             pstmt.executeBatch();
+            conn.commit();
         } catch (BatchUpdateException e) {
+
             throw new SQLException("Failed to execute batch insert", e);
+        } catch (SQLException e) {
+
+            throw e;
         }
     }
 

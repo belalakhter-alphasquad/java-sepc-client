@@ -32,8 +32,13 @@ public class StoreEntity {
 
     public StoreEntity(RedisClient redisClient, DbClient dbClient) {
 
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 4; i++) {
             executorServicecache.submit(() -> startProcessing(entityQueue, redisClient));
+
+        }
+
+        for (int i = 0; i < 2; i++) {
+            executorServicecache.submit(() -> startInsertion(dbClient, redisClient));
 
         }
 
@@ -51,7 +56,7 @@ public class StoreEntity {
                 Entity entity = entityQueue.take();
                 String key = "entity:" + entity.getId();
                 redisClient.setObject(key, entity);
-                redisClient.rpush("entitiesToProcess", key);
+                redisClient.rpush(entity.getDisplayName().toLowerCase(), key);
 
             } catch (Exception e) {
 
