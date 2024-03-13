@@ -16,6 +16,7 @@ import com.betbrain.sepc.connector.sportsmodel.EntityChange;
 import com.betbrain.sepc.connector.sportsmodel.EntityCreate;
 import com.betbrain.sepc.connector.sportsmodel.EntityDelete;
 import com.betbrain.sepc.connector.sportsmodel.EntityUpdate;
+import java.util.ArrayList;
 
 import sepc.sample.DB.DbClient;
 
@@ -31,7 +32,7 @@ public class StoreEntity {
 
     public StoreEntity(RedisClient redisClient, DbClient dbClient) {
 
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < 5; i++) {
             executorServicecache.submit(() -> startProcessing(entityQueue, redisClient));
 
         }
@@ -57,19 +58,37 @@ public class StoreEntity {
         }
     }
 
-    public void startInsertion(DbClient dbClient, RedisClient redisClient) {
+    public void startInsertion(DbClient dbClient, RedisClient redisClient, String listname) {
+        List<Entity> batch = new ArrayList<>();
+        final int batchSize = 50000;
+
         while (runner) {
             try {
-                String key = redisClient.lpop("entitiesToProcess");
-                if (key != null) {
-                    Entity entity = (Entity) redisClient.getObject(key);
-                    if (entity != null) {
-                        createEntity.processEntity(entity, dbClient);
+
+                String key = redisClient.lpop(listname);
+                if (key == null) {
+                    if (!batch.isEmpty()) {
+                        createEntity.processEntity(batch, dbClient);
+                        batch.clear();
+                    }
+                    break;
+                }
+
+                Entity entity = (Entity) redisClient.getObject(key);
+                if (entity != null) {
+                    batch.add(entity);
+
+                    if (batch.size() >= batchSize) {
+                        createEntity.processEntity(batch, dbClient);
+                        batch.clear();
                     }
                 }
             } catch (Exception e) {
-                // do something
             }
+        }
+
+        if (!batch.isEmpty()) {
+            createEntity.processEntity(batch, dbClient);
         }
     }
 

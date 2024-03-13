@@ -10,30 +10,20 @@ import java.util.List;
 public class createEntity {
     private static final Logger logger = LoggerFactory.getLogger(createEntity.class);
 
-    public static void processEntity(Entity entity, DbClient dbClient) {
-        String table = entity.getDisplayName().toLowerCase();
-        List<String> fields = entity.getPropertyNames();
-        List<Object> values = entity.getPropertyValues(fields);
-        try {
-            dbClient.createEntity(table, fields, values);
-        } catch (SQLException e) {
-
-        }
-    }
-
-    public static void processEntitiesBatch(List<Entity> entities, DbClient dbClient) {
-        if (entities.isEmpty())
+    public static void processEntity(List<Entity> batch, DbClient dbClient) {
+        if (batch.isEmpty())
             return;
-
-        String table = entities.get(0).getDisplayName().toLowerCase();
-        List<String> fields = entities.get(0).getPropertyNames();
-
+        String table = batch.get(0).getDisplayName().toLowerCase();
+        List<String> fields = batch.get(0).getPropertyNames();
+        List<List<Object>> batchFieldValues = new ArrayList<>();
+        for (Entity entity : batch) {
+            List<Object> values = entity.getPropertyValues(fields);
+            batchFieldValues.add(values);
+        }
         try {
-            dbClient.createEntitiesBatch(table, fields, entities);
+            dbClient.createEntity(table, fields, batchFieldValues);
         } catch (SQLException e) {
 
         }
-        entities.clear();
     }
-
 }
