@@ -50,7 +50,7 @@ public class StoreEntity {
                 Entity entity = entityQueue.take();
                 String key = "entity:" + entity.getId();
                 redisClient.setObject(key, entity);
-                redisClient.rpush(entity.getDisplayName().toLowerCase(), key);
+                redisClient.rpush("entitiesToProcess", key);
 
             } catch (Exception e) {
 
@@ -58,37 +58,19 @@ public class StoreEntity {
         }
     }
 
-    public void startInsertion(DbClient dbClient, RedisClient redisClient, String listname) {
-        List<Entity> batch = new ArrayList<>();
-        final int batchSize = 50000;
-
+    public void startInsertion(DbClient dbClient, RedisClient redisClient) {
         while (runner) {
             try {
-
-                String key = redisClient.lpop(listname);
-                if (key == null) {
-                    if (!batch.isEmpty()) {
-                        createEntity.processEntity(batch, dbClient);
-                        batch.clear();
-                    }
-                    break;
-                }
-
-                Entity entity = (Entity) redisClient.getObject(key);
-                if (entity != null) {
-                    batch.add(entity);
-
-                    if (batch.size() >= batchSize) {
-                        createEntity.processEntity(batch, dbClient);
-                        batch.clear();
+                String key = redisClient.lpop("entitiesToProcess");
+                if (key != null) {
+                    Entity entity = (Entity) redisClient.getObject(key);
+                    if (entity != null) {
+                        createEntity.processEntity(entity, dbClient);
                     }
                 }
             } catch (Exception e) {
+                // do something
             }
-        }
-
-        if (!batch.isEmpty()) {
-            createEntity.processEntity(batch, dbClient);
         }
     }
 
@@ -99,7 +81,7 @@ public class StoreEntity {
                 if (entityChange instanceof EntityCreate) {
                     EntityCreate newCreate = (EntityCreate) entityChange;
                     Entity entity = newCreate.getEntity();
-                    createEntity.processUpdateEntity(entity, dbClient);
+                    createEntity.processEntity(entity, dbClient);
                 } else if (entityChange instanceof EntityDelete) {
                     EntityDelete deletechange = (EntityDelete) entityChange;
                     Long Id = deletechange.getEntityId();

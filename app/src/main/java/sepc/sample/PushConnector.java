@@ -89,37 +89,15 @@ public class PushConnector {
 
         @Override
         public void notifyInitialDumpRetrieved() {
-            String[] redisLists = new String[] {
-                    "bettingoffer", "bettingofferstatus", "bettingtype", "bettingtypeusage", "currency",
-                    "entityproperty", "entitypropertytype", "entitypropertyvalue", "entitytype", "event",
-                    "eventaction", "eventactiondetail", "eventactiondetailstatus", "eventactiondetailtype",
-                    "eventactiondetailtypeusage", "eventactionstatus", "eventactiontype", "eventactiontypeusage",
-                    "eventcategory", "eventinfo", "eventinfostatus", "eventinfotype", "eventinfotypeusage",
-                    "eventpart", "eventpartdefaultusage", "eventparticipantinfo", "eventparticipantinfodetail",
-                    "eventparticipantinfodetailstatus", "eventparticipantinfodetailtype",
-                    "eventparticipantinfodetailtypeusage",
-                    "eventparticipantinfostatus", "eventparticipantinfotype", "eventparticipantinfotypeusage",
-                    "eventparticipantrelation", "eventparticipantrestriction", "eventstatus", "eventtemplate",
-                    "eventtype", "location", "locationrelation", "locationrelationtype", "locationtype",
-                    "market", "marketoutcomerelation", "outcome", "outcomestatus", "outcometype",
-                    "outcometypebettingtyperelation", "outcometypeusage", "participant", "participantrelation",
-                    "participantrelationtype", "participantrole", "participanttype", "participantusage",
-                    "provider", "providerentitymapping", "providereventrelation", "scoringunit",
-                    "source", "sport", "streamingprovider", "streamingprovidereventrelation", "translation"
-            };
 
             checkInitialDumpComplete = true;
             storeEntity.shutdown();
             logger.info("initial dump done");
-            executorService = Executors.newSingleThreadExecutor();
-            executorService.submit(() -> {
-                for (int i = 0; i < redisLists.length; i++) {
-                    storeEntity.startInsertion(dbClient, redisClient, redisLists[i]);
-                    logger.info("Thread " + Thread.currentThread().getId() + " processing: " + redisLists[i]);
+            executorService = Executors.newFixedThreadPool(4);
+            for (int i = 0; i < 4; i++) {
+                executorService.submit(() -> storeEntity.startInsertion(dbClient, redisClient));
 
-                }
-                logger.info("Insertion process done for initial data");
-            });
+            }
 
         }
 

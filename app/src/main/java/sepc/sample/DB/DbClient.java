@@ -94,55 +94,7 @@ public class DbClient {
         }
     }
 
-    public void createEntity(String table, List<String> fields, List<List<Object>> batchFieldValues)
-            throws SQLException {
-        if (fields.isEmpty() || batchFieldValues.isEmpty()) {
-            throw new IllegalArgumentException("Fields and batch values cannot be empty.");
-        }
-
-        StringBuilder sql = new StringBuilder("INSERT INTO ");
-        sql.append(table).append(" (");
-        sql.append(String.join(", ", fields));
-        sql.append(") VALUES (");
-        sql.append(String.join(", ", Collections.nCopies(fields.size(), "?")));
-        sql.append(")");
-
-        try (Connection conn = dataSource.getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
-            for (List<Object> fieldValues : batchFieldValues) {
-                if (fields.size() != fieldValues.size()) {
-                    throw new IllegalArgumentException("The number of fields must match the number of field values.");
-                }
-                for (int i = 0; i < fieldValues.size(); i++) {
-                    Object value = fieldValues.get(i);
-                    if (value == null) {
-                        pstmt.setNull(i + 1, java.sql.Types.NULL);
-                    } else if (value instanceof Integer) {
-                        pstmt.setInt(i + 1, (Integer) value);
-                    } else if (value instanceof String) {
-                        pstmt.setString(i + 1, (String) value);
-                    } else if (value instanceof Double) {
-                        pstmt.setDouble(i + 1, (Double) value);
-                    } else if (value instanceof Long) {
-                        pstmt.setLong(i + 1, (Long) value);
-                    } else if (value instanceof Float) {
-                        pstmt.setFloat(i + 1, (Float) value);
-                    } else if (value instanceof Boolean) {
-                        pstmt.setBoolean(i + 1, (Boolean) value);
-                    } else if (value instanceof Timestamp) {
-                        pstmt.setTimestamp(i + 1, (Timestamp) value);
-                    } else {
-                        pstmt.setObject(i + 1, value);
-                    }
-                }
-                pstmt.addBatch();
-            }
-            pstmt.executeBatch();
-            logger.info("batch executed");
-        }
-    }
-
-    public void createUpdateEntity(String table, List<String> fields, List<Object> fieldvalues) throws SQLException {
+    public void createEntity(String table, List<String> fields, List<Object> fieldvalues) throws SQLException {
         if (fields.isEmpty() || fieldvalues.isEmpty()) {
             throw new IllegalArgumentException("Fields and values cannot be empty.");
         }
