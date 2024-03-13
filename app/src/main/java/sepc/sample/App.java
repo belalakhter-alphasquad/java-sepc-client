@@ -17,7 +17,6 @@ public class App {
 
         DbClient dbClient = new DbClient();
         try {
-            // make sure to provide sql server credentials
             dbClient.runSqlFileToCreateTables();
             System.out.println("Database setup successfully.");
 

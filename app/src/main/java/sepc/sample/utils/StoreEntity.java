@@ -28,11 +28,11 @@ public class StoreEntity {
     public BlockingQueue<EntityChange> updateentityQueue = new LinkedBlockingDeque<>();
     boolean runner = true;
     boolean Cacherunner = true;
-    ExecutorService executorServicecache = Executors.newFixedThreadPool(6);
+    ExecutorService executorServicecache = Executors.newFixedThreadPool(4);
 
     public StoreEntity(RedisClient redisClient, DbClient dbClient) {
 
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 4; i++) {
             executorServicecache.submit(() -> startProcessing(entityQueue, redisClient));
 
         }
