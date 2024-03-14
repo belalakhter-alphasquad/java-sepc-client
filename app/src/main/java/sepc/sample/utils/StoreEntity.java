@@ -81,7 +81,7 @@ public class StoreEntity {
                 boolean runner = true;
                 while (runner) {
                     try {
-                        String key = redisClient.lpop("participant");
+                        String key = redisClient.lpop(table);
                         if (key != null) {
                             Entity entity = (Entity) redisClient.getObject(key);
                             if (entity != null) {
