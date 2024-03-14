@@ -60,7 +60,7 @@ public class StoreEntity {
     public void startInsertion(DbClient dbClient, RedisClient redisClient) {
         logger.info("Insertion Started");
         List<List<Object>> batchFieldValues = new ArrayList<>();
-        final int batchSize = 1000;
+        final int batchSize = 10000;
         String table = "participant";
         List<String> fields = new ArrayList<>();
         while (runner) {
