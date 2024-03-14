@@ -1,5 +1,6 @@
 package sepc.sample.utils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import java.util.concurrent.BlockingQueue;
@@ -15,30 +16,22 @@ import com.betbrain.sepc.connector.sportsmodel.EntityChange;
 import com.betbrain.sepc.connector.sportsmodel.EntityCreate;
 import com.betbrain.sepc.connector.sportsmodel.EntityDelete;
 import com.betbrain.sepc.connector.sportsmodel.EntityUpdate;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.BlockingQueue;
+
 import sepc.sample.DB.DbClient;
 
 public class StoreEntity {
 
-    int count = 0;
     private static final Logger logger = LoggerFactory.getLogger(StoreEntity.class);
 
     boolean runner = true;
     boolean Cacherunner = true;
-    public BlockingQueue<Entity> entityQueue = new LinkedBlockingDeque<>();
-    public BlockingQueue<EntityChange> updateentityQueue = new LinkedBlockingDeque<>();
-    ExecutorService executorServicecache = Executors.newFixedThreadPool(6);
+    ExecutorService executorServicecache = Executors.newFixedThreadPool(4);
 
-    public StoreEntity(RedisClient redisClient, DbClient dbClient) {
+    public StoreEntity(RedisClient redisClient, DbClient dbClient, BlockingQueue<Entity> entityqueue,
+            BlockingQueue<EntityChange> updateentityQueue) {
 
         for (int i = 0; i < 4; i++) {
-            executorServicecache.submit(() -> startProcessing(entityQueue, redisClient));
-
-        }
-
-        for (int i = 0; i < 2; i++) {
-            executorServicecache.submit(() -> startInsertion(dbClient, redisClient));
+            executorServicecache.submit(() -> startProcessing(entityqueue, redisClient));
 
         }
 
@@ -65,22 +58,46 @@ public class StoreEntity {
     }
 
     public void startInsertion(DbClient dbClient, RedisClient redisClient) {
+        logger.info("Insertion Started");
+        List<List<Object>> batchFieldValues = new ArrayList<>();
+        final int batchSize = 1000;
+        String table = "participant";
+        List<String> fields = new ArrayList<>();
         while (runner) {
             try {
-                String key = redisClient.lpop("entitiesToProcess");
+                String key = redisClient.lpop("participant");
                 if (key != null) {
                     Entity entity = (Entity) redisClient.getObject(key);
                     if (entity != null) {
-                        createEntity.processEntity(entity, dbClient);
+
+                        if (fields.isEmpty()) {
+                            fields = entity.getPropertyNames();
+                            table = entity.getDisplayName().toLowerCase();
+                        }
+
+                        List<Object> values = entity.getPropertyValues(fields);
+                        batchFieldValues.add(values);
+
+                        if (batchFieldValues.size() == batchSize) {
+                            dbClient.createEntities(table, fields, batchFieldValues);
+                            batchFieldValues.clear();
+                        }
                     }
+                } else {
+                    if (!batchFieldValues.isEmpty()) {
+                        dbClient.createEntities(table, fields, batchFieldValues);
+                        batchFieldValues.clear();
+                    }
+                    break;
                 }
             } catch (Exception e) {
-                // do something
             }
+
         }
+        logger.info("Insertion Completed to one table");
     }
 
-    public void startUpdate(DbClient dbClient, RedisClient redisClient) {
+    public void startUpdate(DbClient dbClient, BlockingQueue<EntityChange> updateentityQueue) {
         while (runner) {
             try {
                 EntityChange entityChange = updateentityQueue.take();
@@ -105,19 +122,10 @@ public class StoreEntity {
                 }
 
             } catch (Exception e) {
-                logger.error("Unable to process Entity change" + e);
+                // do something
             }
 
         }
-    }
-
-    public void queueEntity(Entity entity) {
-        try {
-            entityQueue.offer(entity);
-        } catch (Exception e) {
-
-        }
-
     }
 
     public void updatequeueEntity(EntityChange entityChange) {
@@ -129,8 +137,13 @@ public class StoreEntity {
 
     }
 
-    public void shutdown() {
+    public void CacheShutdown() {
         Cacherunner = false;
+        executorServicecache.shutdownNow();
+
+    }
+
+    public void CloseThreads() {
         executorServicecache.shutdownNow();
     }
 

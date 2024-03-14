@@ -7,14 +7,14 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.sql.BatchUpdateException;
+
 import java.util.List;
+import java.util.stream.Collectors;
 import java.sql.SQLIntegrityConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.Date;
 
-import java.util.Collections;
+import java.sql.Date;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -31,6 +31,7 @@ public class DbClient {
     private static final String SQL_FILE_PATH = "./src/main/resources/Tables.sql";
     private static final Logger logger = LoggerFactory.getLogger(DbClient.class);
     private static DbClient instance;
+    public int batchSize = 1000;
 
     public DbClient() {
         EnvLoader.load(".env");
@@ -42,6 +43,7 @@ public class DbClient {
         config.setMinimumIdle(5);
         config.setConnectionTimeout(100000);
         this.dataSource = new HikariDataSource(config);
+
     }
 
     public HikariDataSource getDataSource() {
@@ -148,6 +150,8 @@ public class DbClient {
                     pstmt.setTimestamp(i + 1, (Timestamp) value);
                 } else if (value instanceof Object) {
                     pstmt.setObject(i + 1, value);
+                } else if (value instanceof Date) {
+                    pstmt.setDate(i + 1, (Date) value);
                 }
             }
 
@@ -164,56 +168,28 @@ public class DbClient {
 
     public void createEntities(String table, List<String> fields, List<List<Object>> batchFieldValues)
             throws SQLException {
-        if (fields.isEmpty() || batchFieldValues.isEmpty()) {
-            throw new IllegalArgumentException("Fields and batch values cannot be empty.");
-        }
+        String fieldNames = String.join(", ", fields);
+        String questionMarks = String.join(", ", fields.stream().map(f -> "?").collect(Collectors.toList()));
+        String sql = String.format("INSERT INTO %s (%s) VALUES (%s)", table, fieldNames, questionMarks);
 
-        StringBuilder sql = new StringBuilder("INSERT INTO ");
-        sql.append(table).append(" (").append(String.join(", ", fields)).append(") VALUES ");
-        String valueGroup = "(" + String.join(", ", Collections.nCopies(fields.size(), "?")) + ")";
-        List<String> valueGroups = Collections.nCopies(batchFieldValues.size(), valueGroup);
-        sql.append(String.join(", ", valueGroups));
+        try (Connection connection = this.dataSource.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
 
-        try (Connection conn = dataSource.getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
-            conn.setAutoCommit(false);
-            int batchIndex = 0;
-            for (List<Object> values : batchFieldValues) {
-                for (int i = 0; i < values.size(); i++) {
-                    int parameterIndex = i + 1 + batchIndex * fields.size();
-                    Object value = values.get(i);
-                    if (value == null) {
-                        pstmt.setNull(parameterIndex, java.sql.Types.NULL);
-                    } else if (value instanceof Integer) {
-                        pstmt.setInt(parameterIndex, (Integer) value);
-                    } else if (value instanceof String) {
-                        pstmt.setString(parameterIndex, (String) value);
-                    } else if (value instanceof Double) {
-                        pstmt.setDouble(parameterIndex, (Double) value);
-                    } else if (value instanceof Long) {
-                        pstmt.setLong(parameterIndex, (Long) value);
-                    } else if (value instanceof Float) {
-                        pstmt.setFloat(parameterIndex, (Float) value);
-                    } else if (value instanceof Boolean) {
-                        pstmt.setBoolean(parameterIndex, (Boolean) value);
-                    } else if (value instanceof Timestamp) {
-                        pstmt.setTimestamp(parameterIndex, (Timestamp) value);
-                    } else {
-                        pstmt.setObject(parameterIndex, value);
-                    }
+            int counter = 0;
+            for (List<Object> fieldValues : batchFieldValues) {
+                for (int i = 0; i < fieldValues.size(); i++) {
+                    statement.setObject(i + 1, fieldValues.get(i));
                 }
-                pstmt.addBatch();
-                batchIndex++;
-            }
+                statement.addBatch();
 
-            pstmt.executeBatch();
-            conn.commit();
-        } catch (BatchUpdateException e) {
-            System.err.println("BatchUpdateException: " + e.getMessage());
-            throw new SQLException("Failed to execute batch insert", e);
-        } catch (SQLException e) {
-            System.err.println("SQLException: " + e.getMessage());
-            throw e;
+                if ((counter + 1) % batchSize == 0 || (counter + 1) == batchFieldValues.size()) {
+                    statement.executeBatch();
+                    statement.clearBatch();
+                }
+                counter++;
+            }
+        } catch (Exception e) {
+
         }
     }
 

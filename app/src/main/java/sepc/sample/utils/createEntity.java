@@ -6,7 +6,6 @@ import com.betbrain.sepc.connector.sportsmodel.Entity;
 import java.sql.SQLException;
 import sepc.sample.DB.DbClient;
 import java.util.List;
-import java.util.ArrayList;
 
 public class createEntity {
     private static final Logger logger = LoggerFactory.getLogger(createEntity.class);
@@ -15,6 +14,7 @@ public class createEntity {
         String table = entity.getDisplayName().toLowerCase();
         List<String> fields = entity.getPropertyNames();
         List<Object> values = entity.getPropertyValues(fields);
+
         try {
             dbClient.createEntity(table, fields, values);
         } catch (SQLException e) {
