@@ -5,7 +5,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
+
 import org.agrona.concurrent.ShutdownSignalBarrier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +24,7 @@ import sepc.sample.utils.StoreEntity;
 
 public class PushConnector {
     private static final Logger logger = LoggerFactory.getLogger(PushConnector.class);
-    public BlockingQueue<Entity> entityQueue = new LinkedBlockingDeque<>();
+    public BlockingQueue<List<Entity>> entityQueue = new LinkedBlockingDeque<>();
     public BlockingQueue<EntityChange> updateentityQueue = new LinkedBlockingDeque<>();
 
     private final SEPCPushConnector connector;
@@ -35,7 +36,7 @@ public class PushConnector {
         connector = new SEPCPushConnector(hostname, portPush);
         RedisClient redisClient = new RedisClient("localhost", 6379);
         DbClient dbClient = DbClient.getInstance();
-        ExecutorService executorServiceInsertion = Executors.newFixedThreadPool(2);
+        ExecutorService executorServiceInsertion = Executors.newFixedThreadPool(6);
 
         StoreEntity storeEntity = new StoreEntity(redisClient, dbClient, entityQueue, updateentityQueue);
         SEPCPUSHConnectorListener listener = new SEPCPUSHConnectorListener(storeEntity, entityQueue, updateentityQueue,
@@ -64,13 +65,13 @@ public class PushConnector {
         private volatile String SubscriptionId;
         private volatile String subscriptionChecksum;
         private final StoreEntity storeEntity;
-        private final BlockingQueue<Entity> entityQueue;
+        private final BlockingQueue<List<Entity>> entityQueue;
         private final BlockingQueue<EntityChange> updateentityQueue;
         ExecutorService executorServiceInsertion;
         DbClient dbClient;
         RedisClient redisClient;
 
-        public SEPCPUSHConnectorListener(StoreEntity storeEntity, BlockingQueue<Entity> entityQueue,
+        public SEPCPUSHConnectorListener(StoreEntity storeEntity, BlockingQueue<List<Entity>> entityQueue,
                 BlockingQueue<EntityChange> updateentityQueue, ExecutorService executorServiceInsertion,
                 DbClient dbClient, RedisClient redisClient) {
             this.storeEntity = storeEntity;
@@ -88,9 +89,9 @@ public class PushConnector {
         @Override
         public void notifyPartialInitialDumpRetrieved(List<? extends Entity> entities) {
 
-            for (Entity entity : entities) {
-                entityQueue.offer(entity);
-            }
+            List<Entity> receivedEntities = entities.stream().collect(Collectors.toList());
+            entityQueue.offer(receivedEntities);
+
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
@@ -103,8 +104,11 @@ public class PushConnector {
         public void notifyInitialDumpRetrieved() {
 
             checkInitialDumpComplete = true;
-            for (int i = 0; i < 2; i++) {
+            for (int i = 0; i < 4; i++) {
                 executorServiceInsertion.submit(() -> storeEntity.startInsertion(dbClient, redisClient));
+            }
+            for (int i = 0; i < 2; i++) {
+                executorServiceInsertion.submit(() -> storeEntity.startUpdate(dbClient, updateentityQueue));
             }
             logger.info("initial dump done");
 
@@ -117,6 +121,7 @@ public class PushConnector {
             SubscriptionId = entityChangeBatch.getSubscriptionId();
             subscriptionChecksum = entityChangeBatch.getSubscriptionCheckSum();
             List<EntityChange> ListChangeEntities = entityChangeBatch.getEntityChanges();
+            logger.info("Recieved Updates" + entityChangeBatch.toString());
             if (checkInitialDumpComplete) {
                 for (EntityChange entityChange : ListChangeEntities) {
                     updateentityQueue.offer(entityChange);

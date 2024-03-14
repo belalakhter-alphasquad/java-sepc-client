@@ -3,9 +3,11 @@ package sepc.sample.utils;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
-
+import redis.clients.jedis.Pipeline;
+import com.betbrain.sepc.connector.sportsmodel.Entity;
 import java.io.*;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 public class RedisClient {
@@ -47,6 +49,31 @@ public class RedisClient {
             Object obj = ois.readObject();
 
             return obj;
+        }
+    }
+
+    public void bulkInsertEntities(List<Entity> entities) {
+        try (Jedis jedis = jedisPool.getResource()) {
+            Pipeline pipeline = jedis.pipelined();
+
+            for (Entity entity : entities) {
+
+                String key = "entity:" + entity.getId();
+
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                ObjectOutputStream oos = new ObjectOutputStream(bos);
+                oos.writeObject(entity);
+                byte[] bytes = bos.toByteArray();
+
+                pipeline.set(key.getBytes(), bytes);
+
+                String listName = entity.getDisplayName().toLowerCase();
+                pipeline.rpush(listName, key);
+            }
+
+            pipeline.sync();
+        } catch (IOException e) {
+
         }
     }
 

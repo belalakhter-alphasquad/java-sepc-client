@@ -14,8 +14,6 @@ import java.sql.SQLIntegrityConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Date;
-
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
@@ -99,11 +97,11 @@ public class DbClient {
 
     public void createEntity(String table, List<String> fields, List<Object> fieldValues) throws SQLException {
         if (fields.isEmpty() || fieldValues.isEmpty()) {
-            throw new IllegalArgumentException("Fields and values cannot be empty.");
+
         }
 
         if (fields.size() != fieldValues.size()) {
-            throw new IllegalArgumentException("The number of fields must match the number of field values.");
+
         }
 
         StringBuilder sql = new StringBuilder("INSERT INTO ");
@@ -129,40 +127,15 @@ public class DbClient {
 
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
-
             for (int i = 0; i < fieldValues.size(); i++) {
-                Object value = fieldValues.get(i);
-                if (value == null) {
-                    pstmt.setNull(i + 1, java.sql.Types.NULL);
-                } else if (value instanceof Integer) {
-                    pstmt.setInt(i + 1, (Integer) value);
-                } else if (value instanceof String) {
-                    pstmt.setString(i + 1, (String) value);
-                } else if (value instanceof Double) {
-                    pstmt.setDouble(i + 1, (Double) value);
-                } else if (value instanceof Long) {
-                    pstmt.setLong(i + 1, (Long) value);
-                } else if (value instanceof Float) {
-                    pstmt.setFloat(i + 1, (Float) value);
-                } else if (value instanceof Boolean) {
-                    pstmt.setBoolean(i + 1, (Boolean) value);
-                } else if (value instanceof Timestamp) {
-                    pstmt.setTimestamp(i + 1, (Timestamp) value);
-                } else if (value instanceof Object) {
-                    pstmt.setObject(i + 1, value);
-                } else if (value instanceof Date) {
-                    pstmt.setDate(i + 1, (Date) value);
-                }
+                pstmt.setObject(i + 1, fieldValues.get(i));
             }
-
             pstmt.executeUpdate();
 
         } catch (SQLIntegrityConstraintViolationException e) {
 
-            throw new SQLException("Failed to insert into " + table + ": " + e.getMessage(), e);
         } catch (SQLException e) {
 
-            throw new SQLException("Failed to insert into " + table + ": " + e.getMessage(), e);
         }
     }
 
@@ -214,34 +187,13 @@ public class DbClient {
                 PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
 
             for (int i = 0; i < fieldvalues.size(); i++) {
-                Object value = fieldvalues.get(i);
-
-                if (value == null) {
-                    pstmt.setNull(i + 1, java.sql.Types.NULL);
-                } else if (value instanceof Integer) {
-                    pstmt.setInt(i + 1, (Integer) value);
-                } else if (value instanceof String) {
-                    pstmt.setString(i + 1, (String) value);
-                } else if (value instanceof Double) {
-                    pstmt.setDouble(i + 1, (Double) value);
-                } else if (value instanceof Long) {
-                    pstmt.setLong(i + 1, (Long) value);
-                } else if (value instanceof Float) {
-                    pstmt.setFloat(i + 1, (Float) value);
-                } else if (value instanceof Boolean) {
-                    pstmt.setBoolean(i + 1, (Boolean) value);
-                } else if (value instanceof Timestamp) {
-                    pstmt.setDate(i + 1, new java.sql.Date(((Timestamp) value).getTime()));
-                } else if (value instanceof Timestamp) {
-                    pstmt.setTimestamp(i + 1, (Timestamp) value);
-                } else {
-                    pstmt.setObject(i + 1, value);
-                }
+                pstmt.setObject(i + 1, fieldvalues.get(i));
             }
 
             pstmt.setObject(fields.size() + 1, id);
 
+            pstmt.executeUpdate();
         }
     }
+    
 
-}

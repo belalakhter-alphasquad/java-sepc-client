@@ -25,9 +25,9 @@ public class StoreEntity {
 
     boolean runner = true;
     boolean Cacherunner = true;
-    ExecutorService executorServicecache = Executors.newFixedThreadPool(4);
+    ExecutorService executorServicecache = Executors.newFixedThreadPool(6);
 
-    public StoreEntity(RedisClient redisClient, DbClient dbClient, BlockingQueue<Entity> entityqueue,
+    public StoreEntity(RedisClient redisClient, DbClient dbClient, BlockingQueue<List<Entity>> entityqueue,
             BlockingQueue<EntityChange> updateentityQueue) {
 
         for (int i = 0; i < 5; i++) {
@@ -35,21 +35,16 @@ public class StoreEntity {
 
         }
 
-        // executorService.submit(() -> startUpdate(dbClient,
-        // redisClient,updateentityQueue));
-
         logger.info("Queue Consumer Started");
 
     }
 
-    public void startProcessing(BlockingQueue<Entity> entityQueue, RedisClient redisClient) {
+    public void startProcessing(BlockingQueue<List<Entity>> entityQueue, RedisClient redisClient) {
         while (Cacherunner) {
             try {
 
-                Entity entity = entityQueue.take();
-                String key = "entity:" + entity.getId();
-                redisClient.setObject(key, entity);
-                redisClient.rpush(entity.getDisplayName().toLowerCase(), key);
+                List<Entity> cacheEntities = entityQueue.take();
+                redisClient.bulkInsertEntities(cacheEntities);
 
             } catch (Exception e) {
 
@@ -94,7 +89,7 @@ public class StoreEntity {
             }
 
         }
-        logger.info("Insertion Completed to one table");
+
     }
 
     public void startUpdate(DbClient dbClient, BlockingQueue<EntityChange> updateentityQueue) {
@@ -120,21 +115,13 @@ public class StoreEntity {
                     dbClient.updateEntity(Id, table, fields, fieldvalues);
 
                 }
+                Thread.sleep(200);
 
             } catch (Exception e) {
                 // do something
             }
 
         }
-    }
-
-    public void updatequeueEntity(EntityChange entityChange) {
-        try {
-            // updateentityQueue.offer(entityChange);
-        } catch (Exception e) {
-
-        }
-
     }
 
     public void CacheShutdown() {
