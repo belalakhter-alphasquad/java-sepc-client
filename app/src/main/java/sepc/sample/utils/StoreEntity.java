@@ -25,7 +25,7 @@ public class StoreEntity {
 
     boolean runner = true;
     boolean Cacherunner = true;
-    ExecutorService executorServicecache = Executors.newFixedThreadPool(5);
+    ExecutorService executorServicecache = Executors.newFixedThreadPool(4);
 
     public StoreEntity(RedisClient redisClient, DbClient dbClient, BlockingQueue<Entity> entityqueue,
             BlockingQueue<EntityChange> updateentityQueue) {
