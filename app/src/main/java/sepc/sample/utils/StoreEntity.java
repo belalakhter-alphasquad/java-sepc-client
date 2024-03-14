@@ -3,6 +3,8 @@ package sepc.sample.utils;
 import java.util.ArrayList;
 import java.util.List;
 
+import java.util.Arrays;
+
 import java.util.concurrent.BlockingQueue;
 
 import java.util.concurrent.ExecutorService;
@@ -54,42 +56,64 @@ public class StoreEntity {
 
     public void startInsertion(DbClient dbClient, RedisClient redisClient) {
         logger.info("Insertion Started");
-        List<List<Object>> batchFieldValues = new ArrayList<>();
-        final int batchSize = 10000;
-        String table = "participant";
-        List<String> fields = new ArrayList<>();
-        while (runner) {
-            try {
-                String key = redisClient.lpop("participant");
-                if (key != null) {
-                    Entity entity = (Entity) redisClient.getObject(key);
-                    if (entity != null) {
+        List<String> tableNames = Arrays.asList("bettingoffer", "bettingofferstatus", "bettingtype", "bettingtypeusage",
+                "currency", "entityproperty", "entitypropertytype", "entitypropertyvalue", "entitytype", "event",
+                "eventaction", "eventactiondetail", "eventactiondetailstatus", "eventactiondetailtype",
+                "eventactiondetailtypeusage", "eventactionstatus", "eventactiontype", "eventactiontypeusage",
+                "eventcategory", "eventinfo", "eventinfostatus", "eventinfotype", "eventinfotypeusage", "eventpart",
+                "eventpartdefaultusage", "eventparticipantinfo", "eventparticipantinfodetail",
+                "eventparticipantinfodetailstatus", "eventparticipantinfodetailtype",
+                "eventparticipantinfodetailtypeusage", "eventparticipantinfostatus", "eventparticipantinfotype",
+                "eventparticipantinfotypeusage", "eventparticipantrelation", "eventparticipantrestriction",
+                "eventstatus", "eventtemplate", "eventtype", "location", "locationrelation", "locationrelationtype",
+                "locationtype", "market", "marketoutcomerelation", "outcome", "outcomestatus", "outcometype",
+                "outcometypebettingtyperelation", "outcometypeusage", "participant", "participantrelation",
+                "participantrelationtype", "participantrole", "participanttype", "participantusage", "provider",
+                "providerentitymapping", "providereventrelation", "scoringunit", "source", "sport", "streamingprovider",
+                "streamingprovidereventrelation", "translation");
 
-                        if (fields.isEmpty()) {
-                            fields = entity.getPropertyNames();
-                            table = entity.getDisplayName().toLowerCase();
+        while (true) {
+            for (String tableName : tableNames) {
+                List<List<Object>> batchFieldValues = new ArrayList<>();
+                final int batchSize = 10000;
+                String table = tableName;
+                List<String> fields = new ArrayList<>();
+                boolean runner = true;
+                while (runner) {
+                    try {
+                        String key = redisClient.lpop("participant");
+                        if (key != null) {
+                            Entity entity = (Entity) redisClient.getObject(key);
+                            if (entity != null) {
+
+                                if (fields.isEmpty()) {
+                                    fields = entity.getPropertyNames();
+                                    table = entity.getDisplayName().toLowerCase();
+                                }
+
+                                List<Object> values = entity.getPropertyValues(fields);
+                                batchFieldValues.add(values);
+
+                                if (batchFieldValues.size() == batchSize) {
+                                    dbClient.createEntities(table, fields, batchFieldValues);
+                                    batchFieldValues.clear();
+                                }
+                            }
+                        } else {
+                            if (!batchFieldValues.isEmpty()) {
+                                dbClient.createEntities(table, fields, batchFieldValues);
+                                batchFieldValues.clear();
+                            }
+                            break;
                         }
-
-                        List<Object> values = entity.getPropertyValues(fields);
-                        batchFieldValues.add(values);
-
-                        if (batchFieldValues.size() == batchSize) {
-                            dbClient.createEntities(table, fields, batchFieldValues);
-                            batchFieldValues.clear();
-                        }
+                    } catch (Exception e) {
                     }
-                } else {
-                    if (!batchFieldValues.isEmpty()) {
-                        dbClient.createEntities(table, fields, batchFieldValues);
-                        batchFieldValues.clear();
-                    }
-                    break;
+
                 }
-            } catch (Exception e) {
+
             }
 
         }
-
     }
 
     public void startUpdate(DbClient dbClient, BlockingQueue<EntityChange> updateentityQueue) {
