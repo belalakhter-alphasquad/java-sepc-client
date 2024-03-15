@@ -79,7 +79,7 @@ public class StoreEntity {
 
                 List<String> fields = new ArrayList<>();
                 while (runner) {
-                    List<Entity> entities = redisClient.popAllEntities(tableName);
+                    List<Entity> entities = redisClient.batchPopEntities(tableName);
                     int batchSize = entities.size();
                     if (entities != null && !entities.isEmpty()) {
                         for (Entity entity : entities) {

@@ -81,25 +81,29 @@ public class RedisClient {
         }
     }
 
-    public List<Entity> popAllEntities(String listKey) {
+    public List<Entity> batchPopEntities(String listKey) {
         List<Entity> entities = new ArrayList<>();
+        List<String> keys = new ArrayList<>();
+
         try (Jedis jedis = jedisPool.getResource()) {
             while (true) {
-                byte[] bytes = jedis.lpop(listKey.getBytes(StandardCharsets.UTF_8));
-                if (bytes == null) {
+                String poppedKey = jedis.lpop(listKey);
+                if (poppedKey == null) {
                     break;
                 }
-                try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
-                        ObjectInputStream ois = new ObjectInputStream(bis)) {
-                    Entity entity = (Entity) ois.readObject();
-                    entities.add(entity);
-                } catch (ClassNotFoundException | IOException e) {
-                    e.printStackTrace();
+                keys.add(poppedKey);
+            }
+
+            for (String key : keys) {
+                Entity obj = (Entity) getObject(key);
+                if (obj != null) {
+                    entities.add(obj);
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         return entities;
     }
 
