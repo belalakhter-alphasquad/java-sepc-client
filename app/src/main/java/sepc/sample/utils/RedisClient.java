@@ -84,30 +84,17 @@ public class RedisClient {
     public List<Entity> popAllEntities(String listKey) {
         List<Entity> entities = new ArrayList<>();
         try (Jedis jedis = jedisPool.getResource()) {
-            String luaScript = "local items = {} " +
-                    "while true do " +
-                    "   local item = redis.call('LPOP', KEYS[1]) " +
-                    "   if not item then break end " +
-                    "   table.insert(items, item) " +
-                    "end " +
-                    "return items";
-
-            byte[] scriptBytes = luaScript.getBytes(StandardCharsets.UTF_8);
-            List<byte[]> keys = Collections.singletonList(listKey.getBytes(StandardCharsets.UTF_8));
-
-            List<byte[]> args = new ArrayList<>();
-
-            @SuppressWarnings("unchecked")
-            List<byte[]> serializedEntities = (List<byte[]>) jedis.eval(scriptBytes, keys, args);
-
-            for (byte[] bytes : serializedEntities) {
-                if (bytes != null) {
-                    try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
-                            ObjectInputStream ois = new ObjectInputStream(bis)) {
-                        entities.add((Entity) ois.readObject());
-                    } catch (ClassNotFoundException | IOException e) {
-                        e.printStackTrace();
-                    }
+            while (true) {
+                byte[] bytes = jedis.lpop(listKey.getBytes(StandardCharsets.UTF_8));
+                if (bytes == null) {
+                    break;
+                }
+                try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+                        ObjectInputStream ois = new ObjectInputStream(bis)) {
+                    Entity entity = (Entity) ois.readObject();
+                    entities.add(entity);
+                } catch (ClassNotFoundException | IOException e) {
+                    e.printStackTrace();
                 }
             }
         } catch (Exception e) {
