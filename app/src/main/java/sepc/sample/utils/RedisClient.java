@@ -55,21 +55,6 @@ public class RedisClient {
         }
     }
 
-    public Entity blpopEntity(String listKey, int timeoutSeconds) {
-        try (Jedis jedis = jedisPool.getResource()) {
-            List<String> response = jedis.blpop(timeoutSeconds, listKey);
-            if (response == null || response.isEmpty()) {
-                return null;
-            } else {
-                String key = response.get(1);
-                return (Entity) getObject(key);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
     public void bulkInsertEntities(List<Entity> entities) {
         if (entities.isEmpty())
             return;
@@ -96,11 +81,11 @@ public class RedisClient {
         }
     }
 
-    public List<Entity> batchPopEntities(String listKey, int count) {
+    public List<Entity> popAllEntities(String listKey) {
         List<Entity> entities = new ArrayList<>();
         try (Jedis jedis = jedisPool.getResource()) {
             String luaScript = "local items = {} " +
-                    "for i = 1, tonumber(ARGV[1]) do " +
+                    "while true do " +
                     "   local item = redis.call('LPOP', KEYS[1]) " +
                     "   if not item then break end " +
                     "   table.insert(items, item) " +
@@ -109,7 +94,8 @@ public class RedisClient {
 
             byte[] scriptBytes = luaScript.getBytes(StandardCharsets.UTF_8);
             List<byte[]> keys = Collections.singletonList(listKey.getBytes(StandardCharsets.UTF_8));
-            List<byte[]> args = Collections.singletonList(String.valueOf(count).getBytes(StandardCharsets.UTF_8));
+
+            List<byte[]> args = new ArrayList<>();
 
             @SuppressWarnings("unchecked")
             List<byte[]> serializedEntities = (List<byte[]>) jedis.eval(scriptBytes, keys, args);
@@ -120,12 +106,12 @@ public class RedisClient {
                             ObjectInputStream ois = new ObjectInputStream(bis)) {
                         entities.add((Entity) ois.readObject());
                     } catch (ClassNotFoundException | IOException e) {
-
+                        e.printStackTrace();
                     }
                 }
             }
         } catch (Exception e) {
-
+            e.printStackTrace();
         }
         return entities;
     }

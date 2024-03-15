@@ -28,7 +28,6 @@ public class DbClient {
     private static final String SQL_FILE_PATH = "./src/main/resources/Tables.sql";
     private static final Logger logger = LoggerFactory.getLogger(DbClient.class);
     private static DbClient instance;
-    public int batchSize = 100;
 
     public DbClient() {
         EnvLoader.load(".env");
@@ -138,7 +137,7 @@ public class DbClient {
         }
     }
 
-    public void createEntities(String table, List<String> fields, List<List<Object>> batchFieldValues)
+    public void createEntities(String table, List<String> fields, List<List<Object>> batchFieldValues, int batchSize)
             throws SQLException {
         String fieldNames = String.join(", ", fields);
         String questionMarks = String.join(", ", fields.stream().map(f -> "?").collect(Collectors.toList()));

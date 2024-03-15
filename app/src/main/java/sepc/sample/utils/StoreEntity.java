@@ -76,10 +76,11 @@ public class StoreEntity {
 
             for (String tableName : tableNames) {
                 List<List<Object>> batchFieldValues = new ArrayList<>();
-                final int batchSize = 100;
+
                 List<String> fields = new ArrayList<>();
                 while (runner) {
-                    List<Entity> entities = redisClient.batchPopEntities(tableName, batchSize);
+                    List<Entity> entities = redisClient.popAllEntities(tableName);
+                    int batchSize = entities.size();
                     if (entities != null && !entities.isEmpty()) {
                         for (Entity entity : entities) {
                             if (fields.isEmpty()) {
@@ -91,7 +92,7 @@ public class StoreEntity {
 
                             if (batchFieldValues.size() >= batchSize) {
                                 try {
-                                    dbClient.createEntities(tableName, fields, batchFieldValues);
+                                    dbClient.createEntities(tableName, fields, batchFieldValues, batchSize);
                                 } catch (SQLException e) {
 
                                 }
@@ -100,7 +101,7 @@ public class StoreEntity {
                         }
                         if (!batchFieldValues.isEmpty()) {
                             try {
-                                dbClient.createEntities(tableName, fields, batchFieldValues);
+                                dbClient.createEntities(tableName, fields, batchFieldValues, batchSize);
                             } catch (SQLException e) {
                             }
                             batchFieldValues.clear();
