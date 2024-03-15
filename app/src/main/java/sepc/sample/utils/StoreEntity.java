@@ -1,5 +1,6 @@
 package sepc.sample.utils;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,57 +72,47 @@ public class StoreEntity {
                 "participantrelationtype", "participantrole", "participanttype", "participantusage", "provider",
                 "providerentitymapping", "providereventrelation", "scoringunit", "source", "sport", "streamingprovider",
                 "streamingprovidereventrelation", "translation");
-
         while (true) {
+
             for (String tableName : tableNames) {
                 List<List<Object>> batchFieldValues = new ArrayList<>();
                 final int batchSize = 10000;
-                String table = tableName;
                 List<String> fields = new ArrayList<>();
-                boolean runner = true;
                 while (runner) {
-                    try {
-                        List<String> keys = redisClient.popBulk(table, 10000); 
-                        
-                        if (keys != null && !keys.isEmpty()) {
-                            for (String key : keys) {
-                                Entity entity = (Entity) redisClient.getObject(key);
-                                if (entity != null) {
-                                    if (fields.isEmpty()) {
-                                        fields = entity.getPropertyNames();
-                              
-                                        table = entity.getDisplayName().toLowerCase();
-                                    }
-                
-                                    List<Object> values = entity.getPropertyValues(fields);
-                                    batchFieldValues.add(values);
-                
-                                    if (batchFieldValues.size() == batchSize) {
-                                        dbClient.createEntities(table, fields, batchFieldValues);
-                                        batchFieldValues.clear();
-                                    }
-                                }
+                    List<Entity> entities = redisClient.batchPopEntities(tableName, batchSize);
+                    if (entities != null && !entities.isEmpty()) {
+                        for (Entity entity : entities) {
+                            if (fields.isEmpty()) {
+                                fields = entity.getPropertyNames();
+                                tableName = entity.getDisplayName().toLowerCase();
                             }
-                            
-                       
-                            if (!batchFieldValues.isEmpty()) {
-                                dbClient.createEntities(table, fields, batchFieldValues);
+                            List<Object> values = entity.getPropertyValues(fields);
+                            batchFieldValues.add(values);
+
+                            if (batchFieldValues.size() >= batchSize) {
+                                try {
+                                    dbClient.createEntities(tableName, fields, batchFieldValues);
+                                } catch (SQLException e) {
+
+                                }
                                 batchFieldValues.clear();
                             }
-                        } else {
-                    
-                            break;
                         }
-                    } catch (Exception e) {
-                  
+                        if (!batchFieldValues.isEmpty()) {
+                            try {
+                                dbClient.createEntities(tableName, fields, batchFieldValues);
+                            } catch (SQLException e) {
+                            }
+                            batchFieldValues.clear();
+                        }
+                    } else {
+                        runner = false;
                     }
                 }
-                
-                
 
             }
-
         }
+
     }
 
     public void startUpdate(DbClient dbClient, BlockingQueue<EntityChange> updateentityQueue) {

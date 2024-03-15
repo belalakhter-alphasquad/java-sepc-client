@@ -4,8 +4,11 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.Response;
+
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -52,6 +55,21 @@ public class RedisClient {
         }
     }
 
+    public Entity blpopEntity(String listKey, int timeoutSeconds) {
+        try (Jedis jedis = jedisPool.getResource()) {
+            List<String> response = jedis.blpop(timeoutSeconds, listKey);
+            if (response == null || response.isEmpty()) {
+                return null;
+            } else {
+                String key = response.get(1);
+                return (Entity) getObject(key);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public void bulkInsertEntities(List<Entity> entities) {
         try (Jedis jedis = jedisPool.getResource()) {
             Pipeline pipeline = jedis.pipelined();
@@ -76,34 +94,32 @@ public class RedisClient {
 
         }
     }
-    public List<String> lrange(String listKey, long start, long stop) {
+
+    public List<Entity> batchPopEntities(String listKey, int count) {
+        List<Entity> entities = new ArrayList<>();
         try (Jedis jedis = jedisPool.getResource()) {
-            return jedis.lrange(listKey, start, stop);
+            Pipeline pipeline = jedis.pipelined();
+            List<Response<byte[]>> responses = new ArrayList<>();
+
+            for (int i = 0; i < count; i++) {
+                responses.add(pipeline.lpop(listKey.getBytes()));
+            }
+
+            pipeline.sync();
+
+            for (Response<byte[]> response : responses) {
+                byte[] bytes = response.get();
+                if (bytes != null) {
+                    ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+                    ObjectInputStream ois = new ObjectInputStream(bis);
+                    entities.add((Entity) ois.readObject());
+                }
+            }
         } catch (Exception e) {
-            return Collections.emptyList();
+
         }
+        return entities;
     }
-    public void ltrim(String listKey, long start, long stop) {
-        try (Jedis jedis = jedisPool.getResource()) {
-            jedis.ltrim(listKey, start, stop);
-        } catch (Exception e) {
-          
-        }
-    }
-    public List<String> popBulk(String listKey, int bulkSize) {
-        String luaScript = "local keys = redis.call('LRANGE', KEYS[1], 0, ARGV[1]) " +
-                            "redis.call('LTRIM', KEYS[1], ARGV[1]+1, -1) " +
-                            "return keys";
-        try (Jedis jedis = jedisPool.getResource()) {
-            @SuppressWarnings("unchecked")
-            List<String> keys = (List<String>) jedis.eval(luaScript, Collections.singletonList(listKey), Collections.singletonList(String.valueOf(bulkSize - 1)));
-            return keys;
-        } catch (Exception e) {
-            return Collections.emptyList();
-        }
-    }
-    
-    
 
     public Set<String> keys(String pattern) {
         try (Jedis jedis = jedisPool.getResource()) {
