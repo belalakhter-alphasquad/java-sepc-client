@@ -87,7 +87,7 @@ public class RedisClient {
         List<String> keys = new ArrayList<>();
 
         try (Jedis jedis = jedisPool.getResource()) {
-            while (true) {
+            for (int i = 0; i <= 100; i++) {
                 String poppedKey = jedis.lpop(listKey);
                 if (poppedKey == null) {
                     break;
