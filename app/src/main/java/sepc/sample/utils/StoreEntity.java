@@ -81,35 +81,43 @@ public class StoreEntity {
                 boolean runner = true;
                 while (runner) {
                     try {
-                        String key = redisClient.lpop(table);
-                        if (key != null) {
-                            Entity entity = (Entity) redisClient.getObject(key);
-                            if (entity != null) {
-
-                                if (fields.isEmpty()) {
-                                    fields = entity.getPropertyNames();
-                                    table = entity.getDisplayName().toLowerCase();
-                                }
-
-                                List<Object> values = entity.getPropertyValues(fields);
-                                batchFieldValues.add(values);
-
-                                if (batchFieldValues.size() == batchSize) {
-                                    dbClient.createEntities(table, fields, batchFieldValues);
-                                    batchFieldValues.clear();
+                        List<String> keys = redisClient.popBulk(table, 10000); 
+                        
+                        if (keys != null && !keys.isEmpty()) {
+                            for (String key : keys) {
+                                Entity entity = (Entity) redisClient.getObject(key);
+                                if (entity != null) {
+                                    if (fields.isEmpty()) {
+                                        fields = entity.getPropertyNames();
+                              
+                                        table = entity.getDisplayName().toLowerCase();
+                                    }
+                
+                                    List<Object> values = entity.getPropertyValues(fields);
+                                    batchFieldValues.add(values);
+                
+                                    if (batchFieldValues.size() == batchSize) {
+                                        dbClient.createEntities(table, fields, batchFieldValues);
+                                        batchFieldValues.clear();
+                                    }
                                 }
                             }
-                        } else {
+                            
+                       
                             if (!batchFieldValues.isEmpty()) {
                                 dbClient.createEntities(table, fields, batchFieldValues);
                                 batchFieldValues.clear();
                             }
+                        } else {
+                    
                             break;
                         }
                     } catch (Exception e) {
+                  
                     }
-
                 }
+                
+                
 
             }
 

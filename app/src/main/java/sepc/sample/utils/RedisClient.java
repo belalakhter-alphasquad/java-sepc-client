@@ -76,6 +76,34 @@ public class RedisClient {
 
         }
     }
+    public List<String> lrange(String listKey, long start, long stop) {
+        try (Jedis jedis = jedisPool.getResource()) {
+            return jedis.lrange(listKey, start, stop);
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+    public void ltrim(String listKey, long start, long stop) {
+        try (Jedis jedis = jedisPool.getResource()) {
+            jedis.ltrim(listKey, start, stop);
+        } catch (Exception e) {
+          
+        }
+    }
+    public List<String> popBulk(String listKey, int bulkSize) {
+        String luaScript = "local keys = redis.call('LRANGE', KEYS[1], 0, ARGV[1]) " +
+                            "redis.call('LTRIM', KEYS[1], ARGV[1]+1, -1) " +
+                            "return keys";
+        try (Jedis jedis = jedisPool.getResource()) {
+            @SuppressWarnings("unchecked")
+            List<String> keys = (List<String>) jedis.eval(luaScript, Collections.singletonList(listKey), Collections.singletonList(String.valueOf(bulkSize - 1)));
+            return keys;
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+    
+    
 
     public Set<String> keys(String pattern) {
         try (Jedis jedis = jedisPool.getResource()) {
