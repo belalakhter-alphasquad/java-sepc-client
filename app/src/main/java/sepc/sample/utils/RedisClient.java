@@ -50,6 +50,7 @@ public class RedisClient {
             ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
             ObjectInputStream ois = new ObjectInputStream(bis);
             Object obj = ois.readObject();
+            jedis.del(key.getBytes());
 
             return obj;
         }
