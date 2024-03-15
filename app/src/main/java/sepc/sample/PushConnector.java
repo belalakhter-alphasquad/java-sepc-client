@@ -120,7 +120,7 @@ public class PushConnector {
             SubscriptionId = entityChangeBatch.getSubscriptionId();
             subscriptionChecksum = entityChangeBatch.getSubscriptionCheckSum();
             List<EntityChange> ListChangeEntities = entityChangeBatch.getEntityChanges();
-            logger.info("Recieved Updates" + entityChangeBatch.toString());
+            logger.info("update list recieved:" + ListChangeEntities);
             if (checkInitialDumpComplete) {
                 for (EntityChange entityChange : ListChangeEntities) {
                     updateentityQueue.offer(entityChange);
