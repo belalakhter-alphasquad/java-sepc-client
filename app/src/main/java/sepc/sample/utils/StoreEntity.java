@@ -55,7 +55,7 @@ public class StoreEntity {
         }
     }
 
-    public void startInsertion(DbClient dbClient, RedisClient redisClient) {
+    public void startInsertion(DbClient dbClient, RedisClient redisClient, ExecutorService executorService) {
         logger.info("Insertion Started");
         List<String> tableNames = Arrays.asList("bettingoffer", "bettingofferstatus", "bettingtype", "bettingtypeusage",
                 "currency", "entityproperty", "entitypropertytype", "entitypropertyvalue", "entitytype", "event",
@@ -75,43 +75,46 @@ public class StoreEntity {
         while (true) {
 
             for (String tableName : tableNames) {
-                List<List<Object>> batchFieldValues = new ArrayList<>();
+                executorService.submit(() -> {
+                    List<List<Object>> batchFieldValues = new ArrayList<>();
 
-                List<String> fields = new ArrayList<>();
-                while (runner) {
-                    List<Entity> entities = redisClient.batchPopEntities(tableName);
-                    int batchSize = entities.size();
-                    if (entities != null && !entities.isEmpty()) {
-                        for (Entity entity : entities) {
-                            if (fields.isEmpty()) {
-                                fields = entity.getPropertyNames();
-                                tableName = entity.getDisplayName().toLowerCase();
+                    List<String> fields = new ArrayList<>();
+                    while (runner) {
+                        List<Entity> entities = redisClient.batchPopEntities(tableName);
+                        int batchSize = entities.size();
+                        if (entities != null && !entities.isEmpty()) {
+                            for (Entity entity : entities) {
+                                if (fields.isEmpty()) {
+                                    fields = entity.getPropertyNames();
+
+                                }
+                                List<Object> values = entity.getPropertyValues(fields);
+                                batchFieldValues.add(values);
+
+                                if (batchFieldValues.size() >= batchSize) {
+                                    try {
+                                        dbClient.createEntities(tableName, fields, batchFieldValues, batchSize);
+                                    } catch (SQLException e) {
+
+                                    }
+                                    batchFieldValues.clear();
+                                }
                             }
-                            List<Object> values = entity.getPropertyValues(fields);
-                            batchFieldValues.add(values);
-
-                            if (batchFieldValues.size() >= batchSize) {
+                            if (!batchFieldValues.isEmpty()) {
                                 try {
                                     dbClient.createEntities(tableName, fields, batchFieldValues, batchSize);
                                 } catch (SQLException e) {
-
                                 }
                                 batchFieldValues.clear();
                             }
+                        } else {
+                            runner = false;
                         }
-                        if (!batchFieldValues.isEmpty()) {
-                            try {
-                                dbClient.createEntities(tableName, fields, batchFieldValues, batchSize);
-                            } catch (SQLException e) {
-                            }
-                            batchFieldValues.clear();
-                        }
-                    } else {
-                        runner = false;
                     }
-                }
 
+                });
             }
+
         }
 
     }

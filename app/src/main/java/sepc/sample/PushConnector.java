@@ -104,10 +104,9 @@ public class PushConnector {
         public void notifyInitialDumpRetrieved() {
 
             checkInitialDumpComplete = true;
-            for (int i = 0; i < 3; i++) {
-                executorServiceInsertion.submit(() -> storeEntity.startInsertion(dbClient, redisClient));
 
-            }
+            executorServiceInsertion
+                    .submit(() -> storeEntity.startInsertion(dbClient, redisClient, executorServiceInsertion));
 
             // executorServiceInsertion.submit(() -> storeEntity.startUpdate(dbClient,
             // updateentityQueue));
