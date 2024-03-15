@@ -4,10 +4,10 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.Pipeline;
-import redis.clients.jedis.Response;
 
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -71,22 +71,23 @@ public class RedisClient {
     }
 
     public void bulkInsertEntities(List<Entity> entities) {
+        if (entities.isEmpty())
+            return;
+
         try (Jedis jedis = jedisPool.getResource()) {
             Pipeline pipeline = jedis.pipelined();
 
             for (Entity entity : entities) {
-
-                String key = "entity:" + entity.getId();
-
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 ObjectOutputStream oos = new ObjectOutputStream(bos);
                 oos.writeObject(entity);
                 byte[] bytes = bos.toByteArray();
 
-                pipeline.set(key.getBytes(), bytes);
-
+                String key = "entity:" + entity.getId();
                 String listName = entity.getDisplayName().toLowerCase();
-                pipeline.rpush(listName, key);
+
+                pipeline.set(key.getBytes(), bytes);
+                pipeline.rpush(listName.getBytes(), key.getBytes());
             }
 
             pipeline.sync();
@@ -98,21 +99,29 @@ public class RedisClient {
     public List<Entity> batchPopEntities(String listKey, int count) {
         List<Entity> entities = new ArrayList<>();
         try (Jedis jedis = jedisPool.getResource()) {
-            Pipeline pipeline = jedis.pipelined();
-            List<Response<byte[]>> responses = new ArrayList<>();
+            String luaScript = "local items = {} " +
+                    "for i = 1, tonumber(ARGV[1]) do " +
+                    "   local item = redis.call('LPOP', KEYS[1]) " +
+                    "   if not item then break end " +
+                    "   table.insert(items, item) " +
+                    "end " +
+                    "return items";
 
-            for (int i = 0; i < count; i++) {
-                responses.add(pipeline.lpop(listKey.getBytes()));
-            }
+            byte[] scriptBytes = luaScript.getBytes(StandardCharsets.UTF_8);
+            List<byte[]> keys = Collections.singletonList(listKey.getBytes(StandardCharsets.UTF_8));
+            List<byte[]> args = Collections.singletonList(String.valueOf(count).getBytes(StandardCharsets.UTF_8));
 
-            pipeline.sync();
+            @SuppressWarnings("unchecked")
+            List<byte[]> serializedEntities = (List<byte[]>) jedis.eval(scriptBytes, keys, args);
 
-            for (Response<byte[]> response : responses) {
-                byte[] bytes = response.get();
+            for (byte[] bytes : serializedEntities) {
                 if (bytes != null) {
-                    ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
-                    ObjectInputStream ois = new ObjectInputStream(bis);
-                    entities.add((Entity) ois.readObject());
+                    try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+                            ObjectInputStream ois = new ObjectInputStream(bis)) {
+                        entities.add((Entity) ois.readObject());
+                    } catch (ClassNotFoundException | IOException e) {
+
+                    }
                 }
             }
         } catch (Exception e) {

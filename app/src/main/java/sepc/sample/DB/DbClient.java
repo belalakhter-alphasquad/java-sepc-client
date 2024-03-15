@@ -28,7 +28,7 @@ public class DbClient {
     private static final String SQL_FILE_PATH = "./src/main/resources/Tables.sql";
     private static final Logger logger = LoggerFactory.getLogger(DbClient.class);
     private static DbClient instance;
-    public int batchSize = 10000;
+    public int batchSize = 100;
 
     public DbClient() {
         EnvLoader.load(".env");

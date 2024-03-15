@@ -76,7 +76,7 @@ public class StoreEntity {
 
             for (String tableName : tableNames) {
                 List<List<Object>> batchFieldValues = new ArrayList<>();
-                final int batchSize = 10000;
+                final int batchSize = 100;
                 List<String> fields = new ArrayList<>();
                 while (runner) {
                     List<Entity> entities = redisClient.batchPopEntities(tableName, batchSize);
