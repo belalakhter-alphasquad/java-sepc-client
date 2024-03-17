@@ -28,12 +28,12 @@ public class StoreEntity {
 
     boolean runner = true;
     boolean Cacherunner = true;
-    ExecutorService executorServicecache = Executors.newFixedThreadPool(4);
+    ExecutorService executorServicecache = Executors.newFixedThreadPool(12);
 
     public StoreEntity(RedisClient redisClient, DbClient dbClient, BlockingQueue<List<Entity>> entityqueue,
             BlockingQueue<EntityChange> updateentityQueue) {
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 12; i++) {
             executorServicecache.submit(() -> startProcessing(entityqueue, redisClient));
 
         }
@@ -55,7 +55,7 @@ public class StoreEntity {
         }
     }
 
-    public void startInsertion(DbClient dbClient, RedisClient redisClient, ExecutorService executorService) {
+    public void startInsertion(DbClient dbClient, RedisClient redisClient) {
         logger.info("Insertion Started");
         List<String> tableNames = Arrays.asList("bettingoffer", "bettingofferstatus", "bettingtype", "bettingtypeusage",
                 "currency", "entityproperty", "entitypropertytype", "entitypropertyvalue", "entitytype", "event",
@@ -75,7 +75,7 @@ public class StoreEntity {
         while (true) {
 
             for (String tableName : tableNames) {
-                executorService.submit(() -> {
+               
                     List<List<Object>> batchFieldValues = new ArrayList<>();
 
                     List<String> fields = new ArrayList<>();
@@ -112,7 +112,6 @@ public class StoreEntity {
                         }
                     }
 
-                });
             }
 
         }
