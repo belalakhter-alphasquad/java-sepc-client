@@ -27,16 +27,16 @@ public class StoreEntity {
 
     boolean runner = true;
     boolean Cacherunner = true;
-    ExecutorService executorServicecache = Executors.newFixedThreadPool(22);
+    ExecutorService executorServicecache = Executors.newFixedThreadPool(24);
 
     public StoreEntity(RedisClient redisClient, DbClient dbClient, BlockingQueue<List<Entity>> entityqueue,
             BlockingQueue<EntityChange> updateentityQueue) {
 
-        for (int i = 0; i < 11; i++) {
+        for (int i = 0; i < 14; i++) {
             executorServicecache.submit(() -> startProcessing(entityqueue, redisClient));
 
         }
-        for (int i = 0; i < 11; i++) {
+        for (int i = 0; i < 10; i++) {
             executorServicecache.submit(() -> startInsertion(dbClient, redisClient));
 
         }
@@ -50,11 +50,7 @@ public class StoreEntity {
             try {
 
                 List<Entity> cacheEntities = entityQueue.take();
-                for(Entity entity : cacheEntities){
-                    String key = "entity:" + entity.getId();
-                  redisClient.setObject(key, entity);
-                  redisClient.rpush("entitiesToProcess", key);
-                }
+                redisClient.bulkInsertEntities(cacheEntities);
 
             } catch (Exception e) {
 
@@ -70,6 +66,7 @@ public class StoreEntity {
     while (runner) {
         try {
             String key = redisClient.lpop("entitiesToProcess");
+           redisClient.del(key);
             if(key!=null){
            
             Entity entity = (Entity) redisClient.getObject(key);
