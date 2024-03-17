@@ -27,19 +27,19 @@ public class StoreEntity {
 
     boolean runner = true;
     boolean Cacherunner = true;
-    ExecutorService executorServicecache = Executors.newFixedThreadPool(2);
+    ExecutorService executorServicecache = Executors.newFixedThreadPool(24);
 
     public StoreEntity(RedisClient redisClient, DbClient dbClient, BlockingQueue<List<Entity>> entityqueue,
             BlockingQueue<EntityChange> updateentityQueue) {
 
-      //  for (int i = 0; i < 14; i++) {
+        for (int i = 0; i < 14; i++) {
             executorServicecache.submit(() -> startProcessing(entityqueue, redisClient));
 
-        //}
-        //for (int i = 0; i < 10; i++) {
+        }
+        for (int i = 0; i < 10; i++) {
             executorServicecache.submit(() -> startInsertion(dbClient, redisClient));
 
-        //}
+        }
 
         logger.info("Queue Consumer Started");
 
