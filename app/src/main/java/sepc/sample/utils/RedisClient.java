@@ -50,7 +50,7 @@ public class RedisClient {
             ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
             ObjectInputStream ois = new ObjectInputStream(bis);
             Object obj = ois.readObject();
-            jedis.del(key.getBytes());
+        
 
             return obj;
         }
@@ -82,31 +82,7 @@ public class RedisClient {
         }
     }
 
-    public List<Entity> batchPopEntities(String listKey) {
-        List<Entity> entities = new ArrayList<>();
-        List<String> keys = new ArrayList<>();
-
-        try (Jedis jedis = jedisPool.getResource()) {
-            for (int i = 0; i <= 5000; i++) {
-                String poppedKey = jedis.lpop(listKey);
-                if (poppedKey == null) {
-                    break;
-                }
-                keys.add(poppedKey);
-            }
-
-            for (String key : keys) {
-                Entity obj = (Entity) getObject(key);
-                if (obj != null) {
-                    entities.add(obj);
-                }
-            }
-        } catch (Exception e) {
-
-        }
-
-        return entities;
-    }
+   
 
     public Set<String> keys(String pattern) {
         try (Jedis jedis = jedisPool.getResource()) {
@@ -126,6 +102,11 @@ public class RedisClient {
     public String lpop(String listKey) {
         try (Jedis jedis = jedisPool.getResource()) {
             return jedis.lpop(listKey);
+        }
+    }
+    public void del(String key) {
+        try (Jedis jedis = jedisPool.getResource()) {
+            jedis.del(key.getBytes());
         }
     }
 

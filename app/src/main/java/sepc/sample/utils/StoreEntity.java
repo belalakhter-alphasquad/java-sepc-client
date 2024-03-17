@@ -3,14 +3,12 @@ package sepc.sample.utils;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Arrays;
-import java.util.HashMap;
+
 import java.util.concurrent.BlockingQueue;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
+
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,13 +27,17 @@ public class StoreEntity {
 
     boolean runner = true;
     boolean Cacherunner = true;
-    ExecutorService executorServicecache = Executors.newFixedThreadPool(12);
+    ExecutorService executorServicecache = Executors.newFixedThreadPool(22);
 
     public StoreEntity(RedisClient redisClient, DbClient dbClient, BlockingQueue<List<Entity>> entityqueue,
             BlockingQueue<EntityChange> updateentityQueue) {
 
-        for (int i = 0; i < 12; i++) {
+        for (int i = 0; i < 11; i++) {
             executorServicecache.submit(() -> startProcessing(entityqueue, redisClient));
+
+        }
+        for (int i = 0; i < 11; i++) {
+            executorServicecache.submit(() -> startInsertion(dbClient, redisClient));
 
         }
 
@@ -48,7 +50,11 @@ public class StoreEntity {
             try {
 
                 List<Entity> cacheEntities = entityQueue.take();
-                redisClient.bulkInsertEntities(cacheEntities);
+                for(Entity entity : cacheEntities){
+                    String key = "entity:" + entity.getId();
+                  redisClient.setObject(key, entity);
+                  redisClient.rpush("entitiesToProcess", key);
+                }
 
             } catch (Exception e) {
 
@@ -57,59 +63,35 @@ public class StoreEntity {
     }
 
     public void startInsertion(DbClient dbClient, RedisClient redisClient) {
-    Map<String, List<List<Object>>> tableToFieldValuesMap = new HashMap<>();
-    Map<String, List<String>> tableToFieldNamesMap = new HashMap<>();
-    int totalCount = 0;
+ List<String> tables = new ArrayList<>();
+ List<List<String>> fieldsnames = new ArrayList<>();
+ List<List<Object>> fieldvalues = new ArrayList<>();
 
     while (runner) {
         try {
             String key = redisClient.lpop("entitiesToProcess");
-            if (key != null) {
-                Entity entity = (Entity) redisClient.getObject(key);
-                if (entity != null) {
-                    String tableName = entity.getDisplayName().toLowerCase();
-                    List<String> fieldNames = entity.getPropertyNames();
-                    List<Object> fieldValues = entity.getPropertyValues(fieldNames);
+            if(key!=null){
+           
+            Entity entity = (Entity) redisClient.getObject(key);
+            tables.add(entity.getDisplayName().toLowerCase());
+            List<String> entityfieldnames = entity.getPropertyNames();
+            fieldsnames.add(entityfieldnames);
+            List<Object> entityfieldvalues= entity.getPropertyValues(entityfieldnames);
 
-             
-                    tableToFieldValuesMap.putIfAbsent(tableName, new ArrayList<>());
-                    tableToFieldNamesMap.putIfAbsent(tableName, fieldNames);
-                    tableToFieldValuesMap.get(tableName).add(fieldValues);
-
-                    totalCount++;
-
-             
-                    if (totalCount >= 500) {
-                        performBatchInsert(dbClient, tableToFieldValuesMap, tableToFieldNamesMap, 500);
-                 
-                        tableToFieldValuesMap.clear();
-                        tableToFieldNamesMap.clear();
-                        totalCount = 0;
-                    }
-                }
-            } else {
-              
-                if (totalCount > 0) {
-                    performBatchInsert(dbClient, tableToFieldValuesMap, tableToFieldNamesMap, totalCount);
-                }
-            
-                break;
+            fieldvalues.add(entityfieldvalues);
+            if (tables.size()== 100) {
+                dbClient.createEntities(tables, fieldsnames, fieldvalues, 100);
             }
+        }else{
+            dbClient.createEntities(tables, fieldsnames, fieldvalues, tables.size());
+        }
+
         } catch (Exception e) {
           
         }
     }
 }
 
-private void performBatchInsert(DbClient dbClient, Map<String, List<List<Object>>> tableToFieldValuesMap,
-                                Map<String, List<String>> tableToFieldNamesMap, int batchSize) throws SQLException {
-   
-    List<String> tables = new ArrayList<>(tableToFieldValuesMap.keySet());
-    List<List<String>> fieldsPerTable = tables.stream().map(tableToFieldNamesMap::get).collect(Collectors.toList());
-    List<List<List<Object>>> batchFieldValuesPerTable = tables.stream().map(tableToFieldValuesMap::get).collect(Collectors.toList());
-
-    dbClient.createEntities(tables, fieldsPerTable, batchFieldValuesPerTable, batchSize);
-}
 
 
     public void startUpdate(DbClient dbClient, BlockingQueue<EntityChange> updateentityQueue) {
@@ -138,7 +120,7 @@ private void performBatchInsert(DbClient dbClient, Map<String, List<List<Object>
                 Thread.sleep(200);
 
             } catch (Exception e) {
-               
+                // do something
             }
 
         }
