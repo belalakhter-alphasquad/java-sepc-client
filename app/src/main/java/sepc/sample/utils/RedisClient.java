@@ -8,10 +8,9 @@ import redis.clients.jedis.Pipeline;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import java.io.*;
 
-import java.util.ArrayList;
-import java.util.Collections;
+
 import java.util.List;
-import java.util.Set;
+
 
 public class RedisClient {
 
@@ -84,14 +83,7 @@ public class RedisClient {
 
    
 
-    public Set<String> keys(String pattern) {
-        try (Jedis jedis = jedisPool.getResource()) {
-            return jedis.keys(pattern);
-        } catch (Exception e) {
-
-            return Collections.emptySet();
-        }
-    }
+  
 
     public void rpush(String listKey, String... values) {
         try (Jedis jedis = jedisPool.getResource()) {
@@ -107,6 +99,8 @@ public class RedisClient {
     public void del(String key) {
         try (Jedis jedis = jedisPool.getResource()) {
             jedis.del(key.getBytes());
+            jedis.lrem("entitiesToProcess", 0, key);
+            jedis.del(key);
         }
     }
 
