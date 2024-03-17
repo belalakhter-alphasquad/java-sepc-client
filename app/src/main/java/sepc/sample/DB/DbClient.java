@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import java.util.List;
+import java.util.Collections;
 import java.util.stream.Collectors;
 import java.sql.SQLIntegrityConstraintViolationException;
 import org.slf4j.Logger;
@@ -136,45 +137,45 @@ public class DbClient {
 
         }
     }
-
-    public void createEntities(List<String> tables, List<List<String>> fieldsPerTable, List<List<Object>> batchFieldValuesPerTable, int batchSize) throws SQLException {
-        if (tables.size() != fieldsPerTable.size() || tables.size() != batchFieldValuesPerTable.size()) {
-
+    public void createEntities(String table, List<String> fields, List<List<Object>> batchFieldValues, int batchSize) throws SQLException {
+        if (fields.isEmpty() || batchFieldValues.isEmpty()) {
+            throw new IllegalArgumentException("Fields or values are empty.");
         }
     
-        try (Connection connection = this.dataSource.getConnection()) {
-            connection.setAutoCommit(false);
+        StringBuilder sql = new StringBuilder("INSERT INTO ");
+        sql.append(table).append(" (");
+        sql.append(String.join(", ", fields));
+        sql.append(") VALUES (");
+        sql.append(String.join(", ", Collections.nCopies(fields.size(), "?")));
+        sql.append(")");
     
-            for (int tableIndex = 0; tableIndex < tables.size(); tableIndex++) {
-                String table = tables.get(tableIndex);
-                List<String> fields = fieldsPerTable.get(tableIndex);
-                List<Object> batchFieldValues = batchFieldValuesPerTable.get(tableIndex);
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
+            
+            int count = 0;
+            for (List<Object> rowValues : batchFieldValues) {
+                if (rowValues.size() != fields.size()) {
+                    throw new IllegalArgumentException("Mismatch between fields size and values size.");
+                }
+                
+                for (int i = 0; i < rowValues.size(); i++) {
+                    pstmt.setObject(i + 1, rowValues.get(i));
+                }
+                pstmt.addBatch();
     
-                String fieldNames = String.join(", ", fields);
-                String questionMarks = fields.stream().map(f -> "?").collect(Collectors.joining(", "));
-                String sql = String.format("INSERT INTO %s (%s) VALUES (%s)", table, fieldNames, questionMarks);
-    
-                try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                    for (int i = 0; i < batchFieldValues.size(); i++) {
-                        statement.setObject(i + 1, batchFieldValues.get(i));
-                    }
-                    statement.addBatch();
-    
-   
-                    statement.executeBatch();
-                    statement.clearBatch();
-                } catch (SQLException e) {
-              
+                if (++count % batchSize == 0 || count == batchFieldValues.size()) {
+                    pstmt.executeBatch(); 
+                    pstmt.clearBatch();
                 }
             }
     
-            connection.commit();
-        } catch (Exception e) {
-          
+        } catch (SQLException e) {
+        
+            e.printStackTrace();
         }
     }
-    
 
+    
 
 
     public void updateEntity(Long id, String table, List<String> fields, List<Object> fieldvalues) throws SQLException {

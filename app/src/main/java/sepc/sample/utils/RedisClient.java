@@ -6,11 +6,13 @@ import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.Pipeline;
 
 import com.betbrain.sepc.connector.sportsmodel.Entity;
+
+
 import java.io.*;
 
 
 import java.util.List;
-
+import java.util.Collections;
 
 public class RedisClient {
 
@@ -28,63 +30,15 @@ public class RedisClient {
 
         this.jedisPool = new JedisPool(poolConfig, host, port, 6000);
     }
-
-    public void setObject(String key, Object obj) throws Exception {
-        try (Jedis jedis = jedisPool.getResource()) {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(bos);
-            oos.writeObject(obj);
-            byte[] bytes = bos.toByteArray();
-            jedis.set(key.getBytes(), bytes);
-
-        }
-    }
-
-    public Object getObject(String key) throws Exception {
-        try (Jedis jedis = jedisPool.getResource()) {
-            byte[] bytes = jedis.get(key.getBytes());
-            if (bytes == null) {
-                return null;
+    public void addListToRedis(String key, List<Entity> items) {
+        try (Jedis jedis = jedisPool.getResource()) { 
+            try {
+                jedis.set(key.getBytes(), serialize(items));
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
-            ObjectInputStream ois = new ObjectInputStream(bis);
-            Object obj = ois.readObject();
-        
-
-            return obj;
         }
     }
-
-    public void bulkInsertEntities(List<Entity> entities) {
-        if (entities.isEmpty())
-            return;
-
-        try (Jedis jedis = jedisPool.getResource()) {
-            Pipeline pipeline = jedis.pipelined();
-
-            for (Entity entity : entities) {
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                ObjectOutputStream oos = new ObjectOutputStream(bos);
-                oos.writeObject(entity);
-                byte[] bytes = bos.toByteArray();
-
-                String key = "entity:" + entity.getId();
-                String listName = "entitiesToProcess";
-
-                pipeline.set(key.getBytes(), bytes);
-                pipeline.rpush(listName.getBytes(), key.getBytes());
-            }
-
-            pipeline.sync();
-        } catch (IOException e) {
-
-        }
-    }
-
-   
-
-  
-
     public void rpush(String listKey, String... values) {
         try (Jedis jedis = jedisPool.getResource()) {
             jedis.rpush(listKey, values);
@@ -96,13 +50,52 @@ public class RedisClient {
             return jedis.lpop(listKey);
         }
     }
-    public void del(String key) {
-        try (Jedis jedis = jedisPool.getResource()) {
-            jedis.del(key.getBytes());
-            jedis.lrem("entitiesToProcess", 0, key);
-            jedis.del(key);
+
+
+
+    public List<Entity> getListFromRedis(String key) {
+        try (Jedis jedis = jedisPool.getResource()) { 
+            byte[] data = jedis.get(key.getBytes());
+            List<Entity> entities= Collections.emptyList();;
+            try {
+               entities =  deserialize(data);
+               return entities;
+            } catch (ClassNotFoundException e) {
+           
+                e.printStackTrace();
+            } catch (IOException e) {
+                
+                e.printStackTrace();
+            }
+            return entities;
         }
     }
+    private byte[] serialize(List<Entity> objs) throws IOException {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+             ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+            oos.writeObject(objs); 
+            return bos.toByteArray();
+        }
+    }
+
+    private List<Entity> deserialize(byte[] data) throws IOException, ClassNotFoundException {
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(data);
+             ObjectInputStream ois = new ObjectInputStream(bis)) {
+            @SuppressWarnings("unchecked") 
+            List<Entity> list = (List<Entity>) ois.readObject();
+            return list;
+        }
+    }
+
+
+
+    public void deleteFromRedis(String key) {
+        try (Jedis jedis = jedisPool.getResource()) {
+            jedis.del(key.getBytes());
+        }
+    }
+    
+       
 
     public void close() {
         jedisPool.close();

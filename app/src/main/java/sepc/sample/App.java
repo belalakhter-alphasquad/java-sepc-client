@@ -28,7 +28,7 @@ public class App {
             e.printStackTrace();
         }
       
-
+    
 
         String hostname = System.getProperty("HOSTNAME");
         int portPush = Integer.parseInt(System.getProperty("PORT_PUSH"));
@@ -40,6 +40,7 @@ public class App {
         dbClient.close();
 
     }
+    
    
 
 }
