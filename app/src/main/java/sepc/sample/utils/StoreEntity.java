@@ -70,7 +70,7 @@ public class StoreEntity {
     while (runner) {
         try {
             String key = redisClient.lpop("entitiesToProcess");
-            if(key!=null){
+            if(key!=null && tables.size()!=0){
            
             Entity entity = (Entity) redisClient.getObject(key);
             tables.add(entity.getDisplayName().toLowerCase());
