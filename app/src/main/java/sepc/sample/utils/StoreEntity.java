@@ -3,13 +3,14 @@ package sepc.sample.utils;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.Map;
 import java.util.Arrays;
-
+import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,67 +57,60 @@ public class StoreEntity {
     }
 
     public void startInsertion(DbClient dbClient, RedisClient redisClient) {
-        logger.info("Insertion Started");
-        List<String> tableNames = Arrays.asList("bettingoffer", "bettingofferstatus", "bettingtype", "bettingtypeusage",
-                "currency", "entityproperty", "entitypropertytype", "entitypropertyvalue", "entitytype", "event",
-                "eventaction", "eventactiondetail", "eventactiondetailstatus", "eventactiondetailtype",
-                "eventactiondetailtypeusage", "eventactionstatus", "eventactiontype", "eventactiontypeusage",
-                "eventcategory", "eventinfo", "eventinfostatus", "eventinfotype", "eventinfotypeusage", "eventpart",
-                "eventpartdefaultusage", "eventparticipantinfo", "eventparticipantinfodetail",
-                "eventparticipantinfodetailstatus", "eventparticipantinfodetailtype",
-                "eventparticipantinfodetailtypeusage", "eventparticipantinfostatus", "eventparticipantinfotype",
-                "eventparticipantinfotypeusage", "eventparticipantrelation", "eventparticipantrestriction",
-                "eventstatus", "eventtemplate", "eventtype", "location", "locationrelation", "locationrelationtype",
-                "locationtype", "market", "marketoutcomerelation", "outcome", "outcomestatus", "outcometype",
-                "outcometypebettingtyperelation", "outcometypeusage", "participant", "participantrelation",
-                "participantrelationtype", "participantrole", "participanttype", "participantusage", "provider",
-                "providerentitymapping", "providereventrelation", "scoringunit", "source", "sport", "streamingprovider",
-                "streamingprovidereventrelation", "translation");
-        while (true) {
+    Map<String, List<List<Object>>> tableToFieldValuesMap = new HashMap<>();
+    Map<String, List<String>> tableToFieldNamesMap = new HashMap<>();
+    int totalCount = 0;
 
-            for (String tableName : tableNames) {
-               
-                    List<List<Object>> batchFieldValues = new ArrayList<>();
+    while (runner) {
+        try {
+            String key = redisClient.lpop("entitiesToProcess");
+            if (key != null) {
+                Entity entity = (Entity) redisClient.getObject(key);
+                if (entity != null) {
+                    String tableName = entity.getDisplayName().toLowerCase();
+                    List<String> fieldNames = entity.getPropertyNames();
+                    List<Object> fieldValues = entity.getPropertyValues(fieldNames);
 
-                    List<String> fields = new ArrayList<>();
-                    while (runner) {
-                        List<Entity> entities = redisClient.batchPopEntities(tableName);
-                        int batchSize = entities.size();
-                        if (entities != null && !entities.isEmpty()) {
-                            for (Entity entity : entities) {
-                                if (fields.isEmpty()) {
-                                    fields = entity.getPropertyNames();
+             
+                    tableToFieldValuesMap.putIfAbsent(tableName, new ArrayList<>());
+                    tableToFieldNamesMap.putIfAbsent(tableName, fieldNames);
+                    tableToFieldValuesMap.get(tableName).add(fieldValues);
 
-                                }
-                                List<Object> values = entity.getPropertyValues(fields);
-                                batchFieldValues.add(values);
+                    totalCount++;
 
-                                if (batchFieldValues.size() >= batchSize) {
-                                    try {
-                                        dbClient.createEntities(tableName, fields, batchFieldValues, batchSize);
-                                    } catch (SQLException e) {
-
-                                    }
-                                    batchFieldValues.clear();
-                                }
-                            }
-                            if (!batchFieldValues.isEmpty()) {
-                                try {
-                                    dbClient.createEntities(tableName, fields, batchFieldValues, batchSize);
-                                } catch (SQLException e) {
-                                }
-                                batchFieldValues.clear();
-                            }
-                        } else {
-                            runner = false;
-                        }
+             
+                    if (totalCount >= 500) {
+                        performBatchInsert(dbClient, tableToFieldValuesMap, tableToFieldNamesMap, 500);
+                 
+                        tableToFieldValuesMap.clear();
+                        tableToFieldNamesMap.clear();
+                        totalCount = 0;
                     }
-
+                }
+            } else {
+              
+                if (totalCount > 0) {
+                    performBatchInsert(dbClient, tableToFieldValuesMap, tableToFieldNamesMap, totalCount);
+                }
+            
+                break;
             }
-
+        } catch (Exception e) {
+          
         }
-
     }
+}
+
+private void performBatchInsert(DbClient dbClient, Map<String, List<List<Object>>> tableToFieldValuesMap,
+                                Map<String, List<String>> tableToFieldNamesMap, int batchSize) throws SQLException {
+   
+    List<String> tables = new ArrayList<>(tableToFieldValuesMap.keySet());
+    List<List<String>> fieldsPerTable = tables.stream().map(tableToFieldNamesMap::get).collect(Collectors.toList());
+    List<List<List<Object>>> batchFieldValuesPerTable = tables.stream().map(tableToFieldValuesMap::get).collect(Collectors.toList());
+
+    dbClient.createEntities(tables, fieldsPerTable, batchFieldValuesPerTable, batchSize);
+}
+
 
     public void startUpdate(DbClient dbClient, BlockingQueue<EntityChange> updateentityQueue) {
         while (runner) {
@@ -144,7 +138,7 @@ public class StoreEntity {
                 Thread.sleep(200);
 
             } catch (Exception e) {
-                // do something
+               
             }
 
         }

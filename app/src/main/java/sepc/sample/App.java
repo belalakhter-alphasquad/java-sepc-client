@@ -3,6 +3,12 @@ package sepc.sample;
 import sepc.sample.DB.DbClient;
 
 import sepc.sample.utils.EnvLoader;
+
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.agrona.concurrent.ShutdownSignalBarrier;
 import org.slf4j.Logger; 
 import org.slf4j.LoggerFactory;
@@ -21,6 +27,8 @@ public class App {
         } catch (Exception e) {
             e.printStackTrace();
         }
+      
+
 
         String hostname = System.getProperty("HOSTNAME");
         int portPush = Integer.parseInt(System.getProperty("PORT_PUSH"));
@@ -32,5 +40,6 @@ public class App {
         dbClient.close();
 
     }
+   
 
 }

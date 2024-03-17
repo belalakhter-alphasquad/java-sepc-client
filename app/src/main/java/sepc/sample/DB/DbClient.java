@@ -137,32 +137,50 @@ public class DbClient {
         }
     }
 
-    public void createEntities(String table, List<String> fields, List<List<Object>> batchFieldValues, int batchSize)
-            throws SQLException {
-        String fieldNames = String.join(", ", fields);
-        String questionMarks = String.join(", ", fields.stream().map(f -> "?").collect(Collectors.toList()));
-        String sql = String.format("INSERT INTO %s (%s) VALUES (%s)", table, fieldNames, questionMarks);
-
-        try (Connection connection = this.dataSource.getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
-
-            int counter = 0;
-            for (List<Object> fieldValues : batchFieldValues) {
-                for (int i = 0; i < fieldValues.size(); i++) {
-                    statement.setObject(i + 1, fieldValues.get(i));
+    public void createEntities(List<String> tables, List<List<String>> fieldsPerTable, List<List<List<Object>>> batchFieldValuesPerTable, int batchSize) throws SQLException {
+        if (tables.size() != fieldsPerTable.size() || tables.size() != batchFieldValuesPerTable.size()) {
+            throw new IllegalArgumentException("Mismatch in the size of tables, fieldsPerTable, and batchFieldValuesPerTable lists");
+        }
+    
+        try (Connection connection = this.dataSource.getConnection()) {
+            connection.setAutoCommit(false); 
+    
+            for (int tableIndex = 0; tableIndex < tables.size(); tableIndex++) {
+                String table = tables.get(tableIndex);
+                List<String> fields = fieldsPerTable.get(tableIndex);
+                List<List<Object>> batchFieldValues = batchFieldValuesPerTable.get(tableIndex);
+    
+                String fieldNames = String.join(", ", fields);
+                String questionMarks = fields.stream().map(f -> "?").collect(Collectors.joining(", "));
+                String sql = String.format("INSERT INTO %s (%s) VALUES (%s)", table, fieldNames, questionMarks);
+    
+                try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                    int counter = 0;
+                    for (List<Object> fieldValues : batchFieldValues) {
+                        for (int i = 0; i < fieldValues.size(); i++) {
+                            statement.setObject(i + 1, fieldValues.get(i));
+                        }
+                        statement.addBatch();
+    
+                        if ((counter + 1) % batchSize == 0 || (counter + 1) == batchFieldValues.size()) {
+                            statement.executeBatch();
+                            statement.clearBatch();
+                        }
+                        counter++;
+                    }
+                } catch (SQLException e) {
+                    connection.rollback(); 
+                    throw e;
                 }
-                statement.addBatch();
-
-                if ((counter + 1) % batchSize == 0 || (counter + 1) == batchFieldValues.size()) {
-                    statement.executeBatch();
-                    statement.clearBatch();
-                }
-                counter++;
             }
+    
+            connection.commit(); 
         } catch (Exception e) {
-
+            throw e;
         }
     }
+
+
 
     public void updateEntity(Long id, String table, List<String> fields, List<Object> fieldvalues) throws SQLException {
         if (fields.isEmpty() || fieldvalues.isEmpty()) {

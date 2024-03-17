@@ -36,7 +36,7 @@ public class PushConnector {
         connector = new SEPCPushConnector(hostname, portPush);
         RedisClient redisClient = new RedisClient("localhost", 6379);
         DbClient dbClient = DbClient.getInstance();
-        ExecutorService executorServiceInsertion = Executors.newFixedThreadPool(3);
+        ExecutorService executorServiceInsertion = Executors.newFixedThreadPool(12);
 
         StoreEntity storeEntity = new StoreEntity(redisClient, dbClient, entityQueue, updateentityQueue);
         SEPCPUSHConnectorListener listener = new SEPCPUSHConnectorListener(storeEntity, entityQueue, updateentityQueue,
@@ -124,7 +124,7 @@ public class PushConnector {
             SubscriptionId = entityChangeBatch.getSubscriptionId();
             subscriptionChecksum = entityChangeBatch.getSubscriptionCheckSum();
             List<EntityChange> ListChangeEntities = entityChangeBatch.getEntityChanges();
-            logger.info("update list recieved:" + ListChangeEntities);
+          
             if (checkInitialDumpComplete) {
                 for (EntityChange entityChange : ListChangeEntities) {
                     // updateentityQueue.offer(entityChange);

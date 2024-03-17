@@ -70,7 +70,7 @@ public class RedisClient {
                 byte[] bytes = bos.toByteArray();
 
                 String key = "entity:" + entity.getId();
-                String listName = entity.getDisplayName().toLowerCase();
+                String listName = "entitiesToProcess";
 
                 pipeline.set(key.getBytes(), bytes);
                 pipeline.rpush(listName.getBytes(), key.getBytes());
