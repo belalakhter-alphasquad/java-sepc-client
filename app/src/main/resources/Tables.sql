@@ -222,7 +222,7 @@ CREATE TABLE `event` (
   `currentPartId` bigint(20) unsigned DEFAULT NULL,
   `url` varchar(255) CHARACTER SET utf8 DEFAULT NULL,
   `popularity` int(10) unsigned DEFAULT NULL,
-  `allowsLiveOdds` tinyint(1) NOT NULL DEFAULT '0',
+  `allowsLiveOdds` tinyint(1) NULL DEFAULT '0',
   `note` varchar(255) CHARACTER SET utf8 DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
@@ -836,7 +836,7 @@ CREATE TABLE `eventtemplate` (
   `venueId` bigint(20) unsigned DEFAULT NULL,
   `rootPartId` bigint(20) unsigned DEFAULT NULL,
   `isCyber` tinyint(1) DEFAULT NULL,
-  `allowsLiveOdds` tinyint(1) NOT NULL DEFAULT '0',
+  `allowsLiveOdds` tinyint(1) NULL DEFAULT '0',
   `note` varchar(255) CHARACTER SET utf8 DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
@@ -1026,6 +1026,7 @@ CREATE TABLE `outcome` (
   `id` bigint(20) unsigned NOT NULL,
   `version` int(10) unsigned NOT NULL,
   `typeId` bigint(20) unsigned NOT NULL,
+  `namespaceId` bigint(20) unsigned DEFAULT NULL,
   `isNegation` tinyint(1) NOT NULL,
   `statusId` bigint(20) unsigned NOT NULL,
   `eventId` bigint(20) unsigned NOT NULL,

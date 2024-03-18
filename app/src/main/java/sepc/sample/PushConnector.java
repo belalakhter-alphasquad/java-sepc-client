@@ -15,7 +15,7 @@ import com.betbrain.sepc.connector.sdql.EntityChangeBatchProcessingMonitor;
 import com.betbrain.sepc.connector.sdql.SEPCPushConnector;
 import com.betbrain.sepc.connector.sdql.SEPCStreamedConnectorListener;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
-import com.betbrain.sepc.connector.sportsmodel.EventTemplate;
+import com.betbrain.sepc.connector.sportsmodel.Outcome;
 
 import com.betbrain.sepc.connector.sportsmodel.EntityChange;
 import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
@@ -94,11 +94,12 @@ public class PushConnector {
         public void notifyPartialInitialDumpRetrieved(List<? extends Entity> entities) {
 
             List<Entity> receivedEntities = entities.stream().collect(Collectors.toList());
-            logger.info("\n \n This table is recieved from initial dump "
+            logger.info("\n \n PUSH Connector This table is recieved from initial dump "
                     + receivedEntities.get(0).getDisplayName().toLowerCase() + " and this is size "
                     + receivedEntities.size());
 
             entityQueue.offer(receivedEntities);
+            logger.info("Signal Added to queue PUSH Connector")
 
             try {
                 Thread.sleep(400);

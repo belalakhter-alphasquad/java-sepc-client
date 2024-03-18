@@ -46,9 +46,11 @@ public class StoreEntity {
             try {
 
                 List<Entity> entities = entityQueue.take();
+                logger.info(
+                        "\n Taken From Queue StoreEntity Remaining Batches to Insert => " + entityQueue.size() + "\n");
                 Set<Entity> uniqueEntitiesSet = new LinkedHashSet<>(entities);
                 List<Entity> uniqueEntities = new ArrayList<>(uniqueEntitiesSet);
-                logger.info("\n \n This table is recieved from initial dump "
+                logger.info("\n \n StoreEntity This table is recieved from initial dump "
                         + uniqueEntities.get(0).getDisplayName().toLowerCase() + " and this is size "
                         + uniqueEntities.size());
 
