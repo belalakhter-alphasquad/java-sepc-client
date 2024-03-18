@@ -99,7 +99,7 @@ public class PushConnector {
                     + receivedEntities.size());
 
             entityQueue.offer(receivedEntities);
-            logger.info("Signal Added to queue PUSH Connector")
+            logger.info("Signal Added to queue PUSH Connector");
 
             try {
                 Thread.sleep(400);
