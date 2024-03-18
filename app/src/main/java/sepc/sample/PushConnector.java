@@ -36,7 +36,7 @@ public class PushConnector {
         connector = new SEPCPushConnector(hostname, portPush);
         RedisClient redisClient = new RedisClient("localhost", 6379);
         DbClient dbClient = DbClient.getInstance();
-        ExecutorService executorServiceinsertion = Executors.newFixedThreadPool(6);
+        ExecutorService executorServiceinsertion = Executors.newFixedThreadPool(1);
 
         StoreEntity storeEntity = new StoreEntity(redisClient, dbClient, entityQueue, updateentityQueue);
         SEPCPUSHConnectorListener listener = new SEPCPUSHConnectorListener(storeEntity, entityQueue, updateentityQueue,

@@ -27,7 +27,7 @@ public class StoreEntity {
 
     boolean runner = true;
     boolean Cacherunner = true;
-    ExecutorService executorServicecache = Executors.newFixedThreadPool(7);
+    ExecutorService executorServicecache = Executors.newFixedThreadPool(6);
 
     public StoreEntity(RedisClient redisClient, DbClient dbClient, BlockingQueue<List<Entity>> entityqueue,
             BlockingQueue<EntityChange> updateentityQueue) {
@@ -36,7 +36,7 @@ public class StoreEntity {
         // executorServicecache.submit(() -> startProcessing(entityqueue, redisClient));
 
         // }
-        for (int i = 0; i < 7; i++) {
+        for (int i = 0; i < 6; i++) {
             executorServicecache.submit(() -> startInsertion(entityqueue, dbClient, redisClient));
 
         }
