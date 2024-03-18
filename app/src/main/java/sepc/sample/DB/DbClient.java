@@ -171,8 +171,7 @@ public class DbClient {
             }
 
         } catch (SQLException e) {
-            logger.error(table, e);
-
+            logger.error("Exception -> createEntities() at Table: " + table + ", Exception: " + e);
         }
     }
 

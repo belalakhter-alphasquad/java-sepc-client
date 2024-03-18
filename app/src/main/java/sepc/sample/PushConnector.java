@@ -92,6 +92,9 @@ public class PushConnector {
         public void notifyPartialInitialDumpRetrieved(List<? extends Entity> entities) {
 
             List<Entity> receivedEntities = entities.stream().collect(Collectors.toList());
+            logger.info("\n \n This table is recieved from initial dump "
+                    + receivedEntities.get(0).getDisplayName().toLowerCase() + " and this is size "
+                    + receivedEntities.size());
 
             entityQueue.offer(receivedEntities);
 
@@ -108,8 +111,9 @@ public class PushConnector {
 
             checkInitialDumpComplete = true;
 
-            executorServiceinsertion.submit(() -> storeEntity.startUpdate(entityQueue, dbClient,
-                    updateentityQueue));
+            // executorServiceinsertion.submit(() -> storeEntity.startUpdate(entityQueue,
+            // dbClient,
+            // updateentityQueue));
 
             logger.info("initial dump done");
 
@@ -123,17 +127,17 @@ public class PushConnector {
             subscriptionChecksum = entityChangeBatch.getSubscriptionCheckSum();
             List<EntityChange> ListChangeEntities = entityChangeBatch.getEntityChanges();
 
-            if (checkInitialDumpComplete) {
-                for (EntityChange entityChange : ListChangeEntities) {
-                    updateentityQueue.offer(entityChange);
-                }
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
+            // if (checkInitialDumpComplete) {
+            // for (EntityChange entityChange : ListChangeEntities) {
+            // // updateentityQueue.offer(entityChange);
+            // }
+            // try {
+            // Thread.sleep(1000);
+            // } catch (InterruptedException e) {
 
-                }
+            // }
 
-            }
+            // }
 
         }
 

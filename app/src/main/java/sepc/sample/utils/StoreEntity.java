@@ -26,12 +26,12 @@ public class StoreEntity {
 
     boolean runner = true;
     boolean Cacherunner = true;
-    ExecutorService executorServicecache = Executors.newFixedThreadPool(6);
+    ExecutorService executorServicecache = Executors.newFixedThreadPool(10);
 
     public StoreEntity(RedisClient redisClient, DbClient dbClient, BlockingQueue<List<Entity>> entityqueue,
             BlockingQueue<EntityChange> updateentityQueue) {
 
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < 10; i++) {
             executorServicecache.submit(() -> startInsertion(entityqueue, dbClient, redisClient));
 
         }
@@ -48,7 +48,11 @@ public class StoreEntity {
                 List<Entity> entities = entityQueue.take();
                 Set<Entity> uniqueEntitiesSet = new LinkedHashSet<>(entities);
                 List<Entity> uniqueEntities = new ArrayList<>(uniqueEntitiesSet);
-                if (!entities.isEmpty()) {
+                logger.info("\n \n This table is recieved from initial dump "
+                        + uniqueEntities.get(0).getDisplayName().toLowerCase() + " and this is size "
+                        + uniqueEntities.size());
+
+                if (!uniqueEntities.isEmpty()) {
                     List<String> fieldNames = uniqueEntities.get(0).getPropertyNames();
                     List<List<Object>> batchFieldValues = new ArrayList<>();
                     for (Entity entity : uniqueEntities) {
@@ -58,11 +62,10 @@ public class StoreEntity {
                     String table = uniqueEntities.get(0).getDisplayName().toLowerCase();
                     int batchSize = uniqueEntities.size();
                     dbClient.createEntities(table, fieldNames, batchFieldValues, batchSize);
-                    logger.info("\n\n\nsaved batch for " + table + " with size " + batchSize + "==>\n\n\n\n");
                 }
 
             } catch (Exception e) {
-
+                logger.error("Exception -> startInsertion(): ", e.getMessage());
             }
 
         }
