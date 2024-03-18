@@ -27,13 +27,17 @@ public class StoreEntity {
 
     boolean runner = true;
     boolean Cacherunner = true;
-    ExecutorService executorServicecache = Executors.newFixedThreadPool(4);
+    ExecutorService executorServicecache = Executors.newFixedThreadPool(7);
 
     public StoreEntity(RedisClient redisClient, DbClient dbClient, BlockingQueue<List<Entity>> entityqueue,
             BlockingQueue<EntityChange> updateentityQueue) {
 
-        for (int i = 0; i < 4; i++) {
-            executorServicecache.submit(() -> startProcessing(entityqueue, redisClient));
+        // for (int i = 0; i < 6; i++) {
+        // executorServicecache.submit(() -> startProcessing(entityqueue, redisClient));
+
+        // }
+        for (int i = 0; i < 7; i++) {
+            executorServicecache.submit(() -> startInsertion(entityqueue, dbClient, redisClient));
 
         }
 
@@ -61,26 +65,26 @@ public class StoreEntity {
         }
     }
 
-    public void startInsertion(DbClient dbClient, RedisClient redisClient) {
+    public void startInsertion(BlockingQueue<List<Entity>> entityQueue, DbClient dbClient, RedisClient redisClient) {
 
         while (runner) {
             try {
 
-                String key = redisClient.lpop("entitiesToProcess");
-                List<Entity> entities = redisClient.getListFromRedis(key);
+                List<Entity> entities = entityQueue.take();
+                Set<Entity> uniqueEntitiesSet = new LinkedHashSet<>(entities);
+                List<Entity> uniqueEntities = new ArrayList<>(uniqueEntitiesSet);
                 if (!entities.isEmpty()) {
-                    List<String> fieldNames = entities.get(0).getPropertyNames();
+                    List<String> fieldNames = uniqueEntities.get(0).getPropertyNames();
                     List<List<Object>> batchFieldValues = new ArrayList<>();
-                    for (Entity entity : entities) {
+                    for (Entity entity : uniqueEntities) {
                         List<Object> fieldValues = entity.getPropertyValues(fieldNames);
                         batchFieldValues.add(fieldValues);
                     }
-                    String table = entities.get(0).getDisplayName().toLowerCase();
-                    int batchSize = entities.size();
+                    String table = uniqueEntities.get(0).getDisplayName().toLowerCase();
+                    int batchSize = uniqueEntities.size();
                     dbClient.createEntities(table, fieldNames, batchFieldValues, batchSize);
-                    logger.info("\n\n\nsaved batch for" + table + "with size " + batchSize + "==>\n\n\n\n");
+                    logger.info("\n\n\nsaved batch for " + table + " with size " + batchSize + "==>\n\n\n\n");
                 }
-                redisClient.deleteFromRedis(key);
 
             } catch (Exception e) {
 

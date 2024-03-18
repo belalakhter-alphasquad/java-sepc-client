@@ -137,46 +137,45 @@ public class DbClient {
 
         }
     }
-    public void createEntities(String table, List<String> fields, List<List<Object>> batchFieldValues, int batchSize) throws SQLException {
+
+    public void createEntities(String table, List<String> fields, List<List<Object>> batchFieldValues, int batchSize)
+            throws SQLException {
         if (fields.isEmpty() || batchFieldValues.isEmpty()) {
-          
+
         }
-    
+
         StringBuilder sql = new StringBuilder("INSERT INTO ");
         sql.append(table).append(" (");
         sql.append(String.join(", ", fields));
         sql.append(") VALUES (");
         sql.append(String.join(", ", Collections.nCopies(fields.size(), "?")));
         sql.append(")");
-    
+
         try (Connection conn = dataSource.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
-            
+                PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
+
             int count = 0;
             for (List<Object> rowValues : batchFieldValues) {
                 if (rowValues.size() != fields.size()) {
-                  
+
                 }
-                
+
                 for (int i = 0; i < rowValues.size(); i++) {
                     pstmt.setObject(i + 1, rowValues.get(i));
                 }
                 pstmt.addBatch();
-    
+
                 if (++count % batchSize == 0 || count == batchFieldValues.size()) {
-                    pstmt.executeBatch(); 
+                    pstmt.executeBatch();
                     pstmt.clearBatch();
                 }
             }
-    
+
         } catch (SQLException e) {
-        
-        
+            logger.error(table, e);
+
         }
     }
-
-    
-
 
     public void updateEntity(Long id, String table, List<String> fields, List<Object> fieldvalues) throws SQLException {
         if (fields.isEmpty() || fieldvalues.isEmpty()) {
