@@ -3,6 +3,7 @@ package sepc.sample.utils;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
@@ -61,7 +62,7 @@ public class StoreEntity {
                         List<Object> fieldValues = entity.getPropertyValues(fieldNames);
                         batchFieldValues.add(fieldValues);
                     }
-                    String table = uniqueEntities.get(0).getDisplayName().toLowerCase();
+                    String table = uniqueEntities.get(0).getDisplayName().toLowerCase();\
                     int batchSize = uniqueEntities.size();
                     dbClient.createEntities(table, fieldNames, batchFieldValues, batchSize);
                 }

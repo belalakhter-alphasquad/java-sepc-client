@@ -438,6 +438,7 @@ DROP TABLE IF EXISTS `eventinfo`;
 CREATE TABLE `eventinfo` (
   `id` bigint(20) unsigned NOT NULL,
   `version` int(10) unsigned NOT NULL,
+  `typeId` bigint(20) unsigned NOT NULL,
   `eventId` bigint(20) unsigned NOT NULL,
   `providerId` bigint(20) unsigned NOT NULL,
   `statusId` bigint(20) unsigned NOT NULL,

@@ -36,6 +36,7 @@ public class DbClient {
         config.setUsername(USER);
         config.setPassword(PASSWORD);
         config.setMaximumPoolSize(100);
+        config.addDataSourceProperty("cachePrepStmts", "true");
         config.setMinimumIdle(5);
         config.setConnectionTimeout(100000);
         this.dataSource = new HikariDataSource(config);
