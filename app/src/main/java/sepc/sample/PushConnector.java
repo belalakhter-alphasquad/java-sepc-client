@@ -15,6 +15,7 @@ import com.betbrain.sepc.connector.sdql.EntityChangeBatchProcessingMonitor;
 import com.betbrain.sepc.connector.sdql.SEPCPushConnector;
 import com.betbrain.sepc.connector.sdql.SEPCStreamedConnectorListener;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
+import com.betbrain.sepc.connector.sportsmodel.EventTemplate;
 
 import com.betbrain.sepc.connector.sportsmodel.EntityChange;
 import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
