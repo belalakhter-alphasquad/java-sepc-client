@@ -108,8 +108,8 @@ public class PushConnector {
 
             checkInitialDumpComplete = true;
 
-            // executorServiceInsertion.submit(() -> storeEntity.startUpdate(dbClient,
-            // updateentityQueue));
+            executorServiceinsertion.submit(() -> storeEntity.startUpdate(entityQueue, dbClient,
+                    updateentityQueue));
 
             logger.info("initial dump done");
 
@@ -125,7 +125,7 @@ public class PushConnector {
 
             if (checkInitialDumpComplete) {
                 for (EntityChange entityChange : ListChangeEntities) {
-                    // updateentityQueue.offer(entityChange);
+                    updateentityQueue.offer(entityChange);
                 }
                 try {
                     Thread.sleep(1000);

@@ -1,6 +1,5 @@
 package sepc.sample.utils;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -32,10 +31,6 @@ public class StoreEntity {
     public StoreEntity(RedisClient redisClient, DbClient dbClient, BlockingQueue<List<Entity>> entityqueue,
             BlockingQueue<EntityChange> updateentityQueue) {
 
-        // for (int i = 0; i < 6; i++) {
-        // executorServicecache.submit(() -> startProcessing(entityqueue, redisClient));
-
-        // }
         for (int i = 0; i < 6; i++) {
             executorServicecache.submit(() -> startInsertion(entityqueue, dbClient, redisClient));
 
@@ -45,29 +40,9 @@ public class StoreEntity {
 
     }
 
-    public void startProcessing(BlockingQueue<List<Entity>> entityQueue, RedisClient redisClient) {
-        int adding = 0;
-        while (Cacherunner) {
-            try {
-
-                List<Entity> cacheEntities = entityQueue.take();
-                Set<Entity> uniqueEntitiesSet = new LinkedHashSet<>(cacheEntities);
-                List<Entity> uniqueEntities = new ArrayList<>(uniqueEntitiesSet);
-
-                String key = uniqueEntities.get(0).getDisplayName().toLowerCase() + adding;
-                redisClient.addListToRedis(key, uniqueEntities);
-                redisClient.rpush("entitiesToProcess", key);
-                adding++;
-
-            } catch (Exception e) {
-
-            }
-        }
-    }
-
     public void startInsertion(BlockingQueue<List<Entity>> entityQueue, DbClient dbClient, RedisClient redisClient) {
 
-        while (runner) {
+        while (Cacherunner) {
             try {
 
                 List<Entity> entities = entityQueue.take();
@@ -93,7 +68,8 @@ public class StoreEntity {
         }
     }
 
-    public void startUpdate(DbClient dbClient, BlockingQueue<EntityChange> updateentityQueue) {
+    public void startUpdate(BlockingQueue<List<Entity>> entityQueue, DbClient dbClient,
+            BlockingQueue<EntityChange> updateentityQueue) {
         while (runner) {
             try {
                 EntityChange entityChange = updateentityQueue.take();
@@ -116,7 +92,9 @@ public class StoreEntity {
                     dbClient.updateEntity(Id, table, fields, fieldvalues);
 
                 }
-                Thread.sleep(200);
+                if (entityQueue.isEmpty()) {
+                    CacheShutdown();
+                }
 
             } catch (Exception e) {
                 // do something
@@ -127,8 +105,11 @@ public class StoreEntity {
 
     public void CacheShutdown() {
         Cacherunner = false;
-        executorServicecache.shutdownNow();
 
+    }
+
+    public void updateshutdown() {
+        runner = false;
     }
 
     public void CloseThreads() {

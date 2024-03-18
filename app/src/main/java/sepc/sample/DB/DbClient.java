@@ -9,7 +9,6 @@ import java.sql.Statement;
 
 import java.util.List;
 import java.util.Collections;
-import java.util.stream.Collectors;
 import java.sql.SQLIntegrityConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
