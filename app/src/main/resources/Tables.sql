@@ -202,7 +202,6 @@ CREATE TABLE `event` (
   `id` bigint(20) unsigned NOT NULL,
   `version` int(10) unsigned NOT NULL,
   `namespaceId` bigint(20) unsigned DEFAULT NULL,
-  `typeId` bigint(20) unsigned NOT NULL,
   `isComplete` tinyint(1) NOT NULL,
   `sportId` bigint(20) unsigned NOT NULL,
   `templateId` bigint(20) unsigned DEFAULT NULL,
@@ -222,6 +221,7 @@ CREATE TABLE `event` (
   `currentPartId` bigint(20) unsigned DEFAULT NULL,
   `url` varchar(255) CHARACTER SET utf8 DEFAULT NULL,
   `popularity` int(10) unsigned DEFAULT NULL,
+  `setAllowsLiveOdds` tinyint(1) NOT NULL DEFAULT '0',
   `note` varchar(255) CHARACTER SET utf8 DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
@@ -437,13 +437,14 @@ DROP TABLE IF EXISTS `eventinfo`;
 CREATE TABLE `eventinfo` (
   `id` bigint(20) unsigned NOT NULL,
   `version` int(10) unsigned NOT NULL,
-  `typeId` bigint(20) unsigned NOT NULL,
   `eventId` bigint(20) unsigned NOT NULL,
   `providerId` bigint(20) unsigned NOT NULL,
   `statusId` bigint(20) unsigned NOT NULL,
   `eventPartId` bigint(20) unsigned NOT NULL,
   `paramFloat1` double DEFAULT NULL,
   `paramFloat2` double DEFAULT NULL,
+  `paramFloat3` double DEFAULT NULL,
+  `paramFloat4` double DEFAULT NULL,
   `paramParticipantId1` bigint(20) unsigned DEFAULT NULL,
   `paramParticipantId2` bigint(20) unsigned DEFAULT NULL,
   `paramEventPartId1` bigint(20) unsigned DEFAULT NULL,
@@ -494,6 +495,10 @@ CREATE TABLE `eventinfotype` (
   `paramFloat1Description` varchar(255) CHARACTER SET utf8 DEFAULT NULL,
   `hasParamFloat2` tinyint(1) DEFAULT NULL,
   `paramFloat2Description` varchar(255) CHARACTER SET utf8 DEFAULT NULL,
+  `hasParamFloat3` tinyint(1) DEFAULT NULL,
+  `paramFloat3Description` varchar(255) CHARACTER SET utf8 DEFAULT NULL,
+  `hasParamFloat4` tinyint(1) DEFAULT NULL,
+  `paramFloat4Description` varchar(255) CHARACTER SET utf8 DEFAULT NULL,
   `hasParamParticipantId1` tinyint(1) DEFAULT NULL,
   `paramParticipantId1Description` varchar(255) CHARACTER SET utf8 DEFAULT NULL,
   `hasParamParticipantId2` tinyint(1) DEFAULT NULL,
@@ -979,6 +984,8 @@ CREATE TABLE `market` (
   `paramFloat1` double DEFAULT NULL,
   `paramFloat2` double DEFAULT NULL,
   `paramFloat3` double DEFAULT NULL,
+  `paramFloat4` double DEFAULT NULL,
+  `paramFloat5` double DEFAULT NULL,
   `paramString1` varchar(255) CHARACTER SET utf8 DEFAULT NULL,
   `paramParticipantId1` bigint(20) unsigned DEFAULT NULL,
   `paramParticipantId2` bigint(20) unsigned DEFAULT NULL,
@@ -1016,7 +1023,7 @@ DROP TABLE IF EXISTS `outcome`;
 CREATE TABLE `outcome` (
   `id` bigint(20) unsigned NOT NULL,
   `version` int(10) unsigned NOT NULL,
-  `typeId` bigint(20) unsigned NOT NULL,
+  `namespaceId` bigint(20) unsigned DEFAULT NULL,
   `isNegation` tinyint(1) NOT NULL,
   `statusId` bigint(20) unsigned NOT NULL,
   `eventId` bigint(20) unsigned NOT NULL,
@@ -1024,22 +1031,21 @@ CREATE TABLE `outcome` (
   `paramFloat1` double DEFAULT NULL,
   `paramFloat2` double DEFAULT NULL,
   `paramFloat3` double DEFAULT NULL,
+  `paramFloat4` double DEFAULT NULL, -- Added field
+  `paramFloat5` double DEFAULT NULL, -- Added field
   `paramBoolean1` tinyint(1) DEFAULT NULL,
   `paramString1` varchar(255) CHARACTER SET utf8 DEFAULT NULL,
   `paramParticipantId1` bigint(20) unsigned DEFAULT NULL,
   `paramParticipantId2` bigint(20) unsigned DEFAULT NULL,
   `paramParticipantId3` bigint(20) unsigned DEFAULT NULL,
   `paramEventPartId1` bigint(20) unsigned DEFAULT NULL,
-  `paramScoringUnitId1` bigint(20) DEFAULT NULL,
+  `paramScoringUnitId1` bigint(20) unsigned DEFAULT NULL,
   `code` varchar(255) DEFAULT NULL,
   `name` varchar(255) DEFAULT NULL,
-  `shortCode` varchar(255) DEFAULT NULL,
-  `shortName` varchar(255) DEFAULT NULL,
   `settlementRequired` tinyint(1) DEFAULT NULL,
   `isStatusManuallySet` tinyint(1) NOT NULL DEFAULT '0',
-  `namespaceId` bigint(20) unsigned DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 
@@ -1079,6 +1085,10 @@ CREATE TABLE `outcometype` (
   `paramFloat2Description` varchar(255) CHARACTER SET utf8 DEFAULT NULL,
   `hasParamFloat3` tinyint(1) DEFAULT NULL,
   `paramFloat3Description` varchar(255) CHARACTER SET utf8 DEFAULT NULL,
+  `hasParamFloat4` tinyint(1) DEFAULT NULL,
+  `paramFloat4Description` varchar(255) CHARACTER SET utf8 DEFAULT NULL,
+  `hasParamFloat5` tinyint(1) DEFAULT NULL,
+  `paramFloat5Description` varchar(255) CHARACTER SET utf8 DEFAULT NULL,
   `hasParamBoolean1` tinyint(1) DEFAULT NULL,
   `paramBoolean1Description` varchar(255) CHARACTER SET utf8 DEFAULT NULL,
   `hasParamString1` tinyint(1) DEFAULT NULL,
