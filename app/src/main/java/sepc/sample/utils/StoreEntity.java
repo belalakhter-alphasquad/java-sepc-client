@@ -2,8 +2,9 @@ package sepc.sample.utils;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
-
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import java.util.concurrent.ExecutorService;
@@ -51,8 +52,11 @@ public class StoreEntity {
             try {
 
                 List<Entity> cacheEntities = entityQueue.take();
+                Set<Entity> uniqueEntitiesSet = new LinkedHashSet<>(cacheEntities);
+                List<Entity> uniqueEntities = new ArrayList<>(uniqueEntitiesSet);
+
                 String key = "List_" + adding;
-                redisClient.addListToRedis(key, cacheEntities);
+                redisClient.addListToRedis(key, uniqueEntities);
                 redisClient.rpush("entitiesToProcess", key);
                 adding++;
            

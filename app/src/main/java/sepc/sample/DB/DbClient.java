@@ -139,7 +139,7 @@ public class DbClient {
     }
     public void createEntities(String table, List<String> fields, List<List<Object>> batchFieldValues, int batchSize) throws SQLException {
         if (fields.isEmpty() || batchFieldValues.isEmpty()) {
-            throw new IllegalArgumentException("Fields or values are empty.");
+          
         }
     
         StringBuilder sql = new StringBuilder("INSERT INTO ");
@@ -155,7 +155,7 @@ public class DbClient {
             int count = 0;
             for (List<Object> rowValues : batchFieldValues) {
                 if (rowValues.size() != fields.size()) {
-                    throw new IllegalArgumentException("Mismatch between fields size and values size.");
+                  
                 }
                 
                 for (int i = 0; i < rowValues.size(); i++) {
@@ -171,7 +171,7 @@ public class DbClient {
     
         } catch (SQLException e) {
         
-            e.printStackTrace();
+        
         }
     }
 

@@ -88,6 +88,7 @@ public class PushConnector {
 
             List<Entity> receivedEntities = entities.stream().collect(Collectors.toList());
       
+      
             entityQueue.offer(receivedEntities);
 
             try {

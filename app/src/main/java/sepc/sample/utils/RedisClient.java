@@ -35,7 +35,7 @@ public class RedisClient {
             try {
                 jedis.set(key.getBytes(), serialize(items));
             } catch (IOException e) {
-                e.printStackTrace();
+              
             }
         }
     }
@@ -62,10 +62,10 @@ public class RedisClient {
                return entities;
             } catch (ClassNotFoundException e) {
            
-                e.printStackTrace();
+             
             } catch (IOException e) {
                 
-                e.printStackTrace();
+              
             }
             return entities;
         }
