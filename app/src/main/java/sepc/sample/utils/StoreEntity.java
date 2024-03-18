@@ -10,7 +10,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,17 +27,13 @@ public class StoreEntity {
 
     boolean runner = true;
     boolean Cacherunner = true;
-    ExecutorService executorServicecache = Executors.newFixedThreadPool(24);
+    ExecutorService executorServicecache = Executors.newFixedThreadPool(4);
 
     public StoreEntity(RedisClient redisClient, DbClient dbClient, BlockingQueue<List<Entity>> entityqueue,
             BlockingQueue<EntityChange> updateentityQueue) {
 
-        for (int i = 0; i < 14; i++) {
+        for (int i = 0; i < 4; i++) {
             executorServicecache.submit(() -> startProcessing(entityqueue, redisClient));
-
-        }
-        for (int i = 0; i < 10; i++) {
-            executorServicecache.submit(() -> startInsertion(dbClient, redisClient));
 
         }
 
@@ -47,7 +42,7 @@ public class StoreEntity {
     }
 
     public void startProcessing(BlockingQueue<List<Entity>> entityQueue, RedisClient redisClient) {
-     int adding =0;
+        int adding = 0;
         while (Cacherunner) {
             try {
 
@@ -55,11 +50,10 @@ public class StoreEntity {
                 Set<Entity> uniqueEntitiesSet = new LinkedHashSet<>(cacheEntities);
                 List<Entity> uniqueEntities = new ArrayList<>(uniqueEntitiesSet);
 
-                String key = "List_" + adding;
+                String key = uniqueEntities.get(0).getDisplayName().toLowerCase() + adding;
                 redisClient.addListToRedis(key, uniqueEntities);
                 redisClient.rpush("entitiesToProcess", key);
                 adding++;
-           
 
             } catch (Exception e) {
 
@@ -68,36 +62,32 @@ public class StoreEntity {
     }
 
     public void startInsertion(DbClient dbClient, RedisClient redisClient) {
-        
 
-    while (runner) {
-        try {
-         
-           String key = redisClient.lpop("entitiesToProcess");
-           List<Entity> entities = redisClient.getListFromRedis(key);
-           if (!entities.isEmpty()) {
-            List<String> fieldNames = entities.get(0).getPropertyNames();
-            List<List<Object>> batchFieldValues = new ArrayList<>();
-            for (Entity entity : entities) {
-                List<Object> fieldValues = entity.getPropertyValues(fieldNames);
-                batchFieldValues.add(fieldValues);
-            }   
-            String table = entities.get(0).getDisplayName().toLowerCase();
-            int batchSize = entities.size();
-            dbClient.createEntities(table, fieldNames, batchFieldValues, batchSize);
-        }
-        redisClient.deleteFromRedis(key);
-        
+        while (runner) {
+            try {
 
-            
-        } catch (Exception e) {
-           
+                String key = redisClient.lpop("entitiesToProcess");
+                List<Entity> entities = redisClient.getListFromRedis(key);
+                if (!entities.isEmpty()) {
+                    List<String> fieldNames = entities.get(0).getPropertyNames();
+                    List<List<Object>> batchFieldValues = new ArrayList<>();
+                    for (Entity entity : entities) {
+                        List<Object> fieldValues = entity.getPropertyValues(fieldNames);
+                        batchFieldValues.add(fieldValues);
+                    }
+                    String table = entities.get(0).getDisplayName().toLowerCase();
+                    int batchSize = entities.size();
+                    dbClient.createEntities(table, fieldNames, batchFieldValues, batchSize);
+                    logger.info("\n\n\nsaved batch for" + table + "with size " + batchSize + "==>\n\n\n\n");
+                }
+                redisClient.deleteFromRedis(key);
+
+            } catch (Exception e) {
+
+            }
+
         }
-        
-}
     }
-
-
 
     public void startUpdate(DbClient dbClient, BlockingQueue<EntityChange> updateentityQueue) {
         while (runner) {
