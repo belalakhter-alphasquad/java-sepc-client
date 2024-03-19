@@ -20,7 +20,6 @@ import com.betbrain.sepc.connector.sportsmodel.EntityChange;
 import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
 
 import sepc.sample.DB.DbClient;
-import sepc.sample.utils.RedisClient;
 import sepc.sample.utils.StoreEntity;
 
 public class PushConnector {
@@ -35,13 +34,13 @@ public class PushConnector {
 
         ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();
         connector = new SEPCPushConnector(hostname, portPush);
-        RedisClient redisClient = new RedisClient("localhost", 6379);
+        // RedisClient redisClient = new RedisClient("localhost", 6379);
         DbClient dbClient = DbClient.getInstance();
         ExecutorService executorServiceinsertion = Executors.newFixedThreadPool(1);
 
-        StoreEntity storeEntity = new StoreEntity(redisClient, dbClient, entityQueue, updateentityQueue);
+        StoreEntity storeEntity = new StoreEntity(dbClient, entityQueue, updateentityQueue);
         SEPCPUSHConnectorListener listener = new SEPCPUSHConnectorListener(storeEntity, entityQueue, updateentityQueue,
-                dbClient, redisClient, executorServiceinsertion);
+                dbClient, executorServiceinsertion);
 
         connector.addStreamedConnectorListener(listener);
         connector.setEntityChangeBatchProcessingMonitor(new EntityChangeBatchProcessingMonitor() {
@@ -70,17 +69,15 @@ public class PushConnector {
         private final BlockingQueue<List<Entity>> entityQueue;
         private final BlockingQueue<EntityChange> updateentityQueue;
         DbClient dbClient;
-        RedisClient redisClient;
         ExecutorService executorServiceinsertion;
 
         public SEPCPUSHConnectorListener(StoreEntity storeEntity, BlockingQueue<List<Entity>> entityQueue,
                 BlockingQueue<EntityChange> updateentityQueue,
-                DbClient dbClient, RedisClient redisClient, ExecutorService executorServiceinsertion) {
+                DbClient dbClient, ExecutorService executorServiceinsertion) {
             this.storeEntity = storeEntity;
             this.entityQueue = entityQueue;
             this.updateentityQueue = updateentityQueue;
             this.dbClient = dbClient;
-            this.redisClient = redisClient;
             this.executorServiceinsertion = executorServiceinsertion;
 
         }
