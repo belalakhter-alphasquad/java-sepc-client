@@ -169,6 +169,7 @@ public class DbClient {
 
                 if (++count % batchSize == 0) {
                     pstmt.executeBatch();
+                    conn.commit();
                     pstmt.clearBatch();
                     count = 0;
                 }
