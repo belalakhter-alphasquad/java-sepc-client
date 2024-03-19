@@ -3,8 +3,7 @@ package sepc.sample.utils;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
 import java.util.concurrent.BlockingQueue;
 
 import java.util.concurrent.ExecutorService;
@@ -13,7 +12,6 @@ import com.betbrain.sepc.connector.sportsmodel.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityChange;
 import com.betbrain.sepc.connector.sportsmodel.EntityCreate;
 import com.betbrain.sepc.connector.sportsmodel.EntityDelete;
@@ -33,7 +31,7 @@ public class StoreEntity {
             BlockingQueue<EntityChange> updateentityQueue) {
 
         for (int i = 0; i < 10; i++) {
-            executorServicecache.submit(() -> startInsertionV2(entityqueue, dbClient, redisClient));
+            executorServicecache.submit(() -> startInsertion(entityqueue, dbClient, redisClient));
 
         }
 
@@ -41,7 +39,7 @@ public class StoreEntity {
 
     }
 
-    public void startInsertionV2(BlockingQueue<List<Entity>> entityQueue, DbClient dbClient, RedisClient redisClient) {
+    public void startInsertion(BlockingQueue<List<Entity>> entityQueue, DbClient dbClient, RedisClient redisClient) {
 
         List<Entity> uniqueEntities;
 
@@ -53,7 +51,7 @@ public class StoreEntity {
 
                 if (!uniqueEntities.isEmpty()) {
                     String table = uniqueEntities.get(0).getDisplayName().toLowerCase();
-                    dbClient.createEntitiesV2(table, uniqueEntities);
+                    dbClient.createEntities(table, uniqueEntities);
                 }
                 uniqueEntities.clear();
             } catch (Exception e) {
@@ -91,7 +89,7 @@ public class StoreEntity {
                 }
 
             } catch (Exception e) {
-                // do something
+                logger.error("Exception caught for update batch", e);
             }
 
         }

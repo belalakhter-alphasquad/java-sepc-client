@@ -138,7 +138,7 @@ public class DbClient {
         }
     }
 
-    public void createEntitiesV2(String table, List<Entity> uniqueEntities)
+    public void createEntities(String table, List<Entity> uniqueEntities)
             throws SQLException {
 
         List<String> fields = uniqueEntities.get(0).getPropertyNames();
