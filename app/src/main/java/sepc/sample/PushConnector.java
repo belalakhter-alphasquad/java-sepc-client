@@ -94,7 +94,7 @@ public class PushConnector {
                     + receivedEntities.get(0).getDisplayName().toLowerCase() + " and this is size "
                     + receivedEntities.size());
 
-            // entityQueue.offer(receivedEntities);
+            entityQueue.offer(receivedEntities);
 
             try {
                 Thread.sleep(400);
@@ -108,8 +108,10 @@ public class PushConnector {
         public void notifyInitialDumpRetrieved() {
 
             checkInitialDumpComplete = true;
+            for (int i = 0; i < 4; i++) {
+                executorServiceUpdate.submit(() -> storeEntity.startUpdate(entityQueue, dbClient, updateentityQueue));
 
-            executorServiceUpdate.submit(() -> storeEntity.startUpdate(entityQueue, dbClient, updateentityQueue));
+            }
 
             logger.info("initial dump done");
 
