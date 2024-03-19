@@ -9,7 +9,7 @@ import java.util.concurrent.BlockingQueue;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
+import com.betbrain.sepc.connector.sportsmodel.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +33,7 @@ public class StoreEntity {
             BlockingQueue<EntityChange> updateentityQueue) {
 
         for (int i = 0; i < 10; i++) {
-            executorServicecache.submit(() -> startInsertion(entityqueue, dbClient, redisClient));
+            executorServicecache.submit(() -> startInsertionV2(entityqueue, dbClient, redisClient));
 
         }
 
@@ -41,36 +41,24 @@ public class StoreEntity {
 
     }
 
-    public void startInsertion(BlockingQueue<List<Entity>> entityQueue, DbClient dbClient, RedisClient redisClient) {
+    public void startInsertionV2(BlockingQueue<List<Entity>> entityQueue, DbClient dbClient, RedisClient redisClient) {
+
+        List<Entity> uniqueEntities;
 
         while (Cacherunner) {
             try {
 
-                List<Entity> entities = entityQueue.take();
-                logger.info(
-                        "\n Taken From Queue StoreEntity Remaining Batches to Insert => " + entityQueue.size() + "\n");
-                Set<Entity> uniqueEntitiesSet = new LinkedHashSet<>(entities);
-                List<Entity> uniqueEntities = new ArrayList<>(uniqueEntitiesSet);
-                logger.info("\n \n StoreEntity This table is recieved from initial dump "
-                        + uniqueEntities.get(0).getDisplayName().toLowerCase() + " and this is size "
-                        + uniqueEntities.size());
+                uniqueEntities = new ArrayList<>(new LinkedHashSet<>(entityQueue.take()));
+                logger.info("\n Queue Size: " + entityQueue.size() + ", List Size: " + uniqueEntities.size() + "\n");
 
                 if (!uniqueEntities.isEmpty()) {
-                    List<String> fieldNames = uniqueEntities.get(0).getPropertyNames();
-                    List<List<Object>> batchFieldValues = new ArrayList<>();
-                    for (Entity entity : uniqueEntities) {
-                        List<Object> fieldValues = entity.getPropertyValues(fieldNames);
-                        batchFieldValues.add(fieldValues);
-                    }
-                    String table = uniqueEntities.get(0).getDisplayName().toLowerCase();\
-                    int batchSize = uniqueEntities.size();
-                    dbClient.createEntities(table, fieldNames, batchFieldValues, batchSize);
+                    String table = uniqueEntities.get(0).getDisplayName().toLowerCase();
+                    dbClient.createEntitiesV2(table, uniqueEntities);
                 }
-
+                uniqueEntities.clear();
             } catch (Exception e) {
                 logger.error("Exception -> startInsertion(): ", e.getMessage());
             }
-
         }
     }
 

@@ -6,7 +6,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-
+import com.betbrain.sepc.connector.sportsmodel.Entity;
 import java.util.List;
 import java.util.Collections;
 import java.sql.SQLIntegrityConstraintViolationException;
@@ -138,12 +138,10 @@ public class DbClient {
         }
     }
 
-    public void createEntities(String table, List<String> fields, List<List<Object>> batchFieldValues, int batchSize)
+    public void createEntitiesV2(String table, List<Entity> uniqueEntities)
             throws SQLException {
-        if (fields.isEmpty() || batchFieldValues.isEmpty()) {
 
-        }
-
+        List<String> fields = uniqueEntities.get(0).getPropertyNames();
         StringBuilder sql = new StringBuilder("INSERT INTO ");
         sql.append(table).append(" (");
         sql.append(String.join(", ", fields));
@@ -151,26 +149,31 @@ public class DbClient {
         sql.append(String.join(", ", Collections.nCopies(fields.size(), "?")));
         sql.append(")");
 
+        int batchSize = uniqueEntities.size();
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
-
             int count = 0;
-            for (List<Object> rowValues : batchFieldValues) {
-                if (rowValues.size() != fields.size()) {
+            List<Object> rowValues;
+            for (Entity entity : uniqueEntities) {
 
-                }
+                rowValues = entity.getPropertyValues(fields);
 
                 for (int i = 0; i < rowValues.size(); i++) {
                     pstmt.setObject(i + 1, rowValues.get(i));
                 }
                 pstmt.addBatch();
+                rowValues.clear();
 
-                if (++count % batchSize == 0 || count == batchFieldValues.size()) {
+                if (++count % batchSize == 0) {
                     pstmt.executeBatch();
                     pstmt.clearBatch();
+                    count = 0;
                 }
             }
-
+            if (count > 0) {
+                pstmt.executeBatch();
+                pstmt.clearBatch();
+            }
         } catch (SQLException e) {
             logger.error("Exception -> createEntities() at Table: " + table + ", Exception: " + e);
         }
