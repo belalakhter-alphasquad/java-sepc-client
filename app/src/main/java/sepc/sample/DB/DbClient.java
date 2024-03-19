@@ -153,8 +153,9 @@ public class DbClient {
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
             int count = 0;
-            List<Object> rowValues;
             conn.setAutoCommit(false);
+            List<Object> rowValues;
+
             for (Entity entity : uniqueEntities) {
 
                 rowValues = entity.getPropertyValues(fields);
