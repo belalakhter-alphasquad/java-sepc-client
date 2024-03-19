@@ -172,9 +172,9 @@ public class DbClient {
                     count = 0;
                 }
             }
-            conn.setAutoCommit(true);
 
             if (count > 0) {
+                conn.setAutoCommit(true);
                 pstmt.executeBatch();
                 pstmt.clearBatch();
             }
