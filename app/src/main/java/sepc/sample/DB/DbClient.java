@@ -154,6 +154,7 @@ public class DbClient {
                 PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
             int count = 0;
             List<Object> rowValues;
+            conn.setAutoCommit(false);
             for (Entity entity : uniqueEntities) {
 
                 rowValues = entity.getPropertyValues(fields);
@@ -170,6 +171,8 @@ public class DbClient {
                     count = 0;
                 }
             }
+            conn.setAutoCommit(true);
+
             if (count > 0) {
                 pstmt.executeBatch();
                 pstmt.clearBatch();
