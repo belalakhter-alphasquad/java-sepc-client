@@ -152,8 +152,9 @@ public class DbClient {
         int batchSize = uniqueEntities.size();
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
-            int count = 0;
             conn.setAutoCommit(false);
+            int count = 0;
+
             List<Object> rowValues;
 
             for (Entity entity : uniqueEntities) {
@@ -174,8 +175,8 @@ public class DbClient {
             }
 
             if (count > 0) {
-                conn.setAutoCommit(true);
                 pstmt.executeBatch();
+                conn.commit();
                 pstmt.clearBatch();
             }
         } catch (SQLException e) {
