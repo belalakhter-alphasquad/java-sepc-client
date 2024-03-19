@@ -28,7 +28,7 @@ public class StoreEntity {
     ExecutorService executorServicecache = Executors.newFixedThreadPool(10);
 
     public StoreEntity(DbClient dbClient, BlockingQueue<List<Entity>> entityqueue,
-            BlockingQueue<EntityChange> updateentityQueue) {
+            BlockingQueue<List<EntityChange>> updateentityQueue) {
 
         for (int i = 0; i < 10; i++) {
             executorServicecache.submit(() -> startInsertion(entityqueue, dbClient));
@@ -61,37 +61,39 @@ public class StoreEntity {
     }
 
     public void startUpdate(BlockingQueue<List<Entity>> entityQueue, DbClient dbClient,
-            BlockingQueue<EntityChange> updateentityQueue) {
+            BlockingQueue<List<EntityChange>> updateentityQueue) {
         boolean cacheShutdownInitiated = false;
+        List<EntityChange> ListChangeEntities;
         while (runner) {
             try {
-                EntityChange entityChange = updateentityQueue.take();
-                if (entityChange instanceof EntityCreate) {
-                    EntityCreate newCreate = (EntityCreate) entityChange;
-                    Entity entity = newCreate.getEntity();
-                    createEntity.processEntity(entity, dbClient);
-                } else if (entityChange instanceof EntityDelete) {
-                    EntityDelete deletechange = (EntityDelete) entityChange;
-                    Long Id = deletechange.getEntityId();
-                    String table = deletechange.getEntityClass().getSimpleName().toLowerCase();
-                    dbClient.deleteEntity(Id, table);
+                ListChangeEntities = updateentityQueue.take();
+                for (EntityChange entityChange : ListChangeEntities) {
 
-                } else if (entityChange instanceof EntityUpdate) {
-                    EntityUpdate updatechange = (EntityUpdate) entityChange;
-                    String table = updatechange.getEntityClass().getSimpleName().toLowerCase();
-                    Long Id = updatechange.getEntityId();
-                    List<Object> fieldvalues = updatechange.getPropertyValues();
-                    List<String> fields = updatechange.getPropertyNames();
-                    dbClient.updateEntity(Id, table, fields, fieldvalues);
+                    if (entityChange instanceof EntityCreate) {
+                        EntityCreate newCreate = (EntityCreate) entityChange;
+                        Entity entity = newCreate.getEntity();
+                        dbClient.createEntity(entity.getDisplayName().toLowerCase(), entity.getPropertyNames(),
+                                entity.getPropertyValues(entity.getPropertyNames()));
+                    } else if (entityChange instanceof EntityDelete) {
+                        EntityDelete deletechange = (EntityDelete) entityChange;
+                        dbClient.deleteEntity(deletechange.getEntityId(), deletechange.getDisplayName().toLowerCase());
+
+                    } else if (entityChange instanceof EntityUpdate) {
+                        EntityUpdate updatechange = (EntityUpdate) entityChange;
+                        dbClient.updateEntity(updatechange.getEntityId(), updatechange.getDisplayName().toLowerCase(),
+                                updatechange.getPropertyNames(),
+                                updatechange.getPropertyValues(updatechange.getPropertyNames()));
+
+                    }
 
                 }
-                if (!cacheShutdownInitiated && entityQueue.isEmpty()) {
-                    CacheShutdown();
-                    cacheShutdownInitiated = true;
-                }
-
             } catch (Exception e) {
                 logger.error("Exception caught for update batch", e);
+            }
+
+            if (!cacheShutdownInitiated && entityQueue.isEmpty()) {
+                CacheShutdown();
+                cacheShutdownInitiated = true;
             }
 
         }

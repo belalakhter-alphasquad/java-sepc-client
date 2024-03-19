@@ -133,9 +133,11 @@ public class DbClient {
             pstmt.executeUpdate();
 
         } catch (SQLIntegrityConstraintViolationException e) {
+            logger.error("Exception -> createEntities() at Table: " + table + ", Exception: " + e);
 
         } catch (SQLException e) {
 
+            logger.error("Exception -> createEntities() at Table: " + table + ", Exception: " + e);
         }
     }
 
@@ -213,6 +215,8 @@ public class DbClient {
             pstmt.setObject(fields.size() + 1, id);
 
             pstmt.executeUpdate();
+        } catch (SQLException e) {
+            logger.error("Exception -> createEntities() at Table: " + table + ", Exception: " + e);
         }
     }
 }

@@ -25,7 +25,7 @@ import sepc.sample.utils.StoreEntity;
 public class PushConnector {
     private static final Logger logger = LoggerFactory.getLogger(PushConnector.class);
     public BlockingQueue<List<Entity>> entityQueue = new LinkedBlockingDeque<>();
-    public BlockingQueue<EntityChange> updateentityQueue = new LinkedBlockingDeque<>();
+    public BlockingQueue<List<EntityChange>> updateentityQueue = new LinkedBlockingDeque<>();
 
     private final SEPCPushConnector connector;
     static boolean checkInitialDumpComplete = false;
@@ -34,7 +34,6 @@ public class PushConnector {
 
         ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();
         connector = new SEPCPushConnector(hostname, portPush);
-        // RedisClient redisClient = new RedisClient("localhost", 6379);
         DbClient dbClient = DbClient.getInstance();
         ExecutorService executorServiceUpdate = Executors.newFixedThreadPool(4);
 
@@ -67,12 +66,12 @@ public class PushConnector {
         private volatile String subscriptionChecksum;
         private final StoreEntity storeEntity;
         private final BlockingQueue<List<Entity>> entityQueue;
-        private final BlockingQueue<EntityChange> updateentityQueue;
+        private final BlockingQueue<List<EntityChange>> updateentityQueue;
         DbClient dbClient;
         ExecutorService executorServiceUpdate;
 
         public SEPCPUSHConnectorListener(StoreEntity storeEntity, BlockingQueue<List<Entity>> entityQueue,
-                BlockingQueue<EntityChange> updateentityQueue,
+                BlockingQueue<List<EntityChange>> updateentityQueue,
                 DbClient dbClient, ExecutorService executorServiceUpdate) {
             this.storeEntity = storeEntity;
             this.entityQueue = entityQueue;
@@ -121,14 +120,12 @@ public class PushConnector {
         public void notifyEntityUpdatesRetrieved(EntityChangeBatch entityChangeBatch) {
 
             lastBatchUuid = entityChangeBatch.getUuid();
-            SubscriptionId = entityChangeBatch.getSubscriptionId();
-            subscriptionChecksum = entityChangeBatch.getSubscriptionCheckSum();
             List<EntityChange> ListChangeEntities = entityChangeBatch.getEntityChanges();
 
             if (checkInitialDumpComplete) {
-                for (EntityChange entityChange : ListChangeEntities) {
-                    updateentityQueue.offer(entityChange);
-                }
+
+                updateentityQueue.offer(ListChangeEntities);
+
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
