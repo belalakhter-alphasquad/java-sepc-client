@@ -25,15 +25,15 @@ public class StoreEntity {
 
     boolean runner = true;
     boolean Cacherunner = true;
-    ExecutorService executorServicecache = Executors.newFixedThreadPool(10);
+    ExecutorService executorServicecache = Executors.newFixedThreadPool(1);
 
     public StoreEntity(DbClient dbClient, BlockingQueue<List<Entity>> entityqueue,
             BlockingQueue<EntityChange> updateentityQueue) {
 
-        for (int i = 0; i < 10; i++) {
-            executorServicecache.submit(() -> startInsertion(entityqueue, dbClient));
+        // for (int i = 0; i < 10; i++) {
+        // executorServicecache.submit(() -> startInsertion(entityqueue, dbClient));
 
-        }
+        // }
 
         logger.info("Queue Consumer Started");
 
@@ -86,6 +86,7 @@ public class StoreEntity {
                 }
                 if (entityQueue.isEmpty()) {
                     CacheShutdown();
+                    logger.info("Insertion task is closed ");
                 }
 
             } catch (Exception e) {

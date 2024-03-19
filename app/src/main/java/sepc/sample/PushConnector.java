@@ -36,11 +36,11 @@ public class PushConnector {
         connector = new SEPCPushConnector(hostname, portPush);
         // RedisClient redisClient = new RedisClient("localhost", 6379);
         DbClient dbClient = DbClient.getInstance();
-        ExecutorService executorServiceinsertion = Executors.newFixedThreadPool(1);
+        ExecutorService executorServiceUpdate = Executors.newFixedThreadPool(4);
 
         StoreEntity storeEntity = new StoreEntity(dbClient, entityQueue, updateentityQueue);
         SEPCPUSHConnectorListener listener = new SEPCPUSHConnectorListener(storeEntity, entityQueue, updateentityQueue,
-                dbClient, executorServiceinsertion);
+                dbClient, executorServiceUpdate);
 
         connector.addStreamedConnectorListener(listener);
         connector.setEntityChangeBatchProcessingMonitor(new EntityChangeBatchProcessingMonitor() {
@@ -69,16 +69,16 @@ public class PushConnector {
         private final BlockingQueue<List<Entity>> entityQueue;
         private final BlockingQueue<EntityChange> updateentityQueue;
         DbClient dbClient;
-        ExecutorService executorServiceinsertion;
+        ExecutorService executorServiceUpdate;
 
         public SEPCPUSHConnectorListener(StoreEntity storeEntity, BlockingQueue<List<Entity>> entityQueue,
                 BlockingQueue<EntityChange> updateentityQueue,
-                DbClient dbClient, ExecutorService executorServiceinsertion) {
+                DbClient dbClient, ExecutorService executorServiceUpdate) {
             this.storeEntity = storeEntity;
             this.entityQueue = entityQueue;
             this.updateentityQueue = updateentityQueue;
             this.dbClient = dbClient;
-            this.executorServiceinsertion = executorServiceinsertion;
+            this.executorServiceUpdate = executorServiceUpdate;
 
         }
 
@@ -94,7 +94,7 @@ public class PushConnector {
                     + receivedEntities.get(0).getDisplayName().toLowerCase() + " and this is size "
                     + receivedEntities.size());
 
-            entityQueue.offer(receivedEntities);
+            // entityQueue.offer(receivedEntities);
 
             try {
                 Thread.sleep(400);
@@ -109,9 +109,7 @@ public class PushConnector {
 
             checkInitialDumpComplete = true;
 
-            // executorServiceinsertion.submit(() -> storeEntity.startUpdate(entityQueue,
-            // dbClient,
-            // updateentityQueue));
+            executorServiceUpdate.submit(() -> storeEntity.startUpdate(entityQueue, dbClient, updateentityQueue));
 
             logger.info("initial dump done");
 
@@ -125,17 +123,17 @@ public class PushConnector {
             subscriptionChecksum = entityChangeBatch.getSubscriptionCheckSum();
             List<EntityChange> ListChangeEntities = entityChangeBatch.getEntityChanges();
 
-            // if (checkInitialDumpComplete) {
-            // for (EntityChange entityChange : ListChangeEntities) {
-            // // updateentityQueue.offer(entityChange);
-            // }
-            // try {
-            // Thread.sleep(1000);
-            // } catch (InterruptedException e) {
+            if (checkInitialDumpComplete) {
+                for (EntityChange entityChange : ListChangeEntities) {
+                    updateentityQueue.offer(entityChange);
+                }
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    logger.error("Error caught for getting update batch", e);
+                }
 
-            // }
-
-            // }
+            }
 
         }
 

@@ -88,6 +88,7 @@ public class DbClient {
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setLong(1, id);
+            pstmt.executeUpdate();
 
         } catch (SQLException e) {
 
