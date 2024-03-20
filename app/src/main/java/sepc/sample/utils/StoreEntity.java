@@ -25,17 +25,10 @@ public class StoreEntity {
 
     boolean runner = true;
     boolean Cacherunner = true;
-    ExecutorService executorServicecache = Executors.newFixedThreadPool(10);
+    ExecutorService executorServicecache = Executors.newFixedThreadPool(1);
 
     public StoreEntity(DbClient dbClient, BlockingQueue<List<Entity>> entityqueue,
             BlockingQueue<List<EntityChange>> updateentityQueue) {
-
-        for (int i = 0; i < 10; i++) {
-            executorServicecache.submit(() -> startInsertion(entityqueue, dbClient));
-
-        }
-
-        logger.info("Queue Consumer Started");
 
     }
 

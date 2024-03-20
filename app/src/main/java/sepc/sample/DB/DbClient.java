@@ -1,11 +1,9 @@
 package sepc.sample.DB;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
+
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import java.util.List;
 import java.util.Collections;
@@ -20,12 +18,10 @@ import sepc.sample.utils.EnvLoader;
 
 public class DbClient {
 
-    private static final String DATABASE_NAME = System.getProperty("DB_NAME");
-
     private static final String USER = System.getProperty("DB_USER");
     private static final String PASSWORD = System.getProperty("DB_PASS");
     private HikariDataSource dataSource;
-    private static final String SQL_FILE_PATH = "./src/main/resources/Tables.sql";
+
     private static final Logger logger = LoggerFactory.getLogger(DbClient.class);
     private static DbClient instance;
 
@@ -57,29 +53,6 @@ public class DbClient {
     public void close() {
         if (dataSource != null && !dataSource.isClosed()) {
             dataSource.close();
-        }
-    }
-
-    public void createDatabaseIfNotExist() throws SQLException {
-        try (Connection conn = dataSource.getConnection();
-                Statement stmt = conn.createStatement()) {
-            stmt.executeUpdate("CREATE DATABASE IF NOT EXISTS " + DATABASE_NAME);
-        }
-    }
-
-    public void runSqlFileToCreateTables() throws Exception {
-        createDatabaseIfNotExist();
-
-        String sqlCommands = new String(Files.readAllBytes(Paths.get(SQL_FILE_PATH)));
-        String[] commands = sqlCommands.split(";");
-
-        try (Connection conn = dataSource.getConnection();
-                Statement stmt = conn.createStatement()) {
-            for (String command : commands) {
-                if (!command.trim().isEmpty()) {
-                    stmt.execute(command);
-                }
-            }
         }
     }
 

@@ -35,7 +35,7 @@ public class PushConnector {
         ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();
         connector = new SEPCPushConnector(hostname, portPush);
         DbClient dbClient = DbClient.getInstance();
-        ExecutorService executorServiceUpdate = Executors.newFixedThreadPool(4);
+        ExecutorService executorServiceUpdate = Executors.newFixedThreadPool(6);
 
         StoreEntity storeEntity = new StoreEntity(dbClient, entityQueue, updateentityQueue);
         SEPCPUSHConnectorListener listener = new SEPCPUSHConnectorListener(storeEntity, entityQueue, updateentityQueue,
@@ -88,16 +88,7 @@ public class PushConnector {
         @Override
         public void notifyPartialInitialDumpRetrieved(List<? extends Entity> entities) {
 
-            List<Entity> receivedEntities = entities.stream().collect(Collectors.toList());
-            logger.info("Recieved initial batch size: " + receivedEntities.size());
-
-            entityQueue.offer(receivedEntities);
-
-            try {
-                Thread.sleep(400);
-            } catch (InterruptedException e) {
-
-            }
+            logger.info("Recieved initial batch size: " + entities.size());
 
         }
 
@@ -105,7 +96,7 @@ public class PushConnector {
         public void notifyInitialDumpRetrieved() {
 
             checkInitialDumpComplete = true;
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < 6; i++) {
                 executorServiceUpdate.submit(() -> storeEntity.startUpdate(entityQueue, dbClient, updateentityQueue));
 
             }
@@ -118,6 +109,8 @@ public class PushConnector {
         public void notifyEntityUpdatesRetrieved(EntityChangeBatch entityChangeBatch) {
 
             lastBatchUuid = entityChangeBatch.getUuid();
+            SubscriptionId = entityChangeBatch.getSubscriptionId();
+            subscriptionChecksum = entityChangeBatch.getSubscriptionCheckSum();
 
             List<EntityChange> ListChangeEntities = entityChangeBatch.getEntityChanges();
             logger.info("Recieved Update batch has size: " + ListChangeEntities.size());
