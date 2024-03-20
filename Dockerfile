@@ -1,5 +1,9 @@
 FROM openjdk:21-jdk-slim
 
+ARG BUILD_VERSION=$(date +%s)
+ENV APP_VERSION=$BUILD_VERSION
+
+
 WORKDIR /app
 
 
@@ -15,4 +19,4 @@ COPY app/logs /app/
 
 RUN ./gradlew clean build
 
-CMD ["./gradlew", "run"]
+CMD ["./gradlew", "run", "--version", "${APP_VERSION}"]
