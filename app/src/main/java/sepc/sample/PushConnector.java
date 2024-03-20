@@ -89,9 +89,7 @@ public class PushConnector {
         public void notifyPartialInitialDumpRetrieved(List<? extends Entity> entities) {
 
             List<Entity> receivedEntities = entities.stream().collect(Collectors.toList());
-            logger.info("\n \n PUSH Connector "
-                    + receivedEntities.get(0).getDisplayName().toLowerCase() + " and this is size "
-                    + receivedEntities.size());
+            logger.info("Recieved initial batch size: " + receivedEntities.size());
 
             entityQueue.offer(receivedEntities);
 
@@ -120,7 +118,9 @@ public class PushConnector {
         public void notifyEntityUpdatesRetrieved(EntityChangeBatch entityChangeBatch) {
 
             lastBatchUuid = entityChangeBatch.getUuid();
+
             List<EntityChange> ListChangeEntities = entityChangeBatch.getEntityChanges();
+            logger.info("Recieved Update batch has size: " + ListChangeEntities.size());
 
             if (checkInitialDumpComplete) {
 
