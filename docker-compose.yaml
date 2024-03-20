@@ -1,0 +1,9 @@
+version: "3.8"
+services:
+  oddmatrix-client:
+    build: .
+    volumes:
+      - oddmatrix-client-logs:/app/logs
+volumes:
+  oddmatrix-client-logs:
+    name: oddmatrix-client-logs
