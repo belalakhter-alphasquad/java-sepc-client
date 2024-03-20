@@ -10,22 +10,9 @@ services:
       - oddmatrix-client-logs:/app/logs
     networks:
       - oddmatrix-client-network
-  db:
-    image: mysql:latest
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: demo
-    ports:
-      - "3306:3306"
-    volumes:
-      - ./mysql-init:/docker-entrypoint-initdb.d:ro
-      - mysql-data:/var/lib/mysql
-    networks:
-      - oddmatrix-client-network
 volumes:
   oddmatrix-client-logs:
     name: oddmatrix-client-logs
-  mysql-data:
 
 networks:
   oddmatrix-client-network:

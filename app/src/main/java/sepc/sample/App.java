@@ -23,6 +23,7 @@ public class App {
         ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();
 
         dbClient = new DbClient();
+        logger.info("Database setup successful");
 
         String hostname = System.getProperty("HOSTNAME");
         int portPush = Integer.parseInt(System.getProperty("PORT_PUSH"));
