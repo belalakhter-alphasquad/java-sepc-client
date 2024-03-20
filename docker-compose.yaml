@@ -2,7 +2,10 @@ version: "3.8"
 services:
   oddmatrix-client:
     container_name: oddmatrix-client
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: oddmatrix-client:${TAG:-latest}
     volumes:
       - oddmatrix-client-logs:/app/logs
     networks:

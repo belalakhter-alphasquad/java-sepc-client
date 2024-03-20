@@ -1,5 +1,5 @@
 ### Build and Run
 
-- Write the credentials in env file see env.example
-- Use ./gradlew clean build
-- Then ./gradlew run
+- export TAG=$(date +%Y%m%d%H%M%S)
+
+- docker-compose up --build
