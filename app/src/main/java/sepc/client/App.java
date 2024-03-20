@@ -10,20 +10,21 @@ import sepc.client.utils.EnvLoader;
 public class App {
 
     public static void main(String[] args) {
-        DbClient dbClient = null;
+
         final Logger logger = LoggerFactory.getLogger(App.class);
+        logger.info("its working");
 
         EnvLoader.load(".env");
         ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();
 
-        dbClient = new DbClient();
-        logger.info("Database setup successful");
+        DbClient dbClient = new DbClient();
         try {
             dbClient.runSqlFileToCreateTables();
         } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+        logger.info("Database setup successful");
         logger.info("done");
 
         // String hostname = System.getProperty("HOSTNAME");

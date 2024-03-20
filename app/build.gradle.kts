@@ -24,7 +24,6 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.2.6")
     implementation("org.apache.kafka:kafka-clients:3.0.0") 
     implementation("org.apache.commons:commons-pool2:2.11.0")
-    implementation ("redis.clients:jedis:3.7.0") 
 
 }
 
