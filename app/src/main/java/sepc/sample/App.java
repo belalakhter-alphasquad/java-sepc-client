@@ -4,27 +4,27 @@ import sepc.sample.DB.DbClient;
 
 import sepc.sample.utils.EnvLoader;
 
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.agrona.concurrent.ShutdownSignalBarrier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class App {
-    private static final String USER = System.getProperty("DB_USER");
 
     public static void main(String[] args) {
+        DbClient dbClient = null;
         final Logger logger = LoggerFactory.getLogger(App.class);
 
         EnvLoader.load(".env");
-        logger.info("this is user " + USER);
         ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();
 
-        DbClient dbClient = new DbClient();
-
+        for (int i = 0; i < 6; i++) {
+            dbClient = new DbClient();
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                logger.error("Exception while retrying db connection", e);
+            }
+        }
         String hostname = System.getProperty("HOSTNAME");
         int portPush = Integer.parseInt(System.getProperty("PORT_PUSH"));
         String subscription = System.getProperty("SUBSCRIPTION");
