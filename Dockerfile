@@ -1,7 +1,9 @@
 FROM openjdk:21-jdk-slim
 
+ARG IMAGE_NAME=oddmatrix-client
 ARG BUILD_VERSION=$(date +%s)
 ENV APP_VERSION=$BUILD_VERSION
+ARG IMAGE_TAG=BUILD_VERSION
 
 
 WORKDIR /app
