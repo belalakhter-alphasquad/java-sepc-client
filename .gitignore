@@ -1,6 +1,6 @@
 .env
 /app/build
-!/app/logs/.gitkeep
 .gradle
 .vscode
 /app/logs/*
+!/app/logs/.gitkeep
