@@ -4,6 +4,8 @@ services:
     build: .
     volumes:
       - oddmatrix-client-logs:/app/logs
+    networks:
+      - oddmatrix-client-network
 volumes:
   oddmatrix-client-logs:
     name: oddmatrix-client-logs
