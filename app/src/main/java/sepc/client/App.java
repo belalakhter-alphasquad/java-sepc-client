@@ -12,11 +12,6 @@ public class App {
     public static void main(String[] args) {
         DbClient dbClient = null;
         final Logger logger = LoggerFactory.getLogger(App.class);
-        try {
-            Thread.sleep(60000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
 
         EnvLoader.load(".env");
         ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();
