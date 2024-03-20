@@ -26,6 +26,7 @@ public class DbClient {
     private static DbClient instance;
 
     public DbClient() {
+        logger.info("this is user " + USER);
         EnvLoader.load(".env");
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(System.getProperty("DB_URL"));
