@@ -2,4 +2,4 @@
 
 - export TAG=$(date +%Y%m%d%H%M%S)
 
-- docker-compose up --build
+- docker-compose up --build -d
