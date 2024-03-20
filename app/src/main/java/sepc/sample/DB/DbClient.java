@@ -18,20 +18,30 @@ import sepc.sample.utils.EnvLoader;
 
 public class DbClient {
 
-    private static final String USER = System.getProperty("DB_USER");
-    private static final String PASSWORD = System.getProperty("DB_PASS");
     private HikariDataSource dataSource;
 
     private static final Logger logger = LoggerFactory.getLogger(DbClient.class);
     private static DbClient instance;
 
     public DbClient() {
-        logger.info("this is user " + USER);
+        for (int i = 0; i < 6; i++) {
+            try {
+                SetupDataSource();
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                logger.error("Exception while retrying db connection", e);
+            }
+        }
+
+    }
+
+    private void SetupDataSource() {
+        logger.info("Setting up database connection...");
         EnvLoader.load(".env");
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(System.getProperty("DB_URL"));
-        config.setUsername(USER);
-        config.setPassword(PASSWORD);
+        config.setUsername(System.getProperty("DB_USER"));
+        config.setPassword(System.getProperty("DB_PASS"));
         config.setMaximumPoolSize(100);
         config.addDataSourceProperty("cachePrepStmts", "true");
         config.setMinimumIdle(5);

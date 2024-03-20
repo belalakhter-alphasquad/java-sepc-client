@@ -17,14 +17,8 @@ public class App {
         EnvLoader.load(".env");
         ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();
 
-        for (int i = 0; i < 6; i++) {
-            dbClient = new DbClient();
-            try {
-                Thread.sleep(10000);
-            } catch (InterruptedException e) {
-                logger.error("Exception while retrying db connection", e);
-            }
-        }
+        dbClient = new DbClient();
+
         String hostname = System.getProperty("HOSTNAME");
         int portPush = Integer.parseInt(System.getProperty("PORT_PUSH"));
         String subscription = System.getProperty("SUBSCRIPTION");
