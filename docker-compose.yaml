@@ -7,3 +7,6 @@ services:
 volumes:
   oddmatrix-client-logs:
     name: oddmatrix-client-logs
+
+networks:
+  oddmatrix-client-network:
