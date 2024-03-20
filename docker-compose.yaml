@@ -1,6 +1,7 @@
 version: "3.8"
 services:
   oddmatrix-client:
+    container_name: oddmatrix-client
     build: .
     volumes:
       - oddmatrix-client-logs:/app/logs
