@@ -24,18 +24,6 @@ public class DbClient {
     private static DbClient instance;
 
     public DbClient() {
-        for (int i = 0; i < 6; i++) {
-            try {
-                SetupDataSource();
-                Thread.sleep(10000);
-            } catch (InterruptedException e) {
-                logger.error("Exception while retrying db connection", e);
-            }
-        }
-
-    }
-
-    private void SetupDataSource() {
         logger.info("Setting up database connection...");
         EnvLoader.load(".env");
         HikariConfig config = new HikariConfig();
