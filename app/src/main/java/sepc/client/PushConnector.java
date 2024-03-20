@@ -1,11 +1,10 @@
-package sepc.sample;
+package sepc.client;
 
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.stream.Collectors;
 
 import org.agrona.concurrent.ShutdownSignalBarrier;
 import org.slf4j.Logger;
@@ -19,8 +18,8 @@ import com.betbrain.sepc.connector.sportsmodel.Entity;
 import com.betbrain.sepc.connector.sportsmodel.EntityChange;
 import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
 
-import sepc.sample.DB.DbClient;
-import sepc.sample.utils.StoreEntity;
+import sepc.client.DB.DbClient;
+import sepc.client.utils.StoreEntity;
 
 public class PushConnector {
     private static final Logger logger = LoggerFactory.getLogger(PushConnector.class);

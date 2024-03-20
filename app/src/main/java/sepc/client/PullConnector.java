@@ -1,4 +1,4 @@
-package sepc.sample;
+package sepc.client;
 
 import java.util.List;
 

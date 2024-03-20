@@ -1,4 +1,4 @@
-package sepc.sample.utils;
+package sepc.client.utils;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;

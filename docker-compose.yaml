@@ -16,3 +16,4 @@ volumes:
 
 networks:
   oddmatrix-client-network:
+    name: oddmatrix-client-network

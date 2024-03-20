@@ -1,10 +1,12 @@
-package sepc.sample.utils;
+package sepc.client.utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
+
+import sepc.client.DB.DbClient;
+
 import java.sql.SQLException;
-import sepc.sample.DB.DbClient;
 import java.util.List;
 
 public class createEntity {

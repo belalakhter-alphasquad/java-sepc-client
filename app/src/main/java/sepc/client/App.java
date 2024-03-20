@@ -1,12 +1,11 @@
-package sepc.sample;
-
-import sepc.sample.DB.DbClient;
-
-import sepc.sample.utils.EnvLoader;
+package sepc.client;
 
 import org.agrona.concurrent.ShutdownSignalBarrier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import sepc.client.DB.DbClient;
+import sepc.client.utils.EnvLoader;
 
 public class App {
 

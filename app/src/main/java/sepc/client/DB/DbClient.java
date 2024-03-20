@@ -1,4 +1,4 @@
-package sepc.sample.DB;
+package sepc.client.DB;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
-import sepc.sample.utils.EnvLoader;
+import sepc.client.utils.EnvLoader;
 
 public class DbClient {
 

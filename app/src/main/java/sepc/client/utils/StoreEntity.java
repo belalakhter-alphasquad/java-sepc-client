@@ -1,4 +1,4 @@
-package sepc.sample.utils;
+package sepc.client.utils;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -17,7 +17,7 @@ import com.betbrain.sepc.connector.sportsmodel.EntityCreate;
 import com.betbrain.sepc.connector.sportsmodel.EntityDelete;
 import com.betbrain.sepc.connector.sportsmodel.EntityUpdate;
 
-import sepc.sample.DB.DbClient;
+import sepc.client.DB.DbClient;
 
 public class StoreEntity {
 
