@@ -29,6 +29,7 @@ public class App {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+        logger.info("done");
 
         // String hostname = System.getProperty("HOSTNAME");
         // int portPush = Integer.parseInt(System.getProperty("PORT_PUSH"));
