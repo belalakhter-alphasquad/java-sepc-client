@@ -113,7 +113,7 @@ public class PushConnector {
             subscriptionChecksum = entityChangeBatch.getSubscriptionCheckSum();
 
             List<EntityChange> ListChangeEntities = entityChangeBatch.getEntityChanges();
-            logger.info("Recieved Update batch has size: " + ListChangeEntities.size());
+            logger.info("Recieved Update batch: " + ListChangeEntities.toString());
 
             if (checkInitialDumpComplete) {
 
