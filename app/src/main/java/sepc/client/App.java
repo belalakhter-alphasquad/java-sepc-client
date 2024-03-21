@@ -18,7 +18,7 @@ public class App {
         ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();
 
         DbClient dbClient = new DbClient();
-
+        logger.error("changes");
         String hostname = System.getProperty("HOSTNAME");
         int portPush = Integer.parseInt(System.getProperty("PORT_PUSH"));
         String subscription = System.getProperty("SUBSCRIPTION");
