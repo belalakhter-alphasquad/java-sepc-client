@@ -1,7 +1,6 @@
 
 
 plugins {
-    // Apply the application plugin to add support for building a CLI application in Java.
     application
 }
 
@@ -51,7 +50,7 @@ tasks.named<Jar>("jar") {
 tasks.named<JavaExec>("run") {
     mainClass.set("sepc.client.App")
     classpath = files(tasks.named<Jar>("jar").get().archiveFile)
-    jvmArgs("-Xmx6g", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED")
+    jvmArgs( "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED")
 }
 
 
