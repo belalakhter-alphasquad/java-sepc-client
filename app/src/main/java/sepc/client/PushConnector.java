@@ -52,6 +52,7 @@ public class PushConnector {
 
         barrier.await();
         storeEntity.CloseThreads();
+        executorServiceUpdate.shutdownNow();
 
         connector.stop();
 
