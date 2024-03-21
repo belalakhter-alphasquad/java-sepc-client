@@ -8,12 +8,7 @@ services:
     image: oddmatrix-client:${TAG:-latest}
     volumes:
       - oddmatrix-client-logs:/app/logs
-    networks:
-      - oddmatrix-client-network
+    network_mode: "host"
 volumes:
   oddmatrix-client-logs:
     name: oddmatrix-client-logs
-
-networks:
-  oddmatrix-client-network:
-    name: oddmatrix-client-network
