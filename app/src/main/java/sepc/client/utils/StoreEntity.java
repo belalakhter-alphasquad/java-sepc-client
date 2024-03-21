@@ -69,13 +69,14 @@ public class StoreEntity {
                                 entity.getPropertyValues(entity.getPropertyNames()));
                     } else if (entityChange instanceof EntityDelete) {
                         EntityDelete deletechange = (EntityDelete) entityChange;
-                        dbClient.deleteEntity(deletechange.getEntityId(), deletechange.getDisplayName().toLowerCase());
+                        dbClient.deleteEntity(deletechange.getEntityId(),
+                                deletechange.getEntityClass().getSimpleName().toLowerCase());
 
                     } else if (entityChange instanceof EntityUpdate) {
                         EntityUpdate updatechange = (EntityUpdate) entityChange;
-                        logger.info("just checking" + updatechange.toString());
 
-                        dbClient.updateEntity(updatechange.getEntityId(), updatechange.getDisplayName().toLowerCase(),
+                        dbClient.updateEntity(updatechange.getEntityId(),
+                                updatechange.getEntityClass().getSimpleName().toLowerCase(),
                                 updatechange.getPropertyNames(),
                                 updatechange.getPropertyValues());
 
