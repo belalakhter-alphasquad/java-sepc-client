@@ -122,7 +122,7 @@ public class PushConnector {
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
-                    logger.error("Error caught for getting update batch", e);
+                    logger.error("Thread sleep failed ", e);
                 }
 
             }
