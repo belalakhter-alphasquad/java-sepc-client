@@ -73,9 +73,11 @@ public class StoreEntity {
 
                     } else if (entityChange instanceof EntityUpdate) {
                         EntityUpdate updatechange = (EntityUpdate) entityChange;
+                        logger.info("just checking" + updatechange.toString());
+
                         dbClient.updateEntity(updatechange.getEntityId(), updatechange.getDisplayName().toLowerCase(),
                                 updatechange.getPropertyNames(),
-                                updatechange.getPropertyValues(updatechange.getPropertyNames()));
+                                updatechange.getPropertyValues());
 
                     }
 

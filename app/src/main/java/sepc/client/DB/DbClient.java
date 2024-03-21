@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.nio.file.Files;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
+
 import java.util.List;
 import java.util.Collections;
 import java.sql.SQLIntegrityConstraintViolationException;
@@ -67,6 +68,7 @@ public class DbClient {
             pstmt.executeUpdate();
 
         } catch (SQLException e) {
+            logger.error("Deleting entity failed for ID: " + id + "with exception: ", e);
 
         }
     }
@@ -215,7 +217,7 @@ public class DbClient {
 
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            logger.error("Exception -> createEntities() at Table: " + table + ", Exception: " + e);
+            logger.error("Exception -> update failed for entity at ID: " + id + ", Exception: " + e);
         }
     }
 }
