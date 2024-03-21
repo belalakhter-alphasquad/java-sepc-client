@@ -120,7 +120,7 @@ public class PushConnector {
                 updateentityQueue.offer(ListChangeEntities);
 
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     logger.error("Thread sleep failed ", e);
                 }
