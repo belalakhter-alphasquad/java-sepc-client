@@ -50,7 +50,7 @@ tasks.named<Jar>("jar") {
 tasks.named<JavaExec>("run") {
     mainClass.set("sepc.client.App")
     classpath = files(tasks.named<Jar>("jar").get().archiveFile)
-    jvmArgs( "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED")
+    jvmArgs("-XX:+UseParallelGC", "-XX:ParallelGCThreads=2", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED")
 }
 
 
