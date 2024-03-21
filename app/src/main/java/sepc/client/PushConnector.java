@@ -114,7 +114,6 @@ public class PushConnector {
 
             List<EntityChange> ListChangeEntities = entityChangeBatch.getEntityChanges();
             logger.info("Recieved Update batch: " + ListChangeEntities.toString());
-            logger.info("just checking size of queue " + updateentityQueue.size());
 
             if (checkInitialDumpComplete) {
 

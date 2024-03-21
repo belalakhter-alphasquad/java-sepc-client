@@ -6,8 +6,6 @@ import java.util.List;
 
 import java.util.concurrent.BlockingQueue;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +23,6 @@ public class StoreEntity {
 
     boolean runner = true;
     boolean Cacherunner = true;
-    ExecutorService executorServicecache = Executors.newFixedThreadPool(1);
 
     public StoreEntity(DbClient dbClient, BlockingQueue<List<Entity>> entityqueue,
             BlockingQueue<List<EntityChange>> updateentityQueue) {
@@ -106,7 +103,7 @@ public class StoreEntity {
     }
 
     public void CloseThreads() {
-        executorServicecache.shutdownNow();
+
     }
 
 }
