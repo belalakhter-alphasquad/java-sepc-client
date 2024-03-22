@@ -14,7 +14,7 @@ import com.betbrain.sepc.connector.sdql.EntityChangeBatchProcessingMonitor;
 import com.betbrain.sepc.connector.sdql.SEPCPushConnector;
 import com.betbrain.sepc.connector.sdql.SEPCStreamedConnectorListener;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
-
+import java.util.concurrent.TimeUnit;
 import com.betbrain.sepc.connector.sportsmodel.EntityChange;
 import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
 
@@ -48,6 +48,8 @@ public class PushConnector {
             }
         });
         logger.info("\nAttempting to start the connector\n");
+        connector.setDisconnectTimeOutWhenNoMessagesFromServer(TimeUnit.MINUTES, 5);
+
         connector.start(subscription);
 
         barrier.await();
