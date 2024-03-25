@@ -14,5 +14,7 @@ COPY app/logs /app/
 RUN ./gradlew clean build
 
 
-WORKDIR /app/build/libs
-CMD ["java", "-jar", "app.jar"]
+# WORKDIR /app/build/libs
+# CMD ["java", "-jar", "app.jar"]
+
+CMD ["./gradlew", "run"]

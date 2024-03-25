@@ -11,7 +11,7 @@ public class App {
 
     public static void main(String[] args) {
         Dotenv dotenv = Dotenv.configure()
-                .directory("../../")
+                .directory(".")
                 .load();
 
         final Logger logger = LoggerFactory.getLogger(App.class);

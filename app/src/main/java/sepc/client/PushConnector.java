@@ -49,6 +49,7 @@ public class PushConnector {
             }
         });
         logger.info("Attempting to start the connector");
+        connector.setReconnectInterval(2, TimeUnit.MINUTES);
         connector.setDisconnectTimeOutWhenNoMessagesFromServer(TimeUnit.MINUTES, 5);
 
         connector.start(subscription);

@@ -37,8 +37,6 @@ tasks.named<Jar>("jar") {
         attributes(
             "Main-Class" to "sepc.client.App",
             "Add-Opens" to "java.base/sun.nio.ch",
-            "Implementation-Title" to "OM client",
-            "Implementation-Version" to project.version
         )
     }
     archiveBaseName.set("app")
