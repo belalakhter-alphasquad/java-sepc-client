@@ -8,7 +8,7 @@ COPY app/build.gradle.kts /app/
 COPY app/libs /app/libs
 COPY app/src /app/src
 COPY app/.env /app/
-COPY app/logs 
+COPY app/logs /app/
 
 
 RUN ./gradlew clean build
