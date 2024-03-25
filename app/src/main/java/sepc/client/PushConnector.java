@@ -5,6 +5,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 
 import org.agrona.concurrent.ShutdownSignalBarrier;
 import org.slf4j.Logger;
@@ -54,11 +55,15 @@ public class PushConnector {
         barrier.await();
         storeEntity.CloseThreads();
         executorServiceUpdate.shutdownNow();
+        try {
+            executorServiceUpdate.awaitTermination(5000, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            logger.error("Interreptued Exception caught: ", e);
+        }
 
         connector.stop();
 
         logger.info("Stopping the connection");
-
     }
 
     public static class SEPCPUSHConnectorListener implements SEPCStreamedConnectorListener {

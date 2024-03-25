@@ -52,7 +52,7 @@ public class StoreEntity {
 
     public void startUpdate(BlockingQueue<List<Entity>> entityQueue, DbClient dbClient,
             BlockingQueue<List<EntityChange>> updateentityQueue) {
-        boolean cacheShutdownInitiated = false;
+
         List<EntityChange> ListChangeEntities;
         while (runner) {
             try {
@@ -82,11 +82,6 @@ public class StoreEntity {
                 }
             } catch (Exception e) {
                 logger.error("Exception caught for update batch", e);
-            }
-
-            if (!cacheShutdownInitiated && entityQueue.isEmpty()) {
-                CacheShutdown();
-                cacheShutdownInitiated = true;
             }
 
         }
