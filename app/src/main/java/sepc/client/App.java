@@ -1,6 +1,5 @@
 package sepc.client;
 
-import org.agrona.concurrent.ShutdownSignalBarrier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import io.github.cdimascio.dotenv.Dotenv;
@@ -9,7 +8,7 @@ import sepc.client.DB.DbClient;
 public class App {
 
     public static void main(String[] args) {
-        ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();
+
         final Logger logger = LoggerFactory.getLogger(App.class);
         Dotenv dotenv = Dotenv.configure()
                 .directory("./.env")
@@ -26,10 +25,7 @@ public class App {
         logger.info("Opening new connection");
         int port = Integer.parseInt(portPush);
 
-        new PushConnector(Monkey_TILT, port, subscription, DATABASE_NAME, DbURL, DBUser, DbPass);
-
-        barrier.await();
-        dbClient.close();
+        new PushConnector(Monkey_TILT, port, subscription, DATABASE_NAME, DbURL, DBUser, DbPass, dbClient);
 
     }
 

@@ -31,11 +31,11 @@ public class PushConnector {
     static boolean checkInitialDumpComplete = false;
 
     public PushConnector(String hostname, int portPush, String subscription, String dbname, String dburl, String dbuser,
-            String dbpass) {
+            String dbpass, DbClient dbClient) {
 
         ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();
         connector = new SEPCPushConnector(hostname, portPush);
-        DbClient dbClient = DbClient.getInstance(dbname, dburl, dbuser, dbpass);
+        dbClient = DbClient.getInstance(dbname, dburl, dbuser, dbpass);
         ExecutorService executorServiceUpdate = Executors.newFixedThreadPool(6);
 
         StoreEntity storeEntity = new StoreEntity(dbClient, entityQueue, updateentityQueue);
@@ -55,6 +55,7 @@ public class PushConnector {
         barrier.await();
         storeEntity.CloseThreads();
         executorServiceUpdate.shutdownNow();
+        dbClient.close();
         try {
             executorServiceUpdate.awaitTermination(5000, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
@@ -64,6 +65,7 @@ public class PushConnector {
         connector.stop();
 
         logger.info("Stopping the connection");
+        System.exit(0);
     }
 
     public static class SEPCPUSHConnectorListener implements SEPCStreamedConnectorListener {
