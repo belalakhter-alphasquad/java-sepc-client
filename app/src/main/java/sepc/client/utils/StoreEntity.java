@@ -37,7 +37,7 @@ public class StoreEntity {
             try {
 
                 uniqueEntities = new ArrayList<>(new LinkedHashSet<>(entityQueue.take()));
-                logger.info("Queue Size: " + entityQueue.size() + ", List Size: " + uniqueEntities.size());
+                logger.info("\n Queue Size: " + entityQueue.size() + ", List Size: " + uniqueEntities.size() + "\n");
 
                 if (!uniqueEntities.isEmpty()) {
                     String table = uniqueEntities.get(0).getDisplayName().toLowerCase();

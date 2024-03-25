@@ -14,7 +14,7 @@ import com.betbrain.sepc.connector.sdql.EntityChangeBatchProcessingMonitor;
 import com.betbrain.sepc.connector.sdql.SEPCPushConnector;
 import com.betbrain.sepc.connector.sdql.SEPCStreamedConnectorListener;
 import com.betbrain.sepc.connector.sportsmodel.Entity;
-import java.util.concurrent.TimeUnit;
+
 import com.betbrain.sepc.connector.sportsmodel.EntityChange;
 import com.betbrain.sepc.connector.sportsmodel.EntityChangeBatch;
 
@@ -29,12 +29,12 @@ public class PushConnector {
     private final SEPCPushConnector connector;
     static boolean checkInitialDumpComplete = false;
 
-    public PushConnector(String hostname, int portPush, String subscription, String DATABASE_NAME, String DB_URL,
-            String DB_USER, String DB_Pass) {
+    public PushConnector(String hostname, int portPush, String subscription, String dbname, String dburl, String dbuser,
+            String dbpass) {
 
         ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();
         connector = new SEPCPushConnector(hostname, portPush);
-        DbClient dbClient = DbClient.getInstance(DATABASE_NAME, DB_URL, DB_USER, DB_Pass);
+        DbClient dbClient = DbClient.getInstance(dbname, dburl, dbuser, dbpass);
         ExecutorService executorServiceUpdate = Executors.newFixedThreadPool(6);
 
         StoreEntity storeEntity = new StoreEntity(dbClient, entityQueue, updateentityQueue);
@@ -48,19 +48,16 @@ public class PushConnector {
                 return listener.getLastBatchUuid();
             }
         });
-        logger.info("Attempting to start the connector");
-        connector.setReconnectInterval(2, TimeUnit.MINUTES);
-        connector.setDisconnectTimeOutWhenNoMessagesFromServer(TimeUnit.MINUTES, 5);
-
+        logger.info("\nAttempting to start the connector\n");
         connector.start(subscription);
 
         barrier.await();
         storeEntity.CloseThreads();
         executorServiceUpdate.shutdownNow();
+
         connector.stop();
-        dbClient.close();
+
         logger.info("Stopping the connection");
-        System.exit(0);
 
     }
 
@@ -86,7 +83,7 @@ public class PushConnector {
         }
 
         public void notifyInitialDumpToBeRetrieved() {
-            logger.info("Initial dump started");
+            System.out.println("Initial dump starting ");
         }
 
         @Override
