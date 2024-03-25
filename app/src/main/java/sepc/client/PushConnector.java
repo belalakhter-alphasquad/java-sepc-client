@@ -29,11 +29,12 @@ public class PushConnector {
     private final SEPCPushConnector connector;
     static boolean checkInitialDumpComplete = false;
 
-    public PushConnector(String hostname, int portPush, String subscription) {
+    public PushConnector(String hostname, int portPush, String subscription, String DATABASE_NAME, String DB_URL,
+            String DB_USER, String DB_Pass) {
 
         ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();
         connector = new SEPCPushConnector(hostname, portPush);
-        DbClient dbClient = DbClient.getInstance();
+        DbClient dbClient = DbClient.getInstance(DATABASE_NAME, DB_URL, DB_USER, DB_Pass);
         ExecutorService executorServiceUpdate = Executors.newFixedThreadPool(6);
 
         StoreEntity storeEntity = new StoreEntity(dbClient, entityQueue, updateentityQueue);
@@ -47,7 +48,7 @@ public class PushConnector {
                 return listener.getLastBatchUuid();
             }
         });
-        logger.info("\nAttempting to start the connector\n");
+        logger.info("Attempting to start the connector");
         connector.setDisconnectTimeOutWhenNoMessagesFromServer(TimeUnit.MINUTES, 5);
 
         connector.start(subscription);
@@ -55,10 +56,10 @@ public class PushConnector {
         barrier.await();
         storeEntity.CloseThreads();
         executorServiceUpdate.shutdownNow();
-
         connector.stop();
-
+        dbClient.close();
         logger.info("Stopping the connection");
+        System.exit(0);
 
     }
 
@@ -84,7 +85,7 @@ public class PushConnector {
         }
 
         public void notifyInitialDumpToBeRetrieved() {
-            System.out.println("Initial dump starting ");
+            logger.info("Initial dump started");
         }
 
         @Override

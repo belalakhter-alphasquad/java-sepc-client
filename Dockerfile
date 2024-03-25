@@ -8,8 +8,11 @@ COPY app/build.gradle.kts /app/
 COPY app/libs /app/libs
 COPY app/src /app/src
 COPY app/.env /app/
-COPY app/logs /app/
+COPY app/logs /app/logs
+
 
 RUN ./gradlew clean build
 
-CMD ["./gradlew", "run"]
+
+WORKDIR /app/build/libs
+CMD ["java", "-jar", "app.jar"]

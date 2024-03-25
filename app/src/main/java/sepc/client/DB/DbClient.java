@@ -17,24 +17,20 @@ import java.sql.Statement;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
-import sepc.client.utils.EnvLoader;
-
 public class DbClient {
 
     private HikariDataSource dataSource;
 
     private static final Logger logger = LoggerFactory.getLogger(DbClient.class);
     private static DbClient instance;
-    private static final String DATABASE_NAME = System.getProperty("DB_NAME");
     private static final String SQL_FILE_PATH = "./src/main/resources/Tables.sql";
 
-    public DbClient() {
+    public DbClient(String DATABASE_NAME, String DB_URL, String DB_USER, String DB_Pass) {
         logger.info("Setting up database connection...");
-        EnvLoader.load(".env");
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(System.getProperty("DB_URL"));
-        config.setUsername(System.getProperty("DB_USER"));
-        config.setPassword(System.getProperty("DB_PASS"));
+        config.setJdbcUrl(DB_URL);
+        config.setUsername(DB_USER);
+        config.setPassword(DB_Pass);
         config.setMaximumPoolSize(100);
         config.addDataSourceProperty("cachePrepStmts", "true");
         config.setMinimumIdle(5);
@@ -47,9 +43,9 @@ public class DbClient {
         return this.dataSource;
     }
 
-    public static DbClient getInstance() {
+    public static DbClient getInstance(String DATABASE_NAME, String DB_URL, String DB_USER, String DB_Pass) {
         if (instance == null) {
-            instance = new DbClient();
+            instance = new DbClient(DATABASE_NAME, DB_URL, DB_USER, DB_Pass);
         }
         return instance;
     }
@@ -73,15 +69,15 @@ public class DbClient {
         }
     }
 
-    public void createDatabaseIfNotExist() throws SQLException {
+    public void createDatabaseIfNotExist(String DATABASE_NAME) throws SQLException {
         try (Connection conn = dataSource.getConnection();
                 Statement stmt = conn.createStatement()) {
             stmt.executeUpdate("CREATE DATABASE IF NOT EXISTS " + DATABASE_NAME);
         }
     }
 
-    public void runSqlFileToCreateTables() throws Exception {
-        createDatabaseIfNotExist();
+    public void runSqlFileToCreateTables(String DATABASE_NAME) throws Exception {
+        createDatabaseIfNotExist(DATABASE_NAME);
 
         String sqlCommands = new String(Files.readAllBytes(Paths.get(SQL_FILE_PATH)));
         String[] commands = sqlCommands.split(";");

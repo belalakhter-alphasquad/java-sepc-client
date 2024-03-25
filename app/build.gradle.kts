@@ -23,6 +23,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.2.6")
     implementation("org.apache.kafka:kafka-clients:3.0.0") 
     implementation("org.apache.commons:commons-pool2:2.11.0")
+    implementation ("io.github.cdimascio:dotenv-java:2.2.0")
 
 }
 
@@ -50,7 +51,6 @@ tasks.named<Jar>("jar") {
 tasks.named<JavaExec>("run") {
     mainClass.set("sepc.client.App")
     classpath = files(tasks.named<Jar>("jar").get().archiveFile)
-    jvmArgs("-XX:+UseParallelGC", "-XX:ParallelGCThreads=2", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED")
 }
 
 
