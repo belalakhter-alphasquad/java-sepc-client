@@ -11,9 +11,11 @@ public class App {
     public static void main(String[] args) {
         ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();
         final Logger logger = LoggerFactory.getLogger(App.class);
-        Dotenv dotenv = Dotenv.load();
+        Dotenv dotenv = Dotenv.configure()
+                .directory("./.env")
+                .load();
         String DATABASE_NAME = dotenv.get("DB_NAME");
-        String ADDRESS = dotenv.get("ADDRESS");
+        String Monkey_TILT = dotenv.get("Monkey_TILT");
         String portPush = dotenv.get("PORT_PUSH");
         String subscription = dotenv.get("SUBSCRIPTION");
         String DBUser = dotenv.get("DB_USER");
@@ -23,9 +25,8 @@ public class App {
         DbClient dbClient = new DbClient(DATABASE_NAME, DbURL, DBUser, DbPass);
         logger.info("Opening new connection");
         int port = Integer.parseInt(portPush);
-        logger.info(ADDRESS + port + subscription);
 
-        new PushConnector(ADDRESS, port, subscription, DATABASE_NAME, DbURL, DBUser, DbPass);
+        new PushConnector(Monkey_TILT, port, subscription, DATABASE_NAME, DbURL, DBUser, DbPass);
 
         barrier.await();
         dbClient.close();

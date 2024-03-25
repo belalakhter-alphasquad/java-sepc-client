@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     image: oddmatrix-client:${TAG:-latest}
     volumes:
-      - oddmatrix-client-logs:/app/logs
+      - oddmatrix-client-logs:/application/logs
     network_mode: "host"
 volumes:
   oddmatrix-client-logs:
