@@ -91,12 +91,9 @@ public class PushConnector {
 
         @Override
         public void notifyEntityUpdatesRetrieved(EntityChangeBatch entityChangeBatch) {
-            List<EntityChange> ListChangeEntities;
-            ListChangeEntities = entityChangeBatch.getEntityChanges();
+            List<EntityChange> ListChangeEntities = entityChangeBatch.getEntityChanges();
             logger.info("Recieved Update batch: " + ListChangeEntities.toString());
             updateentityQueue.offer(ListChangeEntities);
-            ListChangeEntities.clear();
-            logger.info("Queue size" + updateentityQueue.size());
 
             lastBatchUuid = entityChangeBatch.getUuid();
             SubscriptionId = entityChangeBatch.getSubscriptionId();
