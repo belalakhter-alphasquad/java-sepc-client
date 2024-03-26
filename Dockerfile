@@ -18,5 +18,5 @@ FROM openjdk:21-jdk-slim
 WORKDIR /application
 COPY --from=build /workspace/.env .env
 COPY --from=build /workspace/build/libs/*.jar app.jar
-CMD ["java", "-jar", "app.jar"]
+CMD ["java", "-XX:+UseContainerSupport", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "-jar", "app.jar"]
 
