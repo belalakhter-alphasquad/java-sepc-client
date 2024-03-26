@@ -97,6 +97,12 @@ public class PushConnector {
                 List<EntityChange> ListChangeEntities = entityChangeBatch.getEntityChanges();
                 logger.info("Recieved Update batch: " + ListChangeEntities.toString());
                 updateentityQueue.offer(ListChangeEntities);
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+
+                    e.printStackTrace();
+                }
             }
 
             lastBatchUuid = entityChangeBatch.getUuid();
