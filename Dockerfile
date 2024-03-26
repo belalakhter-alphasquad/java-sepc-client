@@ -2,6 +2,7 @@
 FROM openjdk:21-jdk-slim AS build
 WORKDIR /workspace
 RUN rm -rf app/build/*
+RUN rm -rf app/app.jar
 COPY gradlew gradlew.bat gradle.properties settings.gradle.kts /workspace/
 COPY gradle /workspace/gradle
 COPY app/build.gradle.kts /workspace/
