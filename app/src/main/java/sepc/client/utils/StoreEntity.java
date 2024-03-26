@@ -34,6 +34,7 @@ public class StoreEntity {
         for (int i = 0; i < 6; i++) {
             executorServiceUpdate.submit(() -> startUpdate(dbClient, updateentityQueue));
         }
+        logger.info("Consumer service started");
 
     }
 
@@ -62,28 +63,25 @@ public class StoreEntity {
             BlockingQueue<List<EntityChange>> updateentityQueue) {
 
         List<EntityChange> ListChangeEntities;
-        EntityCreate newCreate;
-        Entity entity;
-        EntityDelete deletechange;
-        EntityUpdate updatechange;
+
         while (runner) {
             try {
                 ListChangeEntities = updateentityQueue.take();
                 for (EntityChange entityChange : ListChangeEntities) {
 
                     if (entityChange instanceof EntityCreate) {
-                        newCreate = (EntityCreate) entityChange;
-                        entity = newCreate.getEntity();
+                        EntityCreate newCreate = (EntityCreate) entityChange;
+                        Entity entity = newCreate.getEntity();
                         dbClient.createEntity(entity.getDisplayName().toLowerCase(), entity.getPropertyNames(),
                                 entity.getPropertyValues(entity.getPropertyNames()));
 
                     } else if (entityChange instanceof EntityDelete) {
-                        deletechange = (EntityDelete) entityChange;
+                        EntityDelete deletechange = (EntityDelete) entityChange;
                         dbClient.deleteEntity(deletechange.getEntityId(),
                                 deletechange.getEntityClass().getSimpleName().toLowerCase());
 
                     } else if (entityChange instanceof EntityUpdate) {
-                        updatechange = (EntityUpdate) entityChange;
+                        EntityUpdate updatechange = (EntityUpdate) entityChange;
 
                         dbClient.updateEntity(updatechange.getEntityId(),
                                 updatechange.getEntityClass().getSimpleName().toLowerCase(),
