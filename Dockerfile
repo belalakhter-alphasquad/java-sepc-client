@@ -16,4 +16,5 @@ FROM openjdk:21-jdk-slim
 WORKDIR /application
 COPY --from=build /workspace/.env .env
 COPY --from=build /workspace/build/libs/*.jar app.jar
-CMD ["java", "-jar", "app.jar"]
+CMD ["java", "-XX:+UseContainerSupport", "-Xmx512m", "-Xms256m", "-jar", "app.jar"]
+

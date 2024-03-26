@@ -6,7 +6,6 @@ services:
       context: .
       dockerfile: Dockerfile
     image: oddmatrix-client:${TAG:-latest}
-    mem_limit: 768m
     volumes:
       - oddmatrix-client-logs:/application/logs
     network_mode: "host"
