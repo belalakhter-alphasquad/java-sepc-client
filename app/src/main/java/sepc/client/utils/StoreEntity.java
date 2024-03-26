@@ -61,9 +61,7 @@ public class StoreEntity {
 
     public void startUpdate(DbClient dbClient,
             BlockingQueue<List<EntityChange>> updateentityQueue) {
-
         List<EntityChange> ListChangeEntities;
-
         while (runner) {
             try {
                 ListChangeEntities = updateentityQueue.take();
@@ -74,7 +72,6 @@ public class StoreEntity {
                         Entity entity = newCreate.getEntity();
                         dbClient.createEntity(entity.getDisplayName().toLowerCase(), entity.getPropertyNames(),
                                 entity.getPropertyValues(entity.getPropertyNames()));
-
                     } else if (entityChange instanceof EntityDelete) {
                         EntityDelete deletechange = (EntityDelete) entityChange;
                         dbClient.deleteEntity(deletechange.getEntityId(),
@@ -91,7 +88,6 @@ public class StoreEntity {
                     }
 
                 }
-                ListChangeEntities.clear();
             } catch (Exception e) {
                 logger.error("Exception caught for update batch", e);
             }

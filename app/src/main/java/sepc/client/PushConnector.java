@@ -96,6 +96,7 @@ public class PushConnector {
             logger.info("Recieved Update batch: " + ListChangeEntities.toString());
             updateentityQueue.offer(ListChangeEntities);
             ListChangeEntities.clear();
+            logger.info("Queue size" + updateentityQueue.size());
 
             lastBatchUuid = entityChangeBatch.getUuid();
             SubscriptionId = entityChangeBatch.getSubscriptionId();
