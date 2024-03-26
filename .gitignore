@@ -4,3 +4,4 @@
 .vscode
 /app/logs/*
 !/app/logs/.gitkeep
+/app/app.jar
