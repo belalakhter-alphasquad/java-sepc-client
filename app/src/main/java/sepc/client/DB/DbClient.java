@@ -93,13 +93,6 @@ public class DbClient {
     }
 
     public void createEntity(String table, List<String> fields, List<Object> fieldValues) throws SQLException {
-        if (fields.isEmpty() || fieldValues.isEmpty()) {
-
-        }
-
-        if (fields.size() != fieldValues.size()) {
-
-        }
 
         StringBuilder sql = new StringBuilder("INSERT INTO ");
         sql.append(table).append(" (");

@@ -5,6 +5,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import com.betbrain.sepc.connector.sportsmodel.Entity;
 import org.slf4j.Logger;
@@ -20,12 +22,18 @@ import sepc.client.DB.DbClient;
 public class StoreEntity {
 
     private static final Logger logger = LoggerFactory.getLogger(StoreEntity.class);
+    private static ExecutorService executorServiceUpdate;
 
     boolean runner = true;
     boolean Cacherunner = true;
 
     public StoreEntity(DbClient dbClient, BlockingQueue<List<Entity>> entityqueue,
             BlockingQueue<List<EntityChange>> updateentityQueue) {
+
+        executorServiceUpdate = Executors.newFixedThreadPool(6);
+        for (int i = 0; i < 6; i++) {
+            executorServiceUpdate.submit(() -> startUpdate(dbClient, updateentityQueue));
+        }
 
     }
 
@@ -50,27 +58,32 @@ public class StoreEntity {
         }
     }
 
-    public void startUpdate(BlockingQueue<List<Entity>> entityQueue, DbClient dbClient,
+    public void startUpdate(DbClient dbClient,
             BlockingQueue<List<EntityChange>> updateentityQueue) {
 
         List<EntityChange> ListChangeEntities;
+        EntityCreate newCreate;
+        Entity entity;
+        EntityDelete deletechange;
+        EntityUpdate updatechange;
         while (runner) {
             try {
                 ListChangeEntities = updateentityQueue.take();
                 for (EntityChange entityChange : ListChangeEntities) {
 
                     if (entityChange instanceof EntityCreate) {
-                        EntityCreate newCreate = (EntityCreate) entityChange;
-                        Entity entity = newCreate.getEntity();
+                        newCreate = (EntityCreate) entityChange;
+                        entity = newCreate.getEntity();
                         dbClient.createEntity(entity.getDisplayName().toLowerCase(), entity.getPropertyNames(),
                                 entity.getPropertyValues(entity.getPropertyNames()));
+
                     } else if (entityChange instanceof EntityDelete) {
-                        EntityDelete deletechange = (EntityDelete) entityChange;
+                        deletechange = (EntityDelete) entityChange;
                         dbClient.deleteEntity(deletechange.getEntityId(),
                                 deletechange.getEntityClass().getSimpleName().toLowerCase());
 
                     } else if (entityChange instanceof EntityUpdate) {
-                        EntityUpdate updatechange = (EntityUpdate) entityChange;
+                        updatechange = (EntityUpdate) entityChange;
 
                         dbClient.updateEntity(updatechange.getEntityId(),
                                 updatechange.getEntityClass().getSimpleName().toLowerCase(),
@@ -80,6 +93,7 @@ public class StoreEntity {
                     }
 
                 }
+                ListChangeEntities.clear();
             } catch (Exception e) {
                 logger.error("Exception caught for update batch", e);
             }
@@ -98,6 +112,7 @@ public class StoreEntity {
     }
 
     public void CloseThreads() {
+        executorServiceUpdate.shutdownNow();
 
     }
 

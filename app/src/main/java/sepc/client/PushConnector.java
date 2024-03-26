@@ -2,10 +2,8 @@ package sepc.client;
 
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.TimeUnit;
 
 import org.agrona.concurrent.ShutdownSignalBarrier;
 import org.slf4j.Logger;
@@ -28,7 +26,6 @@ public class PushConnector {
     public BlockingQueue<List<EntityChange>> updateentityQueue = new LinkedBlockingDeque<>();
 
     private final SEPCPushConnector connector;
-    static boolean checkInitialDumpComplete = false;
 
     public PushConnector(String hostname, int portPush, String subscription, String dbname, String dburl, String dbuser,
             String dbpass, DbClient dbClient) {
@@ -36,11 +33,9 @@ public class PushConnector {
         ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();
         connector = new SEPCPushConnector(hostname, portPush);
         dbClient = DbClient.getInstance(dbname, dburl, dbuser, dbpass);
-        ExecutorService executorServiceUpdate = Executors.newFixedThreadPool(6);
 
         StoreEntity storeEntity = new StoreEntity(dbClient, entityQueue, updateentityQueue);
-        SEPCPUSHConnectorListener listener = new SEPCPUSHConnectorListener(storeEntity, entityQueue, updateentityQueue,
-                dbClient, executorServiceUpdate);
+        SEPCPUSHConnectorListener listener = new SEPCPUSHConnectorListener(updateentityQueue, dbClient);
 
         connector.addStreamedConnectorListener(listener);
         connector.setEntityChangeBatchProcessingMonitor(new EntityChangeBatchProcessingMonitor() {
@@ -54,14 +49,7 @@ public class PushConnector {
 
         barrier.await();
         storeEntity.CloseThreads();
-        executorServiceUpdate.shutdownNow();
         dbClient.close();
-        try {
-            executorServiceUpdate.awaitTermination(5000, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            logger.error("Interreptued Exception caught: ", e);
-        }
-
         connector.stop();
 
         logger.info("Stopping the connection");
@@ -72,20 +60,13 @@ public class PushConnector {
         private volatile String lastBatchUuid;
         private volatile String SubscriptionId;
         private volatile String subscriptionChecksum;
-        private final StoreEntity storeEntity;
-        private final BlockingQueue<List<Entity>> entityQueue;
         private final BlockingQueue<List<EntityChange>> updateentityQueue;
         DbClient dbClient;
-        ExecutorService executorServiceUpdate;
 
-        public SEPCPUSHConnectorListener(StoreEntity storeEntity, BlockingQueue<List<Entity>> entityQueue,
-                BlockingQueue<List<EntityChange>> updateentityQueue,
-                DbClient dbClient, ExecutorService executorServiceUpdate) {
-            this.storeEntity = storeEntity;
-            this.entityQueue = entityQueue;
+        public SEPCPUSHConnectorListener(BlockingQueue<List<EntityChange>> updateentityQueue,
+                DbClient dbClient) {
             this.updateentityQueue = updateentityQueue;
             this.dbClient = dbClient;
-            this.executorServiceUpdate = executorServiceUpdate;
 
         }
 
@@ -103,37 +84,21 @@ public class PushConnector {
         @Override
         public void notifyInitialDumpRetrieved() {
 
-            checkInitialDumpComplete = true;
-            for (int i = 0; i < 6; i++) {
-                executorServiceUpdate.submit(() -> storeEntity.startUpdate(entityQueue, dbClient, updateentityQueue));
-
-            }
-
             logger.info("initial dump done");
 
         }
 
         @Override
         public void notifyEntityUpdatesRetrieved(EntityChangeBatch entityChangeBatch) {
+            List<EntityChange> ListChangeEntities;
+            ListChangeEntities = entityChangeBatch.getEntityChanges();
+            logger.info("Recieved Update batch: " + ListChangeEntities.toString());
+            updateentityQueue.offer(ListChangeEntities);
+            ListChangeEntities.clear();
 
             lastBatchUuid = entityChangeBatch.getUuid();
             SubscriptionId = entityChangeBatch.getSubscriptionId();
             subscriptionChecksum = entityChangeBatch.getSubscriptionCheckSum();
-
-            List<EntityChange> ListChangeEntities = entityChangeBatch.getEntityChanges();
-            logger.info("Recieved Update batch: " + ListChangeEntities.toString());
-
-            if (checkInitialDumpComplete) {
-
-                updateentityQueue.offer(ListChangeEntities);
-
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    logger.error("Thread sleep failed ", e);
-                }
-
-            }
 
         }
 
