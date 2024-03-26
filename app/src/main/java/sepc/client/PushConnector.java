@@ -49,6 +49,7 @@ public class PushConnector {
 
         barrier.await();
         storeEntity.CloseThreads();
+        storeEntity.updateshutdown();
         dbClient.close();
         connector.stop();
 
