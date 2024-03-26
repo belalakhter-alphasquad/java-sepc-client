@@ -21,6 +21,7 @@ import sepc.client.DB.DbClient;
 import sepc.client.utils.StoreEntity;
 
 public class PushConnector {
+    static boolean checkInitialDumpComplete = false;
     private static final Logger logger = LoggerFactory.getLogger(PushConnector.class);
     public BlockingQueue<List<Entity>> entityQueue = new LinkedBlockingDeque<>();
     public BlockingQueue<List<EntityChange>> updateentityQueue = new LinkedBlockingDeque<>();
@@ -84,6 +85,7 @@ public class PushConnector {
 
         @Override
         public void notifyInitialDumpRetrieved() {
+            checkInitialDumpComplete = true;
 
             logger.info("initial dump done");
 
@@ -91,9 +93,11 @@ public class PushConnector {
 
         @Override
         public void notifyEntityUpdatesRetrieved(EntityChangeBatch entityChangeBatch) {
-            List<EntityChange> ListChangeEntities = entityChangeBatch.getEntityChanges();
-            logger.info("Recieved Update batch: " + ListChangeEntities.toString());
-            updateentityQueue.offer(ListChangeEntities);
+            if (checkInitialDumpComplete) {
+                List<EntityChange> ListChangeEntities = entityChangeBatch.getEntityChanges();
+                logger.info("Recieved Update batch: " + ListChangeEntities.toString());
+                updateentityQueue.offer(ListChangeEntities);
+            }
 
             lastBatchUuid = entityChangeBatch.getUuid();
             SubscriptionId = entityChangeBatch.getSubscriptionId();
