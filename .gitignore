@@ -1,7 +1,7 @@
 .env
 /app/build
+/app/app.jar
 .gradle
 .vscode
 /app/logs/*
 !/app/logs/.gitkeep
-/app/app.jar

@@ -3,11 +3,7 @@
     <property name="LOG_DIR" value="logs"/>
     <property name="APP_NAME" value="myapp"/>
 
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
-        </encoder>
-    </appender>
+    
 
     <appender name="ROLLING_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
 
@@ -24,7 +20,6 @@
     </appender>
 
     <root level="INFO">
-        <appender-ref ref="STDOUT"/>
         <appender-ref ref="ROLLING_FILE"/>
     </root>
 </configuration>
