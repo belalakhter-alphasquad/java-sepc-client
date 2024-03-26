@@ -61,10 +61,9 @@ public class StoreEntity {
 
     public void startUpdate(DbClient dbClient,
             BlockingQueue<List<EntityChange>> updateentityQueue) {
-        List<EntityChange> ListChangeEntities;
         while (runner) {
             try {
-                ListChangeEntities = updateentityQueue.take();
+                List<EntityChange> ListChangeEntities = updateentityQueue.take();
                 for (EntityChange entityChange : ListChangeEntities) {
 
                     if (entityChange instanceof EntityCreate) {
